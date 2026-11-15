@@ -1,0 +1,188 @@
+MiscNoDataRow < UIWidget
+  height: 16
+  margin-top: 2
+
+  UIWidget
+    id: arrow
+    size: 9 8
+    image-auto-resize: true
+    image-source: /images/game/analyzer/arrow
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: parent.left
+    margin-left: 4
+
+  Label
+    id: label
+    !text: tr('No data yet')
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: prev.right
+    margin-left: 5
+    text-auto-resize: true
+    color: #c0c0c0
+    font: Verdana Bold-11px
+
+MiscEntryRow < UIWidget
+  height: 16
+  margin-top: 2
+  phantom: false
+
+  UIWidget
+    id: icon
+    size: 12 12
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: parent.left
+    margin-left: 2
+    image-smooth: false
+    phantom: true
+
+  Label
+    id: name
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: prev.right
+    anchors.right: next.left
+    margin-left: 5
+    margin-right: 4
+    color: #c0c0c0
+    font: Verdana Bold-11px
+    text-wrap: false
+    phantom: true
+
+  Label
+    id: count
+    !text: tr('0x')
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    text-auto-resize: true
+    color: #dfdfdf
+    font: Verdana Bold-11px
+    phantom: true
+
+MiniWindow
+  id: miscAnalyserMiniWindow
+  &type: 'miscAnalyser'
+  !text: tr('Misc Analyser')
+  height: 175
+  @onExtra: modules.game_analyser.onMiscExtra(g_window.getMousePosition())
+  &save: true
+  &autoOpen: false
+
+  UIWidget
+    id: miniwindowIcon
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    margin-top: 2
+    margin-left: 4
+    size: 12 12
+    image-source: /images/icons/icon_misc
+    image-smooth: false
+
+  Label
+    id: miniwindowTitle
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    anchors.right: miniwindowHeader.right
+    margin-top: 2
+    margin-left: 20
+    margin-right: 50
+    font: verdana-11px-monochrome
+    height: 13
+    color: #9d9d9dff
+    !text: tr('Misc Analyser')
+
+  ScrollablePanel
+    id: contentsPanel
+    anchors.fill: parent
+    margin: 16 18 5 5
+    vertical-scrollbar: miniwindowScrollBar
+
+    Label
+      id: sessionLabel
+      !text: tr('Session:')
+      anchors.top: parent.top
+      anchors.left: parent.left
+      text-auto-resize: true
+      color: #c0c0c0
+      font: Verdana Bold-11px
+
+    Label
+      id: session
+      !text: tr('00:00h')
+      anchors.top: parent.top
+      anchors.right: parent.right
+      text-auto-resize: true
+      color: #c0c0c0
+      font: Verdana Bold-11px
+
+    Label
+      id: charmHeader
+      !text: tr('Charm')
+      anchors.top: sessionLabel.bottom
+      anchors.left: parent.left
+      margin-top: 8
+      text-auto-resize: true
+      color: #f4f4f4
+      font: Verdana Bold-11px
+
+    Panel
+      id: charmList
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 2
+      layout:
+        type: verticalBox
+        fit-children: true
+
+    HorizontalSeparator
+      id: sepCharm
+      anchors.top: charmList.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 7
+
+    Label
+      id: imbuementHeader
+      !text: tr('Imbuement')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 6
+      text-auto-resize: true
+      color: #f4f4f4
+      font: Verdana Bold-11px
+
+    Panel
+      id: imbuementList
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 2
+      layout:
+        type: verticalBox
+        fit-children: true
+
+    HorizontalSeparator
+      id: sepImbuement
+      anchors.top: imbuementList.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 7
+
+    Label
+      id: upgradeHeader
+      !text: tr('Item Upgrade')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 6
+      text-auto-resize: true
+      color: #f4f4f4
+      font: Verdana Bold-11px
+
+    Panel
+      id: upgradeList
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 2
+      layout:
+        type: verticalBox
+        fit-children: true

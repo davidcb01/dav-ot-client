@@ -1,0 +1,95 @@
+ConsumableTile < UIWidget
+  size: 38 38
+  background-color: #2b2b2b
+  border-width: 1
+  border-color: #b46be6
+  phantom: false
+
+  Item
+    id: item
+    size: 32 32
+    anchors.centerIn: parent
+    virtual: true
+    phantom: true
+
+  UIWidget
+    id: iconFallback
+    size: 28 28
+    anchors.centerIn: parent
+    phantom: true
+    visible: false
+
+  Label
+    id: timer
+    !text: tr('0:00')
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-top: 2
+    text-align: center
+    font: Verdana Bold-11px
+    color: #ffffff
+    text-wrap: false
+    phantom: true
+
+MiniWindow
+  id: consumableAnalyserMiniWindow
+  &type: 'consumableTimers'
+  !text: tr('Consumable Timers')
+  height: 110
+  @onExtra: modules.game_analyser.onConsumableExtra(g_window.getMousePosition())
+  &save: true
+  &autoOpen: false
+
+  UIWidget
+    id: miniwindowIcon
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    margin-top: 2
+    margin-left: 4
+    size: 12 12
+    image-source: /images/icons/icon_misc
+    image-smooth: false
+
+  Label
+    id: miniwindowTitle
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    anchors.right: miniwindowHeader.right
+    margin-top: 2
+    margin-left: 20
+    margin-right: 50
+    font: verdana-11px-monochrome
+    height: 13
+    color: #9d9d9dff
+    !text: tr('Consumable Timers')
+
+  ScrollablePanel
+    id: contentsPanel
+    anchors.fill: parent
+    margin: 18 18 5 6
+    vertical-scrollbar: miniwindowScrollBar
+
+    Panel
+      id: itemsGrid
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      layout:
+        type: grid
+        cell-size: 38 38
+        cell-spacing: 4
+        flow: true
+        fit-children: true
+
+    Label
+      id: emptyLabel
+      !text: tr('No active consumables')
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 8
+      text-align: center
+      color: #909090
+      font: verdana-11px-monochrome
+      visible: true
