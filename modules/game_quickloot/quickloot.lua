@@ -228,10 +228,37 @@ function QuickLoot.Define()
 
         -- Store lootContainers globally so other modules can access it
         -- Store a copy to avoid interfering with the local variable
+        QuickLoot.data = QuickLoot.data or {}
+        QuickLoot.data.containerRefs = QuickLoot.data.containerRefs or {}
         QuickLoot.lootContainers = {}
         if lootContainers then
             for i, container in ipairs(lootContainers) do
                 QuickLoot.lootContainers[i] = {container[1], container[2], container[3]}
+            end
+        end
+
+        -- Reconcile saved exact container refs with server-reported item IDs
+        local activeCats = {}
+        for _, entry in ipairs(QuickLoot.lootContainers) do
+            local catKey = tostring(entry[1])
+            activeCats[catKey] = true
+            local ref = QuickLoot.data.containerRefs[catKey]
+            if ref then
+                if (entry[2] or 0) == 0 then
+                    ref.obtain = nil
+                elseif ref.obtain and ref.obtain.itemId ~= entry[2] then
+                    ref.obtain = { itemId = entry[2] }
+                end
+                if (entry[3] or 0) == 0 then
+                    ref.loot = nil
+                elseif ref.loot and ref.loot.itemId ~= entry[3] then
+                    ref.loot = { itemId = entry[3] }
+                end
+            end
+        end
+        for catKey, _ in pairs(QuickLoot.data.containerRefs) do
+            if not activeCats[catKey] then
+                QuickLoot.data.containerRefs[catKey] = nil
             end
         end
 
@@ -300,6 +327,12 @@ function QuickLoot.Define()
         end
         quickLootController.ui.list:getLayout():enableUpdates()
         quickLootController.ui.list:getLayout():update()
+        if modules.game_containers and modules.game_containers.refreshAllQuickLootBadges then
+            modules.game_containers.refreshAllQuickLootBadges()
+        end
+        if modules.game_inventory and modules.game_inventory.refreshQuickLootBadges then
+            modules.game_inventory.refreshQuickLootBadges()
+        end
     end
 
     function QuickLoot.loadFilterItems()
@@ -352,6 +385,94 @@ function QuickLoot.Define()
         quickLootController.ui:hide()
     end
 
+    function QuickLoot.getContainerRoleForWidget(item, parentContainer, slotIndex, invSlot)
+        if not item or not item:isContainer() then
+            return nil
+        end
+        local itemId = item:getId()
+        if not itemId or itemId <= 0 then
+            return nil
+        end
+
+        local parentItemId = nil
+        local pos = item:getPosition()
+        local slotVal = slotIndex
+        local invVal = invSlot
+        if parentContainer and parentContainer.getContainerItem then
+            local pci = parentContainer:getContainerItem()
+            if pci then
+                parentItemId = pci:getId()
+            end
+        end
+        if pos and pos.x == 65535 then
+            if pos.y < 64 then
+                invVal = invVal or pos.y
+            else
+                slotVal = slotVal or pos.z
+            end
+        end
+
+        local function refMatches(ref, roleItemId)
+            if ref and ref.itemId == itemId then
+                if ref.itemPtr and ref.itemPtr == item then
+                    return true
+                end
+                if ref.invSlot or ref.slot ~= nil or ref.parentItemId then
+                    if invVal and ref.invSlot == invVal then
+                        return true
+                    end
+                    if ref.slot ~= nil and slotVal ~= nil and ref.slot == slotVal and (not ref.parentItemId or ref.parentItemId == parentItemId) then
+                        return true
+                    end
+                    return false
+                end
+                return true
+            end
+            return roleItemId and roleItemId == itemId
+        end
+
+        local isLoot, isObtain = false, false
+        local refs = QuickLoot.data and QuickLoot.data.containerRefs or {}
+        if type(QuickLoot.lootContainers) == 'table' then
+            for _, entry in pairs(QuickLoot.lootContainers) do
+                local catKey = tostring(entry[1])
+                local catRef = refs[catKey]
+                if entry[3] and entry[3] > 0 and refMatches(catRef and catRef.loot, catRef and catRef.loot and nil or entry[3]) then
+                    isLoot = true
+                end
+                if entry[2] and entry[2] > 0 and refMatches(catRef and catRef.obtain, catRef and catRef.obtain and nil or entry[2]) then
+                    isObtain = true
+                end
+            end
+        end
+        for _, catRef in pairs(refs) do
+            if catRef.loot and refMatches(catRef.loot, nil) then
+                isLoot = true
+            end
+            if catRef.obtain and refMatches(catRef.obtain, nil) then
+                isObtain = true
+            end
+        end
+
+        if isLoot and isObtain then
+            return 'both'
+        elseif isLoot then
+            return 'loot'
+        elseif isObtain then
+            return 'obtain'
+        end
+        return nil
+    end
+
+    local function refreshQuickLootVisuals()
+        if modules.game_containers and modules.game_containers.refreshAllQuickLootBadges then
+            modules.game_containers.refreshAllQuickLootBadges()
+        end
+        if modules.game_inventory and modules.game_inventory.refreshQuickLootBadges then
+            modules.game_inventory.refreshQuickLootBadges()
+        end
+    end
+
     function QuickLoot.confirmError()
         QuickLoot.ErrorWindow:destroy()
         quickLootController.ui:show()
@@ -386,8 +507,25 @@ function QuickLoot.Define()
                 elseif clickedWidget:getClassName() == "UIItem" and not clickedWidget:isVirtual() then
                     if clickedWidget:getItem() and clickedWidget:getItem():isContainer() then
                         item = clickedWidget:getItem()
+                        local catId = tostring(QuickLoot.lastSelectBag:getId())
+                        local role = (QuickLoot.actionsId == 4) and 'obtain' or 'loot'
+                        local pos = item:getPosition()
+                        local parentCtn = item.getParentContainer and item:getParentContainer() or nil
+                        local parentItemId = parentCtn and parentCtn:getContainerItem() and parentCtn:getContainerItem():getId() or nil
+                        QuickLoot.data = QuickLoot.data or {}
+                        QuickLoot.data.containerRefs = QuickLoot.data.containerRefs or {}
+                        QuickLoot.data.containerRefs[catId] = QuickLoot.data.containerRefs[catId] or {}
+                        QuickLoot.data.containerRefs[catId][role] = {
+                            itemId = item:getId(),
+                            itemPtr = item,
+                            parentItemId = parentItemId,
+                            slot = (pos and pos.x == 65535 and pos.y >= 64) and pos.z or nil,
+                            invSlot = (pos and pos.x == 65535 and pos.y < 64) and pos.y or nil
+                        }
                         g_game.openContainerQuickLoot(QuickLoot.actionsId, QuickLoot.lastSelectBag:getId(),
                             item:getPosition(), item:getId(), item:getStackPos())
+                        QuickLoot.save()
+                        refreshQuickLootVisuals()
                     else
                         QuickLoot.ErrorWindow = displayGeneralBox(tr("Invalid Loot Container"), tr(
                             "You can only select containers you carry in your inventory."), {
@@ -429,12 +567,31 @@ function QuickLoot.Define()
     end
 
     function QuickLoot:clearItem()
+        local catId = tostring(self:getParent():getId())
+        local role = (self.borrar == 5 or self.borrar == 4) and 'obtain' or 'loot'
+        if self.borrar == 1 or self.borrar == 5 then
+            if QuickLoot.data and QuickLoot.data.containerRefs and QuickLoot.data.containerRefs[catId] then
+                if self.borrar == 1 then
+                    QuickLoot.data.containerRefs[catId].loot = nil
+                else
+                    QuickLoot.data.containerRefs[catId].obtain = nil
+                end
+            end
+        end
         if self.borrar == 1 then
             self:getParent().item2:setItem(nil)
+            if QuickLoot.data and QuickLoot.data.containerRefs and QuickLoot.data.containerRefs[catId] then
+                QuickLoot.data.containerRefs[catId].loot = nil
+            end
         else
             self:getParent().item:setItem(nil)
+            if QuickLoot.data and QuickLoot.data.containerRefs and QuickLoot.data.containerRefs[catId] then
+                QuickLoot.data.containerRefs[catId].obtain = nil
+            end
         end
         g_game.openContainerQuickLoot(self.borrar, self:getParent():getId(), {}, nil, nil, nil)
+        QuickLoot.save()
+        refreshQuickLootVisuals()
     end
 
     function QuickLoot:clearFilterItem()

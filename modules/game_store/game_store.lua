@@ -636,10 +636,29 @@ function onParseStoreGetPurchaseStatus(purchaseStatus)
     messageBox = g_ui.createWidget('confirmarSHOP', g_ui.getRootWidget())
     messageBox.Box:setText(purchaseStatus)
     messageBox.buttonAnimation.animation:setImageClip("0 0 108 108")
+    local animationEvent = nil
+    local closeEvent = nil
+    local function finishPurchasePopup()
+        if animationEvent then
+            removeEvent(animationEvent)
+            animationEvent = nil
+        end
+        if closeEvent then
+            removeEvent(closeEvent)
+            closeEvent = nil
+        end
+        destroyWindow({messageBox})
+        if controllerShop.ui then
+            controllerShop.ui:show()
+            controllerShop.ui:raise()
+        end
+        fixServerNoSend0xF2()
+    end
+    messageBox.onEscape = finishPurchasePopup
     messageBox.buttonAnimation.onClick = function(widget)
         messageBox.buttonAnimation:disable()
         local phase = 0
-        local animationEvent = periodicalEvent(function()
+        animationEvent = periodicalEvent(function()
             if messageBox and messageBox.buttonAnimation and messageBox.buttonAnimation.animation then
                 messageBox.buttonAnimation.animation:setImageClip((phase % 13 * 108) .. " 0 108 108")
                 phase = phase + 1
@@ -649,16 +668,8 @@ function onParseStoreGetPurchaseStatus(purchaseStatus)
             end
         end, function()
             return messageBox and messageBox.buttonAnimation and messageBox.buttonAnimation.animation
-        end, 120, 120)
-        controllerShop:scheduleEvent(function()
-            destroyWindow({messageBox})
-            controllerShop.ui:show()
-            if animationEvent then
-                removeEvent(animationEvent)
-                animationEvent = nil
-            end
-            fixServerNoSend0xF2()
-        end, 2000)
+        end, 60, 60)
+        closeEvent = controllerShop:scheduleEvent(finishPurchasePopup, 650)
     end
 end
 
@@ -1078,7 +1089,34 @@ function hide()
     if not controllerShop.ui then
         return
     end
+    if controllerShop.ui.SearchEdit then
+        controllerShop.ui.SearchEdit:setText('')
+    end
     controllerShop.ui:hide()
+end
+
+function openCatalogOffer(categoryHint, query)
+    if not controllerShop.ui then
+        return
+    end
+    show()
+    local q = tostring(query or ''):trim()
+    if controllerShop.ui.SearchEdit then
+        controllerShop.ui.SearchEdit:setText(q)
+    end
+    controllerShop:scheduleEvent(function()
+        if not controllerShop.ui or not controllerShop.ui:isVisible() then
+            return
+        end
+        if q ~= '' then
+            if controllerShop.ui.openedCategory ~= nil then
+                close(controllerShop.ui.openedCategory)
+            end
+            g_game.sendRequestStoreSearch(q, 0, 1)
+        elseif categoryHint and categoryHint ~= '' then
+            g_game.requestStoreOffers(categoryHint, '', 0, 1)
+        end
+    end, 220)
 end
 
 function toggle()

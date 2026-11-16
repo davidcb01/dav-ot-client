@@ -45,12 +45,39 @@ function setFilter(filter)
     g_game.imbuementDurations(imbuementTrackerButton:isOn())
 end
 
+local refreshTrackerEvent = nil
+local function scheduleImbuementTrackerRefresh(delayMs)
+    if refreshTrackerEvent then
+        removeEvent(refreshTrackerEvent)
+        refreshTrackerEvent = nil
+    end
+    refreshTrackerEvent = scheduleEvent(function()
+        refreshTrackerEvent = nil
+        if g_game.isOnline() and imbuementTrackerButton and imbuementTrackerButton:isOn() then
+            g_game.imbuementDurations(true)
+        end
+    end, delayMs or 300)
+end
+
+local function onImbuementTrackerInventoryChange()
+    scheduleImbuementTrackerRefresh(250)
+end
+
+local function onImbuementWindowRefresh()
+    -- Exceed Canary's 1000ms updateImbuementTrackerStats debounce when imbuing an equipped item
+    scheduleImbuementTrackerRefresh(1100)
+end
+
 function initialize()
     g_ui.importStyle('imbuementtracker')
     connect(g_game, {
         onGameStart = onGameStart,
         onGameEnd = onGameEnd,
-        onUpdateImbuementTracker = onUpdateImbuementTracker
+        onUpdateImbuementTracker = onUpdateImbuementTracker,
+        onImbuementWindow = onImbuementWindowRefresh
+    })
+    connect(LocalPlayer, {
+        onInventoryChange = onImbuementTrackerInventoryChange
     })
     
     imbuementTracker = g_ui.createWidget('ImbuementTracker', modules.game_interface.getRightPanel())
@@ -121,6 +148,10 @@ function onMiniWindowOpen()
     if imbuementTrackerButton then
         imbuementTrackerButton:setOn(true)
     end
+    if g_game.isOnline() then
+        g_game.imbuementDurations(true)
+        scheduleImbuementTrackerRefresh(250)
+    end
 end
 
 function onMiniWindowClose()
@@ -130,10 +161,18 @@ function onMiniWindowClose()
 end
 
 function terminate()
+    if refreshTrackerEvent then
+        removeEvent(refreshTrackerEvent)
+        refreshTrackerEvent = nil
+    end
     disconnect(g_game, {
         onGameStart = onGameStart,
         onGameEnd = onGameEnd,
-        onUpdateImbuementTracker = onUpdateImbuementTracker
+        onUpdateImbuementTracker = onUpdateImbuementTracker,
+        onImbuementWindow = onImbuementWindowRefresh
+    })
+    disconnect(LocalPlayer, {
+        onInventoryChange = onImbuementTrackerInventoryChange
     })
 
     if imbuementTrackerButton then
@@ -264,13 +303,16 @@ end
 
 function onGameStart()
     if g_game.getClientVersion() >= 1100 then
+        loadFilters()
         imbuementTrackerButton = modules.game_mainpanel.addToggleButton('imbuementTrackerButton', tr('Imbuement Tracker'), '/images/options/button_imbuementtracker', toggle)
         imbuementTracker:setupOnStart()
         if imbuementTrackerButton then
             imbuementTrackerButton:setOn(imbuementTracker:isVisible())
         end
         g_game.imbuementDurations(imbuementTrackerButton:isOn())
-        loadFilters()
+        if imbuementTracker:isVisible() then
+            scheduleImbuementTrackerRefresh(400)
+        end
     end
 end
 

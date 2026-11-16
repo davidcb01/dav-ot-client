@@ -21,6 +21,7 @@ HelperTabButton < UIButton
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
     margin-left: 5
+    image-smooth: false
     phantom: true
 
   UILabel

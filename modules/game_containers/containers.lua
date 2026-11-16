@@ -31,22 +31,30 @@ function init()
         onSizeChange = onContainerChangeSize,
         onUpdateItem = onContainerUpdateItem
     })
-    connect(Game, {
-        onGameEnd = clean()
+    connect(LocalPlayer, {
+        onPositionChange = checkGroundContainersStillPresent
+    })
+    connect(g_game, {
+        onGameEnd = clean
     })
 
+    wrapGroundContainerOpenHook()
     reloadContainers()
 end
 
 function terminate()
+    stopGroundContainerWatcher()
     disconnect(Container, {
         onOpen = onContainerOpen,
         onClose = onContainerClose,
         onSizeChange = onContainerChangeSize,
         onUpdateItem = onContainerUpdateItem
     })
-    disconnect(Game, {
-        onGameEnd = clean()
+    disconnect(LocalPlayer, {
+        onPositionChange = checkGroundContainersStillPresent
+    })
+    disconnect(g_game, {
+        onGameEnd = clean
     })
 end
 
@@ -57,7 +65,139 @@ function reloadContainers()
     end
 end
 
+local pendingGroundOpen = nil
+local groundWatcherEvent = nil
+
+function wrapGroundContainerOpenHook()
+    if g_game._davGroundHooked or not g_game.open then
+        return
+    end
+    g_game._davGroundHooked = true
+    local origOpen = g_game.open
+    g_game.open = function(item, parentContainer)
+        if item and item.getPosition then
+            local pos = item:getPosition()
+            if pos and pos.x and pos.x ~= 65535 and pos.x > 0 then
+                pendingGroundOpen = {
+                    pos = { x = pos.x, y = pos.y, z = pos.z },
+                    itemId = item:getId(),
+                    ts = g_clock.millis()
+                }
+            else
+                pendingGroundOpen = nil
+            end
+        end
+        return origOpen(item, parentContainer)
+    end
+end
+
+function stopGroundContainerWatcher()
+    if groundWatcherEvent then
+        removeEvent(groundWatcherEvent)
+        groundWatcherEvent = nil
+    end
+end
+
+function checkGroundContainersStillPresent()
+    local player = g_game.getLocalPlayer()
+    local pPos = player and player:getPosition() or nil
+    local anyGround = false
+    for _, container in pairs(g_game.getContainers()) do
+        if container._groundPos and container._groundItemId then
+            anyGround = true
+            local gp = container._groundPos
+            local stillHere = false
+            if pPos and gp.z == pPos.z and math.max(math.abs(pPos.x - gp.x), math.abs(pPos.y - gp.y)) <= 1 then
+                local tile = g_map.getTile(gp)
+                if tile then
+                    for _, th in ipairs(tile:getThings()) do
+                        if th:isItem() and th:getId() == container._groundItemId then
+                            stillHere = true
+                            break
+                        end
+                    end
+                end
+            end
+            if not stillHere then
+                container._groundPos = nil
+                container._groundItemId = nil
+                g_game.close(container)
+                destroy(container)
+            end
+        end
+    end
+    if not anyGround then
+        stopGroundContainerWatcher()
+    end
+end
+
+local function ensureGroundContainerWatcher()
+    if not groundWatcherEvent then
+        groundWatcherEvent = cycleEvent(checkGroundContainersStillPresent, 200)
+    end
+end
+
+local function getQuickLootContainerRole(item, parentContainer, slotIndex)
+    if not item or not item:isContainer() then
+        return nil
+    end
+    local ql = modules.game_quickloot and modules.game_quickloot.QuickLoot
+    if ql and ql.getContainerRoleForWidget then
+        return ql.getContainerRoleForWidget(item, parentContainer, slotIndex)
+    end
+    return nil
+end
+
+local function applyQuickLootBadge(itemWidget, item, parentContainer, slotIndex)
+    if not itemWidget or itemWidget:isDestroyed() then
+        return
+    end
+    local badge = itemWidget:getChildById('quickLootMark')
+    local role = getQuickLootContainerRole(item, parentContainer, slotIndex)
+    if role then
+        if not badge then
+            badge = g_ui.createWidget('UIWidget', itemWidget)
+            badge:setId('quickLootMark')
+            badge:setSize({ width = 11, height = 11 })
+            badge:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+            badge:addAnchor(AnchorRight, 'parent', AnchorRight)
+            badge:setMarginBottom(1)
+            badge:setMarginRight(1)
+            badge:setPhantom(true)
+            badge:setImageSource('/game_quickloot/images/container_badge')
+        end
+        if role == 'obtain' then
+            badge:setImageColor('#4fc3f7')
+        elseif role == 'both' then
+            badge:setImageColor('#ffd54f')
+        else
+            badge:setImageColor('#ffffff')
+        end
+        badge:show()
+        badge:raise()
+    else
+        if badge then
+            badge:hide()
+        end
+    end
+end
+
+function refreshAllQuickLootBadges()
+    for _, container in pairs(g_game.getContainers()) do
+        if container.window and not container.window:isDestroyed() and container.itemsPanel then
+            for slot = 0, container:getCapacity() - 1 do
+                local itemWidget = container.itemsPanel:getChildById('item' .. slot)
+                if itemWidget then
+                    applyQuickLootBadge(itemWidget, itemWidget:getItem(), container, slot)
+                end
+            end
+        end
+    end
+end
+
 function clean()
+    stopGroundContainerWatcher()
+    pendingGroundOpen = nil
     for containerid, container in pairs(g_game.getContainers()) do
         destroy(container)
     end
@@ -752,6 +892,7 @@ function refreshContainerItems(container)
         itemWidget:setItem(container:getItem(slot))
         ItemsDatabase.setRarityItem(itemWidget, container:getItem(slot))
         ItemsDatabase.setTier(itemWidget, container:getItem(slot))
+        applyQuickLootBadge(itemWidget, container:getItem(slot), container, slot)
         itemWidget:setShowDuration(g_game.getFeature(GameThingClock) and modules.client_options.getOption('showExpiryInContainers'))
         itemWidget:setShowCharges(g_game.getFeature(GameThingCounter) and modules.client_options.getOption('showExpiryInContainers'))
     end
@@ -939,6 +1080,15 @@ function refreshContainerPages(container)
 end
 
 function onContainerOpen(container, previousContainer)
+    if pendingGroundOpen and (g_clock.millis() - pendingGroundOpen.ts) <= 2500
+       and not container:hasParent()
+       and container:getContainerItem() and container:getContainerItem():getId() == pendingGroundOpen.itemId then
+        container._groundPos = pendingGroundOpen.pos
+        container._groundItemId = pendingGroundOpen.itemId
+        pendingGroundOpen = nil
+        ensureGroundContainerWatcher()
+    end
+
     local containerWindow
     if previousContainer then
         containerWindow = previousContainer.window
@@ -1066,10 +1216,12 @@ function onContainerOpen(container, previousContainer)
         itemWidget:setItem(container:getItem(slot))
         ItemsDatabase.setRarityItem(itemWidget, container:getItem(slot))
         ItemsDatabase.setTier(itemWidget, container:getItem(slot))
+        applyQuickLootBadge(itemWidget, container:getItem(slot), container, slot)
         itemWidget:setShowDuration(g_game.getFeature(GameThingClock) and modules.client_options.getOption('showExpiryInContainers'))
         itemWidget:setShowCharges(g_game.getFeature(GameThingCounter) and modules.client_options.getOption('showExpiryInContainers'))
         itemWidget:setMargin(0)
         itemWidget.position = container:getSlotPosition(slot)
+        applyQuickLootBadge(itemWidget, container:getItem(slot), container, slot)
 
         if not container:isUnlocked() then
             itemWidget:setBorderColor('red')
@@ -1086,29 +1238,66 @@ function onContainerOpen(container, previousContainer)
     local cellSize = layout:getCellSize()
     local step = cellSize.height + layout:getCellSpacing()
     local numLines = math.max(layout:getNumLines(), 1)
-    local chromeHeight = container:hasPages() and 55 or 30
-    containerWindow:setContentMinimumHeight(cellSize.height + 6)
+    local contentsPadV = (containerPanel:getPaddingTop() or 6) + (containerPanel:getPaddingBottom() or 6)
+    local chromeHeight = (container:hasPages() and 54 or 22) + contentsPadV
+    containerWindow:setContentMinimumHeight(cellSize.height + contentsPadV)
+    containerWindow:setContentMaximumHeight(numLines * step + contentsPadV + (container:hasPages() and 28 or 4))
 
     local resizeBorder = containerWindow:getChildById('bottomResizeBorder')
     if resizeBorder then
         resizeBorder:setMinimum(step + chromeHeight)
         resizeBorder:setMaximum(numLines * step + chromeHeight)
     end
-    containerWindow.onGeometryChange = function(widget, oldRect, newRect)
-        if not oldRect or not newRect or oldRect.width ~= newRect.width then
-            if layout then
-                layout:update()
-                if resizeBorder then
-                    local nl = math.max(layout:getNumLines(), 1)
-                    resizeBorder:setMinimum(step + chromeHeight)
-                    resizeBorder:setMaximum(nl * step + chromeHeight)
-                end
+
+    local pendingLayoutSync = nil
+    local function syncContainerLayoutAndScroll()
+        pendingLayoutSync = nil
+        if not containerWindow or containerWindow:isDestroyed() or not containerPanel or containerPanel:isDestroyed() then
+            return
+        end
+        if layout then
+            layout:update()
+            local nl = math.max(layout:getNumLines(), 1)
+            containerWindow:setContentMaximumHeight(nl * step + contentsPadV + (container:hasPages() and 28 or 4))
+            if resizeBorder then
+                resizeBorder:setMinimum(step + chromeHeight)
+                resizeBorder:setMaximum(nl * step + chromeHeight)
             end
         end
+        if containerPanel.updateScrollBars then
+            containerPanel:updateScrollBars()
+        end
+        if scrollbar then
+            local maxVal = scrollbar:getMaximum()
+            if maxVal <= 0 then
+                scrollbar:setValue(0)
+                if containerPanel.setVirtualOffset then
+                    containerPanel:setVirtualOffset({ x = 0, y = 0 })
+                end
+            elseif scrollbar:getValue() > maxVal then
+                scrollbar:setValue(maxVal)
+            end
+        end
+    end
+
+    local function scheduleContainerLayoutSync()
+        if pendingLayoutSync then
+            return
+        end
+        pendingLayoutSync = addEvent(syncContainerLayoutAndScroll)
+    end
+
+    containerPanel.onGeometryChange = function(widget, oldRect, newRect)
+        scheduleContainerLayoutSync()
+    end
+
+    containerWindow.onGeometryChange = function(widget, oldRect, newRect)
+        scheduleContainerLayoutSync()
         if UIMiniWindow and UIMiniWindow.onGeometryChange then
             UIMiniWindow.onGeometryChange(widget, oldRect, newRect)
         end
     end
+    scheduleContainerLayoutSync()
     -- Enables dragging only when mouse press occurs within window bounds (with tolerance margins)
     -- and not over the containerPanel child widget
     -- On Drop: When an item is dropped, it is placed at the nearest valid parent location, such as in a grid.
@@ -1214,6 +1403,7 @@ function onContainerUpdateItem(container, slot, item, oldItem)
     itemWidget:setItem(item)
     ItemsDatabase.setRarityItem(itemWidget, item)
     ItemsDatabase.setTier(itemWidget, item)
+    applyQuickLootBadge(itemWidget, item, container, slot)
     itemWidget:setShowDuration(g_game.getFeature(GameThingClock) and modules.client_options.getOption('showExpiryInContainers'))
     itemWidget:setShowCharges(g_game.getFeature(GameThingCounter) and modules.client_options.getOption('showExpiryInContainers'))
     

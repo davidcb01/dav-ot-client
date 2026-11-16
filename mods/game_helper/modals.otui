@@ -13,6 +13,24 @@ HelperBlueButton < UIButton
   $disabled:
     color: #7f7f7f
 
+RowActionButton < UIButton
+  size: 18 18
+  focusable: false
+  font: verdana-11px-monochrome
+  color: #dfdfdf
+  background-color: #3a3a3a
+  border-width: 1
+  border-color-top: #686868
+  border-color-left: #686868
+  border-color-right: #222222
+  border-color-bottom: #222222
+  padding: 0
+  $hover !disabled:
+    background-color: #4f4f4f
+  $pressed:
+    background-color: #2b2b2b
+    text-offset: 1 1
+
 HelperSmallButton < UIButton
   height: 18
   focusable: false
@@ -516,12 +534,39 @@ ConditionSettingsModal < MainWindow
     anchors.left: parent.left
     margin-top: 6
     !text: tr('Cast If Trapped')
-    width: 235
+    width: 145
+
+  Label
+    id: lblTrappedGe
+    text: >=
+    anchors.left: condTrapped.right
+    anchors.verticalCenter: condTrapped.verticalCenter
+    margin-left: 2
+    color: #aaaaaa
+    text-auto-resize: true
+
+  TextEdit
+    id: condTrappedCount
+    anchors.left: lblTrappedGe.right
+    anchors.verticalCenter: condTrapped.verticalCenter
+    margin-left: 4
+    width: 28
+    height: 18
+    text: 8
+
+  Label
+    id: lblTrappedCr
+    text: cr
+    anchors.left: condTrappedCount.right
+    anchors.verticalCenter: condTrapped.verticalCenter
+    margin-left: 4
+    color: #dddddd
+    text-auto-resize: true
 
   HelperInfoIcon
     anchors.right: parent.right
     anchors.verticalCenter: condTrapped.verticalCenter
-    !tooltip: tr('Only cast this spell when surrounded/trapped')
+    !tooltip: tr('Only cast this spell when at least X monsters are adjacent (1-8)')
 
   CheckBox
     id: condStopped
@@ -663,13 +708,13 @@ KeyCaptureModal < MainWindow
 
 CavebotSettingsModal < MainWindow
   id: cavebotSettingsModal
-  !text: tr('Cavebot & Dynamic Lure Settings')
-  size: 380 292
+  !text: tr('Cavebot & Lure Settings')
+  size: 400 326
   visible: false
   @onEscape: self:hide()
 
   Label
-    text: Stop walking (hold & kill) when monsters >=
+    text: Stop walking when monster >=
     anchors.top: parent.top
     anchors.left: parent.left
     margin-top: 6
@@ -684,7 +729,7 @@ CavebotSettingsModal < MainWindow
     text: 3
 
   Label
-    text: Resume walking when monsters <=
+    text: Resume walking when monster <=
     anchors.top: cbStopMonstersEdit.bottom
     anchors.left: parent.left
     margin-top: 10
@@ -698,13 +743,38 @@ CavebotSettingsModal < MainWindow
     width: 48
     text: 1
 
-  CheckBox
-    id: cbDynamicLureCheck
+  Label
+    id: cbLureModeLbl
+    text: Lure Mode:
     anchors.top: cbWalkMonstersEdit.bottom
     anchors.left: parent.left
     margin-top: 12
-    width: 340
-    !text: tr('Enable Dynamic Lure (speed adapts to monster count)')
+    color: #f0d080
+
+  CheckBox
+    id: cbLureBoxModeCheck
+    anchors.top: cbLureModeLbl.bottom
+    anchors.left: parent.left
+    margin-top: 6
+    width: 360
+    !text: tr('Box Lure (Stop at Start Lure + Stand + End Lure; skip if < min)')
+    checked: true
+
+  CheckBox
+    id: cbLureGlobalModeCheck
+    anchors.top: cbLureBoxModeCheck.bottom
+    anchors.left: parent.left
+    margin-top: 5
+    width: 360
+    !text: tr('Hunt Lure (Global Stop >= / Resume <= on waypoints)')
+
+  CheckBox
+    id: cbDynamicLureCheck
+    anchors.top: cbLureGlobalModeCheck.bottom
+    anchors.left: parent.left
+    margin-top: 10
+    width: 360
+    !text: tr('Enable Dynamic Lure Speed (adapts speed by monster count)')
     checked: true
 
   Label

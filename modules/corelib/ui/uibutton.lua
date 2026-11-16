@@ -16,9 +16,13 @@ end
 function UIButton:onDestroy()
     -- Clean up cursor if it was pushed
     if self.cursorPushed then
-        if modules.client_options and modules.client_options.getOption('nativeCursor') then
-            g_window.restoreMouseCursor()
-        else
+        if not g_ui.isMouseGrabbed() then
+            if modules.client_options and modules.client_options.getOption('nativeCursor') then
+                g_window.restoreMouseCursor()
+            else
+                g_mouse.popCursor('pointerbutton')
+            end
+        elseif not (modules.client_options and modules.client_options.getOption('nativeCursor')) then
             g_mouse.popCursor('pointerbutton')
         end
         self.cursorPushed = false
@@ -33,12 +37,13 @@ function UIButton:onHoverChange(hovered)
     
     local nativeCursor = modules.client_options.getOption('nativeCursor')
     local animatedCursor = modules.client_options.getOption('showAnimatedCursor')
+    local mouseGrabbed = g_ui.isMouseGrabbed()
     
     -- Animated cursor mode - show pointer button on hover
     if animatedCursor and not nativeCursor then
         if hovered then
-            -- Only push if we haven't already
-            if not self.cursorPushed then
+            -- Do not override target/crosshair cursor while mouse is grabbed
+            if not mouseGrabbed and not self.cursorPushed then
                 g_mouse.pushCursor('pointerbutton')
                 self.cursorPushed = true
             end
@@ -50,15 +55,17 @@ function UIButton:onHoverChange(hovered)
             end
         end
     elseif nativeCursor then
-        -- Native cursor mode - use hand pointer
+        -- Native cursor mode - use hand pointer (do not clobber 'cross' cursor while mouse is grabbed)
         if hovered then
-            if not self.cursorPushed then
+            if not mouseGrabbed and not self.cursorPushed then
                 g_window.setSystemCursor('hand')
                 self.cursorPushed = true
             end
         else
             if self.cursorPushed then
-                g_window.restoreMouseCursor()
+                if not mouseGrabbed then
+                    g_window.restoreMouseCursor()
+                end
                 self.cursorPushed = false
             end
         end

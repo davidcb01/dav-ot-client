@@ -73,8 +73,18 @@ function startup()
     else
         EnterGame.firstShow()
     end
-    if g_app.hasUpdater() and g_sounds then
-        g_sounds.setAudioEnabled(g_settings.getBoolean('enableAudio', true))
+    if g_sounds then
+        local audioEnabled = g_settings.getBoolean('enableAudio', true) and (g_settings.getNumber('soundMaster', 25) > 1)
+        g_sounds.setAudioEnabled(audioEnabled)
+        if not audioEnabled then
+            for _, cid in pairs(SoundChannels) do
+                local ch = g_sounds.getChannel(cid)
+                if ch then
+                    ch:setGain(0)
+                    ch:setEnabled(false)
+                end
+            end
+        end
     end
 end
 

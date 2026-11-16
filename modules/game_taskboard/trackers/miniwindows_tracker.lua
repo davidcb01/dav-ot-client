@@ -69,6 +69,18 @@ function TaskBoardController:initTracker()
     Tracker.Bounty.setInactive()
     Tracker.Weekly.clearAll()
 
+    for idx = 1, 3 do
+        local slotWidget = preyTracker.contentsPanel["slot" .. idx]
+        if slotWidget then
+            slotWidget.onClick = function()
+                if modules.game_prey and modules.game_prey.show then
+                    modules.game_prey.show()
+                end
+            end
+            slotWidget:setTooltip(tr("Inactive Prey.\n\nClick in this window to open the prey dialog."))
+        end
+    end
+
     preyTracker.onOpen = function()
         if taskboardTrackerButton then
             taskboardTrackerButton:setOn(true)
@@ -210,6 +222,9 @@ function Tracker.Prey.updateWidget(slot, state, currentHolderOutfit, preySlot, s
         local creatureAndBonus = preySlot.active.creatureAndBonus
         local duration = creatureAndBonus.timeLeft:getText()
         trackerSlot.creature:setOutfit(currentHolderOutfit)
+        if trackerSlot.creature.setCenter then
+            trackerSlot.creature:setCenter(true)
+        end
         trackerSlot.creatureName:setText(short_text(preySlot.title:getText(), 12))
         trackerSlot.time:setPercent(creatureAndBonus.timeLeft:getPercent())
         trackerSlot.preyType:setImageSource(Tracker.Prey.getSmallIconPath(preySlot.bonusType))
@@ -228,6 +243,7 @@ function Tracker.Prey.updateWidget(slot, state, currentHolderOutfit, preySlot, s
         trackerSlot.time:setPercent(0)
         trackerSlot.preyAutoExtend:setImageSource(Tracker.Prey.getExtendIcon(preySlot.lockType))
         trackerSlot.preyType:setImageSource(Tracker.Prey.getSmallIconPath(preySlot.bonusType))
+        trackerSlot:setTooltip(tr("Inactive Prey.\n\nClick in this window to open the prey dialog."))
         trackerSlot.onClick = function()
             showCallback()
         end

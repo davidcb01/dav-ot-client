@@ -45,6 +45,16 @@ gameLeftLockPanel = nil
 
 local INSTANT_USE_COIN_IDS = { [3031] = true, [3035] = true, [3043] = true }
 
+local function useThingSafely(thing)
+    if not thing then
+        return nil
+    end
+    if thing.isItem and thing:isItem() and INSTANT_USE_COIN_IDS[thing:getId()] and thing.isMultiUse and thing:isMultiUse() then
+        return g_game.useWith(thing, thing)
+    end
+    return g_game.use(thing)
+end
+
 function shouldStartUseWith(thing)
     if not thing or not thing:isMultiUse() then
         return false
@@ -902,7 +912,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
                 end, shortcut)
             else
                 menu:addOption(tr('Use'), function()
-                    g_game.use(useThing)
+                    useThingSafely(useThing)
                 end, shortcut)
             end
         end
@@ -947,7 +957,13 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
             menu:addOption(optionText, function()
                 local added = modules.game_npctrade.toggleBlacklist(itemId)
                 if modules.game_textmessage then
-                    local itemName = lookThing:getName()
+                    local itemName = lookThing.getName and lookThing:getName() or nil
+                    if (not itemName or itemName == '') and g_things then
+                        local thingType = g_things.getThingType(itemId, ThingCategoryItem)
+                        if thingType and thingType.getName then
+                            itemName = thingType:getName()
+                        end
+                    end
                     if not itemName or itemName == '' then
                         itemName = string.format('Item #%d', itemId)
                     end
@@ -1252,7 +1268,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                     startUseWith(useThing)
                     return true
                 else
-                    g_game.use(useThing)
+                    useThingSafely(useThing)
                     return true
                 end
             end
@@ -1324,7 +1340,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                         startUseWith(useThing)
                         return true
                     else
-                        g_game.use(useThing)
+                        useThingSafely(useThing)
                         return true
                     end
                 end
@@ -1351,7 +1367,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                     startUseWith(useThing)
                     return true
                 else
-                    local useResult = g_game.use(useThing)
+                    local useResult = useThingSafely(useThing)
 
                     if useResult ~= nil then
                         return true
@@ -1368,9 +1384,12 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                 -- If we couldn't use or pick up the item, try to walk to its position if possible
                 local position = useThing:getPosition()
                 if position and position.x ~= 0 and autoWalkPos then
-                    local player = g_game.getLocalPlayer()
-                    player:autoWalk(autoWalkPos)
-                    return true
+                    local useTile = g_map.getTile(position)
+                    if useTile and useTile:isWalkable() then
+                        local player = g_game.getLocalPlayer()
+                        player:autoWalk(autoWalkPos)
+                        return true
+                    end
                 end
 
                 return true
@@ -1437,7 +1456,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                     startUseWith(useThing)
                     return true
                 else
-                    g_game.use(useThing)
+                    useThingSafely(useThing)
                     return true
                 end
             end
@@ -1514,7 +1533,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                         startUseWith(useThing)
                         return true
                     else
-                        g_game.use(useThing)
+                        useThingSafely(useThing)
                         return true
                     end
                 end
@@ -1540,7 +1559,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                         startUseWith(useThing)
                         return true
                     else
-                        g_game.use(useThing)
+                        useThingSafely(useThing)
                         return true
                     end
                 end
@@ -1585,7 +1604,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                         startUseWith(useThing)
                         return true
                     else
-                        g_game.use(useThing)
+                        useThingSafely(useThing)
                         return true
                     end
                 end
@@ -1675,7 +1694,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                         startUseWith(useThing)
                         return true
                     else
-                        g_game.use(useThing)
+                        useThingSafely(useThing)
                         return true
                     end
                 end

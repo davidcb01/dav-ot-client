@@ -93,6 +93,68 @@ UIWidget
       margin-top: 7
       height: 22
 
+      OptionCheckBox
+        id: openNpcChatPopup
+        !text: tr('Open NPC chat popup')
+
+    SmallReversedQtPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+      margin-top: 7
+      height: 24
+
+      Label
+        id: rotateHoldLabel
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 4
+        color: #c0c0c0ff
+        text-auto-resize: true
+        !text: tr('To Rotate Your Character Hold:')
+
+      OptionCheckBox
+        id: rotateHoldCtrl
+        width: 48
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 8
+        !text: tr('Ctrl')
+
+      OptionCheckBox
+        id: rotateHoldShift
+        width: 52
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 6
+        !text: tr('Shift')
+
+      OptionCheckBox
+        id: rotateHoldAlt
+        width: 45
+        anchors.left: prev.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 6
+        !text: tr('Alt')
+
+    SmallReversedQtPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+      margin-top: 7
+      height: 22
+
+      OptionCheckBox
+        id: alwaysTurnTowardsDirection
+        !text: tr('Always turn towards the direction of movement')
+
+    SmallReversedQtPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+      margin-top: 7
+      height: 22
+
       OptionCheckBoxMarked
         id: returnDisablesChat
         !text: tr('Enter to disable chat')
@@ -215,16 +277,6 @@ UIWidget
         @onSetup: |
           local value = modules.client_options.getOption('walkStairsDelay')
           self:setText(tr('Walk delay after turn: %dms', value))
-
-    QtButton
-      id: hotkeysButton
-      !text: tr('Hotkeys Manager')
-      @onClick: modules.game_hotkeys.show()
-      anchors.top: prev.bottom
-      anchors.left: parent.left
-      margin-top: 12
-
-      size: 120 20
 
   VerticalScrollBar
     id: generalScrollBar

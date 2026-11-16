@@ -10,7 +10,9 @@ function UIDragIcon:display(item)
         end
         
         uiIcon:setItem(item)
+        uiIcon:setPhantom(true)
         uiIcon:show()
+        uiIcon:raise()
         
         connect(rootWidget, { onMouseMove = onMouseMove })
     end

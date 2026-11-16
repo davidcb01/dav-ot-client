@@ -39,43 +39,66 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
     end
 
     local selfHeight = self:getHeight() - (self:getPaddingTop() + self:getPaddingBottom())
-    if sumHeight <= selfHeight then
+    if selfHeight < 80 or sumHeight <= selfHeight then
         return
     end
 
     local removeChildren = {}
+    local function isProtectedContainer(child)
+        local cid = child and child:getId() or ''
+        return cid:find('^container%d+') ~= nil
+    end
 
     -- try to resize noRemoveChild
     local maximumHeight = selfHeight - (sumHeight - noRemoveChild:getHeight())
     if noRemoveChild:isResizeable() and noRemoveChild:getMinimumHeight() <= maximumHeight then
         sumHeight = sumHeight - noRemoveChild:getHeight() + maximumHeight
         addEvent(function()
-            noRemoveChild:setHeight(maximumHeight)
+            if noRemoveChild and not noRemoveChild:isDestroyed() then
+                noRemoveChild:setHeight(maximumHeight)
+            end
         end)
     end
 
-    -- try to remove no-save widget
+    -- try to minimize excess non-minimized widgets first (avoids closing backpacks on server)
     for i = #children, 1, -1 do
         if sumHeight <= selfHeight then
             break
         end
 
         local child = children[i]
-        if child ~= noRemoveChild and not child.save then
+        if child ~= noRemoveChild and child:isVisible() and not child:isOn() then
+            local prevH = child:getHeight()
+            child:minimize(true)
+            local newH = child:getHeight()
+            if prevH > newH then
+                sumHeight = sumHeight - (prevH - newH)
+            end
+        end
+    end
+
+    -- try to remove no-save non-container widget
+    for i = #children, 1, -1 do
+        if sumHeight <= selfHeight then
+            break
+        end
+
+        local child = children[i]
+        if child ~= noRemoveChild and not child.save and not isProtectedContainer(child) then
             local childHeight = child:getHeight()
             sumHeight = sumHeight - childHeight
             table.insert(removeChildren, child)
         end
     end
 
-    -- try to remove save widget
+    -- try to remove save non-container widget (never auto-close backpacks on relog/resize)
     for i = #children, 1, -1 do
         if sumHeight <= selfHeight then
             break
         end
 
         local child = children[i]
-        if child ~= noRemoveChild and child:isVisible() then
+        if child ~= noRemoveChild and child:isVisible() and not isProtectedContainer(child) then
             local childHeight = child:getHeight()
             sumHeight = sumHeight - childHeight
             table.insert(removeChildren, child)

@@ -276,95 +276,95 @@ Panel
         HelperSmallButton
           id: wpStandBtn
           text: Stand
-          width: 78
+          width: 66
           height: 20
           anchors.top: parent.top
           anchors.left: dirGridPanel.right
-          margin-left: 12
+          margin-left: 8
           @onClick: modules.game_helper.addCavebotWaypoint('Stand')
 
         HelperSmallButton
           id: wpNodeBtn
           text: Node
-          width: 78
+          width: 66
           height: 20
           anchors.top: parent.top
           anchors.left: wpStandBtn.right
-          margin-left: 4
+          margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('Node')
 
         HelperSmallButton
           id: wpRopeBtn
           text: Rope
-          width: 78
+          width: 66
           height: 20
           anchors.top: parent.top
           anchors.left: wpNodeBtn.right
-          margin-left: 4
+          margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('Rope')
 
         HelperSmallButton
           id: wpShovelBtn
           text: Shovel
-          width: 78
+          width: 66
           height: 20
           anchors.top: wpStandBtn.bottom
           anchors.left: dirGridPanel.right
-          margin-left: 12
+          margin-left: 8
           margin-top: 3
           @onClick: modules.game_helper.addCavebotWaypoint('Shovel')
 
         HelperSmallButton
           id: wpLadderBtn
           text: Ladder
-          width: 78
+          width: 66
           height: 20
           anchors.top: wpShovelBtn.top
           anchors.left: wpShovelBtn.right
-          margin-left: 4
+          margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('Ladder')
 
         HelperSmallButton
           id: wpHoleBtn
           text: Hole
-          width: 78
+          width: 66
           height: 20
           anchors.top: wpShovelBtn.top
           anchors.left: wpLadderBtn.right
-          margin-left: 4
+          margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('Hole')
 
         HelperSmallButton
           id: wpUseBtn
           text: Use Tile
-          width: 78
+          width: 66
           height: 20
           anchors.top: wpShovelBtn.bottom
           anchors.left: dirGridPanel.right
-          margin-left: 12
+          margin-left: 8
           margin-top: 3
           @onClick: modules.game_helper.addCavebotWaypoint('Use')
 
         HelperSmallButton
           id: wpStartLureBtn
           text: Start Lure
-          width: 78
+          width: 66
           height: 20
           color: #5ce65c
           anchors.top: wpUseBtn.top
           anchors.left: wpUseBtn.right
-          margin-left: 4
+          margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('Start Lure')
 
         HelperSmallButton
           id: wpEndLureBtn
           text: End Lure
-          width: 78
+          width: 66
           height: 20
           color: #ff9944
           anchors.top: wpUseBtn.top
           anchors.left: wpStartLureBtn.right
-          margin-left: 4
+          margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('End Lure')
 
         HorizontalSeparator
@@ -419,7 +419,7 @@ Panel
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        width: 280
+        width: 346
         image-source: /images/ui/1pixel_down_frame
 
         Minimap
@@ -477,7 +477,7 @@ Panel
         border-width: 1
         border-color: #191919
         vertical-scrollbar: wpScrollBar
-        auto-focus: first
+        auto-focus: none
 
       VerticalScrollBar
         id: wpScrollBar

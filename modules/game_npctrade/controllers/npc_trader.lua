@@ -52,6 +52,9 @@ function controllerNpcTrader:onOpenNpcTrade(items, currencyId, currencyName)
         end
     end
 
+    local hasSell = (#controllerNpcTrader.sellItems > 0)
+    controllerNpcTrader.hasSellItems = hasSell
+
     local currencyLabel = controllerNpcTrader:findWidget(".tradeCurrencyName")
     if currencyLabel then
         currencyLabel:setText(controllerNpcTrader.currencyName)
@@ -203,7 +206,7 @@ function controllerNpcTrader:onTradeListRendered()
                     end
                 end
                 if showBlacklist then
-                    child:setTooltip("Quick Sell Blacklist (ignorado no Sell All). Botao direito para remover.")
+                    child:setTooltip("Quick Sell Blacklist (skipped in Sell All). Right-click to remove.")
                 elseif child.removeTooltip then
                     child:removeTooltip()
                 end
@@ -491,6 +494,9 @@ function controllerNpcTrader:refreshPlayerGoods(skipFilter)
         self:updateAmount(self.amount)
     end
     self:updateSellAllButton()
+    if self.quickSellWindow and self.refreshQuickSellWindow then
+        self:refreshQuickSellWindow()
+    end
 end
 
 function controllerNpcTrader:executeTrade()
@@ -611,19 +617,19 @@ function controllerNpcTrader:getSellAllSummary(exceptions)
     end
 
     if sellableTypes > 15 then
-        table.insert(lines, string.format("... e mais %d tipos", sellableTypes - 15))
+        table.insert(lines, string.format("... and %d more types", sellableTypes - 15))
     end
 
     local tooltip = ""
     if sellableTypes > 0 then
         tooltip = table.concat(lines, "\n") .. string.format("\nTotal: %d %s", totalGold, self.currencyName or "Gold")
         if skippedBlacklist > 0 then
-            tooltip = tooltip .. string.format("\nIgnorados (Blacklist): %d tipos", skippedBlacklist)
+            tooltip = tooltip .. string.format("\nSkipped (Blacklist): %d types", skippedBlacklist)
         end
     elseif skippedBlacklist > 0 then
-        tooltip = string.format("Nenhum item elegivel (%d tipos protegidos na Quick Sell Blacklist).", skippedBlacklist)
+        tooltip = string.format("No eligible items (%d types protected in Quick Sell Blacklist).", skippedBlacklist)
     else
-        tooltip = "Nenhum item vendavel encontrado no inventario."
+        tooltip = "No sellable items found in inventory."
     end
 
     return {
@@ -644,7 +650,7 @@ function controllerNpcTrader:updateSellAllButton()
     if self.isSellingAll then
         btn:setEnabled(false)
         btn:setText("Selling...")
-        btn:setTooltip("Vendendo todos os itens...")
+        btn:setTooltip("Selling all items...")
         return
     end
 
@@ -663,20 +669,33 @@ function controllerNpcTrader:processSellAllQueue(queue, index)
     if not self.isTradeOpen then
         self.isSellingAll = false
         self.sellAllWithDelayEvent = nil
+        if self.updateQuickSellProgress then
+            self:updateQuickSellProgress(0, 0)
+        end
         return
     end
 
+    local total = #queue
     local batchSize = controllerNpcTrader.SELL_ALL_BATCH_SIZE or 5
-    local endIndex = math.min(#queue, index + batchSize - 1)
+    local endIndex = math.min(total, index + batchSize - 1)
     for i = index, endIndex do
         local entry = queue[i]
         g_game.sellItem(entry[1], entry[2], entry[3])
     end
 
-    if endIndex >= #queue then
+    if self.updateQuickSellProgress then
+        self:updateQuickSellProgress(endIndex, total)
+    end
+
+    if endIndex >= total then
         self.isSellingAll = false
         self.sellAllWithDelayEvent = nil
         self:updateSellAllButton()
+        if self.quickSellWindow and self.refreshQuickSellWindow then
+            scheduleEvent(function()
+                self:refreshQuickSellWindow()
+            end, 150)
+        end
         return
     end
 
@@ -736,12 +755,24 @@ function controllerNpcTrader:sellAll(delayed, exceptions)
     end
 
     if #queue <= (controllerNpcTrader.SELL_ALL_BATCH_SIZE or 5) then
+        local total = #queue
         for _, entry in ipairs(queue) do
             g_game.sellItem(entry[1], entry[2], entry[3])
         end
+        if self.updateQuickSellProgress then
+            self:updateQuickSellProgress(total, total)
+        end
         self:updateSellAllButton()
+        if self.quickSellWindow and self.refreshQuickSellWindow then
+            scheduleEvent(function()
+                self:refreshQuickSellWindow()
+            end, 150)
+        end
     else
         self.isSellingAll = true
+        if self.updateQuickSellProgress then
+            self:updateQuickSellProgress(0, #queue)
+        end
         self:updateSellAllButton()
         self:processSellAllQueue(queue, 1)
     end

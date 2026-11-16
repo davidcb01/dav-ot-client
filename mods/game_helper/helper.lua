@@ -127,7 +127,14 @@ local activeKeyCaptureBtn = nil
 -- Timers & cooldown tracking
 local lastCastTime = 0
 local lastShooterCastTime = 0
+local lastSupportShooterCastTime = 0
+local shooterDraftRule = nil
 local playerStopTracker = { pos = nil, since = 0 }
+local DEFAULT_ADJACENT_SPELLS = {
+  ['exori'] = true, ['exori gran'] = true, ['exori min'] = true, ['exori max'] = true,
+  ['exeta res'] = true, ['exori mas'] = false, ['exori ico'] = false, ['exori hur'] = false,
+  ['exeta amp res'] = false, ['utito tempo'] = false
+}
 local origGameLook = nil
 local lastPotionTime = 0
 local lastHasteTime = 0
@@ -172,6 +179,9 @@ local function isSpellOnClientCooldown(words, now)
   local sp = findSpellByWords(words)
   if not sp then return false end
   if sp.id and (spellCooldownUntil[sp.id] or 0) > now then
+    return true
+  end
+  if sp.clientId and (spellCooldownUntil[sp.clientId] or 0) > now then
     return true
   end
   if type(sp.group) == 'table' then
@@ -267,6 +277,8 @@ local ITEM_CATALOG = {
   { id = 268,   name = 'Mana Potion', desc = 'Restores basic Mana', cat = 'potion', ptype = 'mp' },
   { id = 23374, name = 'Ultimate Spirit Potion', desc = 'Restores HP & Mana (RP 200+)', cat = 'potion', ptype = 'spirit' },
   { id = 7642,  name = 'Great Spirit Potion', desc = 'Restores HP & Mana (RP 80+)', cat = 'potion', ptype = 'spirit' },
+  { id = 35563, name = 'Magic Shield Potion', desc = 'Grants Magic Shield (Mage)', cat = 'potion', ptype = 'mp' },
+  { id = 49271, name = 'Transcendence Potion', desc = 'Temporary Transcendence boost', cat = 'potion', ptype = 'mp' },
 
   -- Runes
   { id = 3155,  name = 'Sudden Death Rune', desc = 'Single-target high Death damage', cat = 'rune', target = true },
@@ -276,8 +288,14 @@ local ITEM_CATALOG = {
   { id = 3175,  name = 'Stone Shower Rune', desc = 'Area Earth damage', cat = 'rune', target = true },
   { id = 3158,  name = 'Icicle Rune', desc = 'Single-target Ice damage', cat = 'rune', target = true },
   { id = 3189,  name = 'Fireball Rune', desc = 'Single-target Fire damage', cat = 'rune', target = true },
+  { id = 3198,  name = 'Heavy Magic Missile Rune', desc = 'Single-target Energy damage', cat = 'rune', target = true },
+  { id = 3179,  name = 'Stalagmite Rune', desc = 'Single-target Earth damage', cat = 'rune', target = true },
+  { id = 3200,  name = 'Explosion Rune', desc = 'Small Area Physical damage', cat = 'rune', target = true },
   { id = 3182,  name = 'Holy Missile Rune', desc = 'Single-target Holy damage (Paladin)', cat = 'rune', target = true },
   { id = 3195,  name = 'Soulfire Rune', desc = 'Applies burning condition on target', cat = 'rune', target = true },
+  { id = 3192,  name = 'Fire Bomb Rune', desc = 'Area Fire field', cat = 'rune', target = true },
+  { id = 3149,  name = 'Energy Bomb Rune', desc = 'Area Energy field', cat = 'rune', target = true },
+  { id = 3173,  name = 'Poison Bomb Rune', desc = 'Area Earth field', cat = 'rune', target = true },
   { id = 3180,  name = 'Magic Wall Rune', desc = 'Creates a Magic Wall barrier', cat = 'rune', target = true },
   { id = 3156,  name = 'Wild Growth Rune', desc = 'Creates a Wild Growth barrier (Druid)', cat = 'rune', target = true },
   { id = 3165,  name = 'Paralyze Rune', desc = 'Paralyzes target (Druid)', cat = 'rune', target = true },
@@ -490,7 +508,7 @@ local function createDefaultVocProfile(voc)
         },
         potions = {
           { id = 23375, pct = 45, ptype = 'hp', enabled = true },
-          { id = 237,   pct = 60, ptype = 'mp', enabled = true }
+          { id = 238,   pct = 60, ptype = 'mp', enabled = true }
         },
         curePara = { enabled = false, words = 'utani hur', name = 'Haste', clientId = 100 },
         manaShield = { enabled = false, words = '', name = '', clientId = 0 },
@@ -507,10 +525,10 @@ local function createDefaultVocProfile(voc)
         presets = {
           ['Hunt'] = {
             { type = 'S', words = 'utito tempo', name = 'Blood Rage', clientId = 133, countVal = 2, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 15, delay = 10000, priority = 'All Monsters', targetName = '', requiresTarget = false, enabled = true, cond = {} },
-            { type = 'S', words = 'exori gran', name = 'Fierce Berserk', clientId = 105, countVal = 2, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 10, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = true, enabled = true, cond = { momentum = true } },
-            { type = 'S', words = 'exori min', name = 'Front Sweep', clientId = 59, countVal = 1, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 10, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = true, enabled = true, cond = { faceTarget = true } },
-            { type = 'S', words = 'exori mas', name = 'Groundshaker', clientId = 106, countVal = 3, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 10, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = false, enabled = true, cond = {} },
-            { type = 'S', words = 'exori', name = 'Berserk', clientId = 80, countVal = 1, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 5, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = false, enabled = true, cond = {} },
+            { type = 'S', words = 'exori gran', name = 'Fierce Berserk', clientId = 105, countVal = 2, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 10, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = true, enabled = true, cond = { adjacent = true, momentum = true } },
+            { type = 'S', words = 'exori min', name = 'Front Sweep', clientId = 59, countVal = 1, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 10, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = true, enabled = true, cond = { adjacent = true, faceTarget = true } },
+            { type = 'S', words = 'exori mas', name = 'Groundshaker', clientId = 106, countVal = 3, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 10, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = false, enabled = true, cond = { adjacent = false } },
+            { type = 'S', words = 'exori', name = 'Berserk', clientId = 80, countVal = 1, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 5, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = false, enabled = true, cond = { adjacent = true } },
             { type = 'S', words = 'exori ico', name = 'Brutal Strike', clientId = 61, countVal = 1, countOp = '>=', hpMin = 0, hpMax = 100, mpPct = 5, delay = 0, priority = 'All Monsters', targetName = '', requiresTarget = true, enabled = true, cond = {} }
           }
         }
@@ -559,7 +577,7 @@ local function createDefaultVocProfile(voc)
         },
         potions = {
           { id = 238, pct = 65, ptype = 'mp', enabled = true },
-          { id = 23374, pct = 55, ptype = 'spirit', enabled = true }
+          { id = 23374, pct = 55, ptype = 'hp', enabled = true }
         },
         curePara = { enabled = false, words = 'utani gran hur', name = 'Strong Haste', clientId = 39 },
         manaShield = { enabled = false, words = 'utamo tio', name = 'Focus Serenity', clientId = 169 },
@@ -644,6 +662,7 @@ local function normalizeShooterRule(r)
   if r.enabled == nil then r.enabled = true end
   r.cond = type(r.cond) == 'table' and r.cond or {}
   r.cond.stoppedMs = tonumber(r.cond.stoppedMs) or 1000
+  r.cond.trappedCount = math.max(1, math.min(8, tonumber(r.cond.trappedCount) or 8))
 
   -- Convert legacy string counts ('2+', '3-', '1') to structured countVal + countOp
   if not r.countVal then
@@ -703,7 +722,12 @@ local function normalizeVocProfile(vp, voc)
     if type(pt) == 'table' then
       pt.id = tonumber(pt.id) or 0
       pt.pct = tonumber(pt.pct) or 50
-      pt.ptype = pt.ptype or 'hp'
+      local cat = findItemInCatalog(pt.id)
+      if cat and (cat.ptype == 'hp' or cat.ptype == 'mp') then
+        pt.ptype = cat.ptype
+      elseif pt.ptype == 'spirit' or (pt.ptype ~= 'hp' and pt.ptype ~= 'mp') then
+        pt.ptype = 'hp'
+      end
       if pt.enabled == nil then pt.enabled = true end
       table.insert(normPotions, pt)
     end
@@ -934,6 +958,9 @@ local function normalizeCharConfig(cfg)
   if cb.settings.stopMonsters == nil then cb.settings.stopMonsters = 3 end
   if cb.settings.walkMonsters == nil then cb.settings.walkMonsters = 1 end
   if cb.settings.dynamicLure == nil then cb.settings.dynamicLure = true end
+  if cb.settings.lureMode ~= 'box' and cb.settings.lureMode ~= 'global' then
+    cb.settings.lureMode = 'box'
+  end
   cb.settings.stopMonsters = tonumber(cb.settings.stopMonsters) or 3
   cb.settings.walkMonsters = tonumber(cb.settings.walkMonsters) or 1
   if cb.settings.walkSpeedPct == nil then
@@ -1429,15 +1456,25 @@ end
 -- TAB BAR, WINDOW & DAVHUD SHORTCUTS STATUS
 -- ============================================================================
 
+local function updateHelperButtonIcon(isOpen)
+  if not helperButton then return end
+  local iconPath = isOpen and '/mods/game_helper/images/custom/helper_open' or '/mods/game_helper/images/custom/helper_closed'
+  if helperButton.setImageSource then
+    pcall(function() helperButton:setImageSource(iconPath) end)
+  elseif helperButton.setIcon then
+    pcall(function() helperButton:setIcon(iconPath) end)
+  end
+end
+
 local function setupTabIcons()
   local tabBar = helperWindow:getChildById('tabBar')
   local defs = {
-    { id = 'tabHealing',  title = ht('HEALING'),  img = '/mods/game_helper/images/ui/healing' },
-    { id = 'tabTools',    title = ht('TOOLS'),    img = '/mods/game_helper/images/ui/tools' },
-    { id = 'tabShooter',  title = ht('SHOOTER'),  img = '/mods/game_helper/images/ui/KACaster' },
-    { id = 'tabTarget',   title = ht('TARGET'),   img = '/mods/game_helper/images/ui/target' },
-    { id = 'tabCavebot',  title = ht('CAVEBOT'),  img = '/mods/game_helper/images/custom/Logo-cavebot' },
-    { id = 'tabSettings', title = ht('SETTINGS'), img = '/images/options/button_options' }
+    { id = 'tabHealing',  title = ht('HEALING'),  img = '/mods/game_helper/images/custom/tab_healing' },
+    { id = 'tabTools',    title = ht('TOOLS'),    img = '/mods/game_helper/images/custom/tab_tools' },
+    { id = 'tabShooter',  title = ht('SHOOTER'),  img = '/mods/game_helper/images/custom/tab_shooter' },
+    { id = 'tabTarget',   title = ht('TARGET'),   img = '/mods/game_helper/images/custom/tab_target' },
+    { id = 'tabCavebot',  title = ht('CAVEBOT'),  img = '/mods/game_helper/images/custom/tab_cavebot' },
+    { id = 'tabSettings', title = ht('SETTINGS'), img = '/mods/game_helper/images/custom/tab_settings' }
   }
   for _, d in ipairs(defs) do
     local btn = tabBar:getChildById(d.id)
@@ -1554,7 +1591,10 @@ function show()
   helperWindow:show()
   helperWindow:raise()
   helperWindow:focus()
-  if helperButton then helperButton:setOn(true) end
+  if helperButton then
+    helperButton:setOn(true)
+    updateHelperButtonIcon(true)
+  end
   if charConfig.windowPos and charConfig.windowPos.x and charConfig.windowPos.y then
     helperWindow:setPosition(charConfig.windowPos)
   end
@@ -1567,7 +1607,10 @@ end
 
 function hide()
   if helperWindow then helperWindow:hide() end
-  if helperButton then helperButton:setOn(false) end
+  if helperButton then
+    helperButton:setOn(false)
+    updateHelperButtonIcon(false)
+  end
 end
 
 function toggleStatsWindow()
@@ -1617,19 +1660,35 @@ local function renderSpellSlot(slotWidget, spellEntry)
   end
 end
 
+local function setVirtualUIItem(itemW, itemId)
+  if not itemW then return end
+  local id = tonumber(itemId) or 0
+  if id > 0 then
+    local itemObj = Item and Item.create and Item.create(id, 1) or nil
+    if itemObj and itemW.setItem then
+      itemW:setItem(itemObj)
+    else
+      itemW:setItemId(id)
+    end
+    itemW:setVisible(true)
+  else
+    if itemW.setItem then itemW:setItem(nil) end
+    itemW:setItemId(0)
+    itemW:setVisible(false)
+  end
+end
+
 local function renderItemSlot(slotWidget, itemId)
   if not slotWidget then return end
   local itemW = slotWidget:getChildById('item')
   if not itemW then return end
   local id = tonumber(itemId) or 0
   if id > 0 then
-    itemW:setItemId(id)
-    itemW:setVisible(true)
+    setVirtualUIItem(itemW, id)
     local info = findItemInCatalog(id)
     slotWidget:setTooltip(htf('%s (ID: %d)\nClick or Drop Item from BP | Right-click to clear', info and info.name or ('Item #' .. id), id))
   else
-    itemW:setItemId(0)
-    itemW:setVisible(false)
+    setVirtualUIItem(itemW, 0)
     slotWidget:setTooltip(ht('Empty Item Slot\nClick to choose OR Drop Item from BP'))
   end
 end
@@ -1900,12 +1959,12 @@ function populateItemSelectorList()
     local textOk = (filterText == '') or it.name:lower():find(filterText, 1, true) or tostring(it.id):find(filterText, 1, true)
     if catOk and textOk then
       local row = g_ui.createWidget('ItemSelectorRow', list)
-      local itemIcon = row:getChildById('itemIcon')
+      local itemIcon = row:recursiveGetChildById('itemIcon')
       local nameLbl = row:getChildById('itemNameLabel')
       local descLbl = row:getChildById('itemDescLabel')
       local idLbl = row:getChildById('idLabel')
 
-      if itemIcon then itemIcon:setItemId(it.id) end
+      if itemIcon then setVirtualUIItem(itemIcon, it.id) end
       if nameLbl then nameLbl:setText(it.name) end
       if descLbl then descLbl:setText(it.desc or '') end
       if idLbl then idLbl:setText('ID: ' .. tostring(it.id)) end
@@ -1990,12 +2049,22 @@ function applyVocationVisibility()
   exBox:getChildById('recoveryPctEdit'):setVisible(hasRecovery)
 end
 
+local function isClickInsideAnyChild(parent, childNames, mousePos)
+  if not mousePos then return false end
+  for _, cid in ipairs(childNames) do
+    local c = parent:getChildById(cid)
+    if c and c:isVisible() and c:containsPoint(mousePos) then
+      return true
+    end
+  end
+  return false
+end
+
 local function bindDeleteButton(btn, fn)
   if not btn then return end
   if btn.setFocusable then btn:setFocusable(false) end
+  if btn.setPhantom then btn:setPhantom(false) end
   btn.onClick = function(w)
-    if w._davDeleting then return end
-    w._davDeleting = true
     fn(w)
   end
 end
@@ -2129,19 +2198,27 @@ function refreshHealingPotionsListUI()
     local info = pt.id and pt.id > 0 and findItemInCatalog(pt.id) or nil
     nameLbl:setText(info and info.name or ht('Empty / Drop Potion'))
 
-    local ptypeLabelByKey = { hp = 'HP%', mp = 'MP%', spirit = 'HP/MP%' }
-    local ptypeKeyByLabel = { ['HP%'] = 'hp', ['MP%'] = 'mp', ['HP/MP%'] = 'spirit' }
-    ptypeCombo:addOption('HP%')
-    ptypeCombo:addOption('MP%')
-    ptypeCombo:addOption('HP/MP%')
+    local catalogPtype = info and info.ptype or nil
+    local ptypeLabelByKey = { hp = 'HP%', mp = 'MP%' }
+    local ptypeKeyByLabel = { ['HP%'] = 'hp', ['MP%'] = 'mp' }
+    if catalogPtype == 'mp' then
+      ptypeCombo:addOption('MP%')
+      pt.ptype = 'mp'
+    elseif catalogPtype == 'hp' then
+      ptypeCombo:addOption('HP%')
+      pt.ptype = 'hp'
+    else
+      ptypeCombo:addOption('HP%')
+      ptypeCombo:addOption('MP%')
+      if pt.ptype ~= 'hp' and pt.ptype ~= 'mp' then pt.ptype = 'hp' end
+    end
+    renderPotionTypeBar(barType, pt.ptype)
 
     local function syncPtypeCombo()
-      local curKey = pt.ptype or 'hp'
+      local curKey = (pt.ptype == 'mp') and 'mp' or 'hp'
       ptypeCombo:setCurrentOption(ptypeLabelByKey[curKey] or 'HP%', true)
       if curKey == 'mp' then
         ptypeCombo:setColor('#8ec5ff')
-      elseif curKey == 'spirit' then
-        ptypeCombo:setColor('#d88cff')
       else
         ptypeCombo:setColor('#ff9999')
       end
@@ -2153,7 +2230,11 @@ function refreshHealingPotionsListUI()
     bindSlotClicks(slot, function()
       openItemSelector('Select Healing Potion', 'potion', pt.id, function(it)
         pt.id = it.id
-        if it.ptype then pt.ptype = it.ptype end
+        if it.ptype == 'mp' or it.ptype == 'hp' then
+          pt.ptype = it.ptype
+        elseif it.ptype == 'spirit' and pt.ptype ~= 'hp' and pt.ptype ~= 'mp' then
+          pt.ptype = 'hp'
+        end
         refreshHealingPotionsListUI()
         saveCurrentProfile()
       end)
@@ -2166,14 +2247,21 @@ function refreshHealingPotionsListUI()
     attachItemDropHandler(slot, function(droppedId)
       pt.id = droppedId
       local cat = findItemInCatalog(droppedId)
-      if cat and cat.ptype then pt.ptype = cat.ptype end
+      if cat and (cat.ptype == 'mp' or cat.ptype == 'hp') then
+        pt.ptype = cat.ptype
+      elseif pt.ptype ~= 'hp' and pt.ptype ~= 'mp' then
+        pt.ptype = 'hp'
+      end
       refreshHealingPotionsListUI()
       saveCurrentProfile()
     end)
 
     barType.onClick = function()
-      local nxt = { hp = 'mp', mp = 'spirit', spirit = 'hp' }
-      pt.ptype = nxt[pt.ptype or 'hp'] or 'hp'
+      if catalogPtype == 'mp' or catalogPtype == 'hp' then
+        pt.ptype = catalogPtype
+      else
+        pt.ptype = (pt.ptype == 'mp') and 'hp' or 'mp'
+      end
       renderPotionTypeBar(barType, pt.ptype)
       syncPtypeCombo()
       saveCurrentProfile()
@@ -2437,7 +2525,8 @@ local function formatRuleConditionSummary(rule)
   end
   local c = rule.cond or {}
   if c.adjacent then table.insert(parts, 'Adj') end
-  if c.trapped then table.insert(parts, 'Trap') end
+  if c.trapped then table.insert(parts, 'Trap>=' .. (tonumber(c.trappedCount) or 8)) end
+  if c.stopped then table.insert(parts, 'Stop>=' .. (tonumber(c.stoppedMs) or 1000) .. 'ms') end
   if c.faceTarget then table.insert(parts, 'Face') end
   return table.concat(parts, ' | ')
 end
@@ -2449,14 +2538,18 @@ local function loadSelectedShooterRuleIntoEditor()
   local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
   local r = selectedShooterRuleIdx and rules[selectedShooterRuleIdx] or nil
   if not r then
+    shooterDraftRule = nil
     ed:getChildById('ruleSpellNameLabel'):setText(ht('No rule selected'))
     renderSpellSlot(ed:getChildById('ruleSpellSlot'), nil)
     return
   end
 
+  shooterDraftRule = normalizeShooterRule(deepCopy(r))
+  local d = shooterDraftRule
+
   refreshingShooterUI = true
   local slot = ed:getChildById('ruleSpellSlot')
-  if r.type == 'R' and r.itemId and r.itemId > 0 then
+  if d.type == 'R' and d.itemId and d.itemId > 0 then
     slot:getChildById('icon'):setVisible(false)
     local itemW = slot:getChildById('dropItem') or g_ui.createWidget('UIItem', slot)
     itemW:setId('dropItem')
@@ -2465,16 +2558,15 @@ local function loadSelectedShooterRuleIntoEditor()
     itemW:addAnchor(AnchorVerticalCenter, 'parent', AnchorVerticalCenter)
     itemW:setVirtual(true)
     itemW:setPhantom(true)
-    itemW:setItemId(r.itemId)
-    itemW:setVisible(true)
+    setVirtualUIItem(itemW, d.itemId)
     ed:getChildById('ruleTypeCombo'):setCurrentOptionByData('Rune', true)
-    ed:getChildById('ruleSpellNameLabel'):setText((r.name or ht('Rune')) .. ' (#' .. r.itemId .. ')')
+    ed:getChildById('ruleSpellNameLabel'):setText((d.name or ht('Rune')) .. ' (#' .. d.itemId .. ')')
   else
     local oldItem = slot:getChildById('dropItem')
     if oldItem then oldItem:setVisible(false) end
-    renderSpellSlot(slot, r)
-    ed:getChildById('ruleTypeCombo'):setCurrentOptionByData(r.type == 'R' and 'Rune' or 'Spell', true)
-    ed:getChildById('ruleSpellNameLabel'):setText((r.words ~= '' and r.words) or r.name or ht('Click slot'))
+    renderSpellSlot(slot, d)
+    ed:getChildById('ruleTypeCombo'):setCurrentOptionByData(d.type == 'R' and 'Rune' or 'Spell', true)
+    ed:getChildById('ruleSpellNameLabel'):setText((d.words ~= '' and d.words) or d.name or ht('Click slot'))
   end
 
   local function setEditText(id, val)
@@ -2482,18 +2574,18 @@ local function loadSelectedShooterRuleIntoEditor()
     if w and w:getText() ~= val then w:setText(val) end
   end
 
-  ed:getChildById('ruleTargetReqCheck'):setChecked(r.requiresTarget ~= false)
-  local prio = (r.priority == 'Target Name') and 'Target Name' or 'All Monsters'
+  ed:getChildById('ruleTargetReqCheck'):setChecked(d.requiresTarget ~= false)
+  local prio = (d.priority == 'Target Name') and 'Target Name' or 'All Monsters'
   ed:getChildById('rulePriorityCombo'):setCurrentOptionByData(prio, true)
   local nameEdit = ed:getChildById('ruleTargetNameEdit')
-  if nameEdit:getText() ~= (r.targetName or '') then nameEdit:setText(r.targetName or '') end
+  if nameEdit:getText() ~= (d.targetName or '') then nameEdit:setText(d.targetName or '') end
   nameEdit:setVisible(prio == 'Target Name')
-  setEditText('ruleMpEdit', tostring(r.mpPct or 0))
-  ed:getChildById('ruleCountModeCombo'):setCurrentOption(r.countOp or '>=', true)
-  setEditText('ruleCreaturesEdit', tostring(r.countVal or 1))
-  setEditText('ruleHpMinEdit', tostring(r.hpMin or 0))
-  setEditText('ruleHpMaxEdit', tostring(r.hpMax or 100))
-  setEditText('ruleDelayEdit', tostring(r.delay or 0))
+  setEditText('ruleMpEdit', tostring(d.mpPct or 0))
+  ed:getChildById('ruleCountModeCombo'):setCurrentOption(d.countOp or '>=', true)
+  setEditText('ruleCreaturesEdit', tostring(d.countVal or 1))
+  setEditText('ruleHpMinEdit', tostring(d.hpMin or 0))
+  setEditText('ruleHpMaxEdit', tostring(d.hpMax or 100))
+  setEditText('ruleDelayEdit', tostring(d.delay or 0))
   refreshingShooterUI = false
 end
 
@@ -2536,8 +2628,7 @@ function refreshShooterRulesUI()
 
     if rule.type == 'R' and rule.itemId and rule.itemId > 0 then
       spIcon:setVisible(false)
-      rnIcon:setVisible(true)
-      rnIcon:setItemId(rule.itemId)
+      setVirtualUIItem(rnIcon, rule.itemId)
       wordsLbl:setText(rule.name or ('Rune #' .. rule.itemId))
     else
       rnIcon:setVisible(false)
@@ -2580,7 +2671,10 @@ function refreshShooterRulesUI()
     end)
 
     row.ruleIdx = idx
-    row.onClick = function(w)
+    row.onClick = function(w, mousePos)
+      if isClickInsideAnyChild(w, {'enableCheck', 'upBtn', 'downBtn', 'delBtn'}, mousePos) then
+        return
+      end
       selectedShooterRuleIdx = w.ruleIdx
       list:focusChild(w, MouseFocusReason)
       loadSelectedShooterRuleIntoEditor()
@@ -2608,11 +2702,13 @@ end
 function openConditionSettingsModalForSelected()
   local vp = getVocProfile()
   local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
-  local r = selectedShooterRuleIdx and rules[selectedShooterRuleIdx] or nil
+  local r = shooterDraftRule or (selectedShooterRuleIdx and rules[selectedShooterRuleIdx] or nil)
   if not r then return end
   local c = r.cond or {}
 
   conditionSettingsModal:getChildById('condTrapped'):setChecked(c.trapped == true)
+  local trEdit = conditionSettingsModal:getChildById('condTrappedCount')
+  if trEdit then trEdit:setText(tostring(c.trappedCount or 8)) end
   conditionSettingsModal:getChildById('condStopped'):setChecked(c.stopped == true)
   conditionSettingsModal:getChildById('condStoppedMs'):setText(tostring(c.stoppedMs or 1000))
   conditionSettingsModal:getChildById('condAdjacent'):setChecked(c.adjacent == true)
@@ -2753,7 +2849,6 @@ function renderCavebotWaypointsOnMaps()
   local curZ = pPos and pPos.z or nil
 
   local cbMap = panels.cavebot and panels.cavebot:getChildById('bodyPanel'):getChildById('cbMiddleRow'):getChildById('cavebotMapBorder'):getChildById('cavebotMinimap')
-  local mainMap = modules.game_minimap and modules.game_minimap.getMiniMapUi and modules.game_minimap.getMiniMapUi()
   local wps = charConfig.cavebot.waypoints or {}
 
   for idx, wpStr in ipairs(wps) do
@@ -2770,19 +2865,6 @@ function renderCavebotWaypointsOnMaps()
             table.insert(minimapTempFlags, { map = cbMap, pos = pos, icon = iconIdx, desc = desc })
           end)
         end
-        if mainMap then
-          pcall(function()
-            mainMap:addFlag(pos, iconIdx, desc, true)
-            table.insert(minimapTempFlags, { map = mainMap, pos = pos, icon = iconIdx, desc = desc })
-          end)
-        end
-        pcall(function()
-          local tile = g_map.getTile(pos)
-          if tile and tile.setText then
-            tile:setText(string.format('[%d]', idx))
-            table.insert(markedWorldTiles, pos)
-          end
-        end)
       end
     end
   end
@@ -2831,11 +2913,46 @@ function setCavebotDirOffset(dir)
   end
 end
 
+local function getWaypointPos(wpStr)
+  if not wpStr then return nil end
+  local x, y, z = wpStr:match('(%d+),%s*(%d+),%s*(%d+)')
+  if x and y and z then
+    return { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+  end
+  return nil
+end
+
 function onToggleCavebotAutoRec(checked)
   cavebotAutoRec = checked and true or false
-  lastAutoRecPos = nil
-  local topBox = panels.cavebot:getChildById('bodyPanel'):getChildById('cbTopControlsBox')
-  local chk = topBox:getChildById('autoRecCheck')
+  if cavebotAutoRec then
+    if charConfig and charConfig.cavebot and charConfig.cavebot.enabled then
+      charConfig.cavebot.enabled = false
+      local player = g_game.getLocalPlayer()
+      if player and player.stopAutoWalk and player:isAutoWalking() then
+        player:stopAutoWalk()
+      end
+      local topBox0 = panels.cavebot and panels.cavebot:getChildById('bodyPanel'):getChildById('cbTopControlsBox')
+      local cbEnChk = topBox0 and topBox0:getChildById('enableCavebotCheck')
+      if cbEnChk and cbEnChk:isChecked() then
+        cbEnChk:setChecked(false)
+      end
+      updateStatsUI()
+      refreshCavebotUI()
+      saveCurrentProfile()
+    end
+    local wps = charConfig and charConfig.cavebot and charConfig.cavebot.waypoints or {}
+    local lastPos = (#wps > 0) and getWaypointPos(wps[#wps]) or nil
+    local pPos = g_game.getLocalPlayer() and g_game.getLocalPlayer():getPosition() or nil
+    if lastPos and pPos and lastPos.z == pPos.z then
+      lastAutoRecPos = lastPos
+    else
+      lastAutoRecPos = nil
+    end
+  else
+    lastAutoRecPos = nil
+  end
+  local topBox = panels.cavebot and panels.cavebot:getChildById('bodyPanel'):getChildById('cbTopControlsBox')
+  local chk = topBox and topBox:getChildById('autoRecCheck')
   if chk and chk:isChecked() ~= cavebotAutoRec then
     chk:setChecked(cavebotAutoRec)
   end
@@ -2906,10 +3023,27 @@ function refreshCavebotUI(scrollToBottom)
     row.onClick = function(w)
       selectedCavebotWpIdx = w.wpIdx
       list:focusChild(w, MouseFocusReason)
+      if charConfig.cavebot.enabled then
+        local dest = getWaypointPos(wps[w.wpIdx])
+        local player = g_game.getLocalPlayer()
+        local pPos = player and player:getPosition() or nil
+        if dest and pPos and dest.z == pPos.z and getDistanceBetween(pPos, dest) <= 25 then
+          charConfig.cavebot.currentWpIndex = w.wpIdx
+          if player.stopAutoWalk and player:isAutoWalking() then
+            player:stopAutoWalk()
+          end
+          player:autoWalk(dest)
+          refreshCavebotUI()
+        end
+      end
     end
     row.onDoubleClick = function(w)
+      selectedCavebotWpIdx = w.wpIdx
       charConfig.cavebot.currentWpIndex = w.wpIdx
       refreshCavebotUI()
+    end
+    if idx == selectedCavebotWpIdx then
+      list:focusChild(row, KeyboardFocusReason)
     end
   end
 
@@ -2934,19 +3068,18 @@ function selectNearestCavebotWaypoint()
   local bestIdx = 1
   local bestDist = 99999
   for idx, wpStr in ipairs(wps) do
-    local x, y, z = wpStr:match('(%d+),%s*(%d+),%s*(%d+)')
-    if x and y and z then
-      local wz = tonumber(z)
-      if wz == pPos.z then
-        local d = math.max(math.abs(pPos.x - tonumber(x)), math.abs(pPos.y - tonumber(y)))
-        if d < bestDist then
-          bestDist = d
-          bestIdx = idx
-        end
+    local pos = getWaypointPos(wpStr)
+    if pos and pos.z == pPos.z then
+      local d = math.max(math.abs(pPos.x - pos.x), math.abs(pPos.y - pos.y))
+      if d < bestDist then
+        bestDist = d
+        bestIdx = idx
       end
     end
   end
   charConfig.cavebot.currentWpIndex = bestIdx
+  selectedCavebotWpIdx = bestIdx
+  refreshCavebotUI()
 end
 
 function addCavebotWaypoint(wpType)
@@ -2956,8 +3089,9 @@ function addCavebotWaypoint(wpType)
   local off = DIR_OFFSETS[cavebotDirOffset] or { 0, 0 }
   local x, y, z = pPos.x + off[1], pPos.y + off[2], pPos.z
   table.insert(charConfig.cavebot.waypoints, string.format('%s: %d, %d, %d', wpType, x, y, z))
+  selectedCavebotWpIdx = #charConfig.cavebot.waypoints
   setCavebotDirOffset('C')
-  refreshCavebotUI()
+  refreshCavebotUI(true)
   saveCurrentProfile()
 end
 
@@ -2965,6 +3099,11 @@ function undoCavebotWaypoint()
   local wps = charConfig.cavebot.waypoints
   if #wps > 0 then
     table.remove(wps)
+    selectedCavebotWpIdx = (#wps > 0) and #wps or nil
+    if (charConfig.cavebot.currentWpIndex or 1) > #wps then
+      charConfig.cavebot.currentWpIndex = math.max(1, #wps)
+    end
+    lastAutoRecPos = (#wps > 0) and getWaypointPos(wps[#wps]) or nil
     refreshCavebotUI()
     saveCurrentProfile()
   end
@@ -2985,10 +3124,21 @@ end
 
 function deleteSelectedCavebotWaypoint()
   local wps = charConfig.cavebot.waypoints
-  if not selectedCavebotWpIdx or not wps[selectedCavebotWpIdx] then return end
-  table.remove(wps, selectedCavebotWpIdx)
-  if selectedCavebotWpIdx > #wps then selectedCavebotWpIdx = #wps end
-  if selectedCavebotWpIdx < 1 then selectedCavebotWpIdx = nil end
+  local idx = selectedCavebotWpIdx
+  if (not idx or not wps[idx]) and #wps > 0 then
+    idx = #wps
+  end
+  if not idx or not wps[idx] then return end
+  table.remove(wps, idx)
+  if #wps == 0 then
+    selectedCavebotWpIdx = nil
+    charConfig.cavebot.currentWpIndex = 1
+    lastAutoRecPos = nil
+  else
+    selectedCavebotWpIdx = math.min(idx, #wps)
+    charConfig.cavebot.currentWpIndex = math.min(charConfig.cavebot.currentWpIndex or 1, #wps)
+    lastAutoRecPos = getWaypointPos(wps[#wps])
+  end
   refreshCavebotUI()
   saveCurrentProfile()
 end
@@ -3113,6 +3263,21 @@ end
 function openCavebotSettingsModal()
   local s = charConfig.cavebot.settings
   local ls = s.lureSpeeds or {}
+  local isGlobal = (s.lureMode == 'global')
+  local boxChk = cavebotSettingsModal:getChildById('cbLureBoxModeCheck')
+  local glbChk = cavebotSettingsModal:getChildById('cbLureGlobalModeCheck')
+  if boxChk and glbChk then
+    boxChk.onCheckChange = function(w, ch)
+      if ch and glbChk:isChecked() then glbChk:setChecked(false)
+      elseif not ch and not glbChk:isChecked() then boxChk:setChecked(true) end
+    end
+    glbChk.onCheckChange = function(w, ch)
+      if ch and boxChk:isChecked() then boxChk:setChecked(false)
+      elseif not ch and not boxChk:isChecked() then glbChk:setChecked(true) end
+    end
+    boxChk:setChecked(not isGlobal)
+    glbChk:setChecked(isGlobal)
+  end
   cavebotSettingsModal:getChildById('cbStopMonstersEdit'):setText(tostring(s.stopMonsters or 3))
   cavebotSettingsModal:getChildById('cbWalkMonstersEdit'):setText(tostring(s.walkMonsters or 1))
   cavebotSettingsModal:getChildById('cbDynamicLureCheck'):setChecked(s.dynamicLure ~= false)
@@ -3132,6 +3297,8 @@ function saveCavebotSettingsModal()
   local s = charConfig.cavebot.settings
   s.stopMonsters = parseNum(cavebotSettingsModal:getChildById('cbStopMonstersEdit'), 3, 1, 20)
   s.walkMonsters = parseNum(cavebotSettingsModal:getChildById('cbWalkMonstersEdit'), 1, 0, 20)
+  local glbChk = cavebotSettingsModal:getChildById('cbLureGlobalModeCheck')
+  s.lureMode = (glbChk and glbChk:isChecked()) and 'global' or 'box'
   s.dynamicLure = cavebotSettingsModal:getChildById('cbDynamicLureCheck'):isChecked()
   s.lureSpeeds = s.lureSpeeds or {}
   local grid = cavebotSettingsModal:getChildById('cbLureGrid')
@@ -3199,8 +3366,30 @@ function refreshTargetRulesUI()
       r.enabled = ch
       saveCurrentProfile()
     end
+    local upBtn = row:getChildById('upBtn')
+    local dnBtn = row:getChildById('downBtn')
+    local dlBtn = row:getChildById('delBtn')
+    if upBtn then
+      upBtn.onClick = function()
+        selectedTargetRuleIdx = idx
+        moveTargetRule(-1)
+      end
+    end
+    if dnBtn then
+      dnBtn.onClick = function()
+        selectedTargetRuleIdx = idx
+        moveTargetRule(1)
+      end
+    end
+    bindDeleteButton(dlBtn, function()
+      selectedTargetRuleIdx = idx
+      deleteTargetRule()
+    end)
     row.ruleIdx = idx
-    row.onClick = function(w)
+    row.onClick = function(w, mousePos)
+      if isClickInsideAnyChild(w, {'ruleEnableCheck', 'upBtn', 'downBtn', 'delBtn'}, mousePos) then
+        return
+      end
       selectedTargetRuleIdx = w.ruleIdx
       list:focusChild(w, MouseFocusReason)
       loadSelectedTargetRuleIntoEditor()
@@ -3600,6 +3789,15 @@ function refreshSettingsTabUI()
     end
   end
 
+  local tmplBox = panels.settings:getChildById('saveTemplateBox')
+  local tmplEdit = tmplBox and tmplBox:getChildById('templateNameEdit')
+  if tmplEdit then
+    local pName = (currentCharName and #currentCharName > 0) and currentCharName or ''
+    if pName ~= '' and tmplEdit:getText() == '' then
+      tmplEdit:setText(pName)
+    end
+  end
+
   local box = panels.settings:getChildById('savedProfilesBox')
   local list = box and box:getChildById('profilesList')
   if not list then return end
@@ -3764,7 +3962,10 @@ function onSettingsSaveTemplate()
     return
   end
   saveHelperStoredProfile(clean, normalizeCharConfig(deepCopy(charConfig)))
-  if edit then edit:setText('') end
+  if edit then
+    local pName = (currentCharName and #currentCharName > 0) and currentCharName or ''
+    edit:setText(pName)
+  end
   selectedProfileListKey = clean
   refreshSettingsTabUI()
   local msg = htf('Saved template copy "%s".', clean)
@@ -4014,18 +4215,19 @@ function setupWidgetsAndCallbacks()
   conditionSettingsModal:getChildById('updateCondBtn').onClick = function()
     local vp = getVocProfile()
     local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
-    local r = selectedShooterRuleIdx and rules[selectedShooterRuleIdx] or nil
-    if r then
-      r.cond = {
+    if not shooterDraftRule and selectedShooterRuleIdx and rules[selectedShooterRuleIdx] then
+      shooterDraftRule = normalizeShooterRule(deepCopy(rules[selectedShooterRuleIdx]))
+    end
+    if shooterDraftRule then
+      shooterDraftRule.cond = {
         trapped = conditionSettingsModal:getChildById('condTrapped'):isChecked(),
+        trappedCount = parseNum(conditionSettingsModal:getChildById('condTrappedCount'), 8, 1, 8),
         stopped = conditionSettingsModal:getChildById('condStopped'):isChecked(),
         stoppedMs = parseNum(conditionSettingsModal:getChildById('condStoppedMs'), 1000, 0, 60000),
         adjacent = conditionSettingsModal:getChildById('condAdjacent'):isChecked(),
         faceTarget = conditionSettingsModal:getChildById('condFaceTarget'):isChecked(),
         momentum = conditionSettingsModal:getChildById('condMomentum'):isChecked()
       }
-      refreshShooterRulesUI()
-      saveCurrentProfile()
     end
     conditionSettingsModal:hide()
   end
@@ -4327,108 +4529,125 @@ function setupWidgetsAndCallbacks()
     saveCurrentProfile()
   end
 
-  -- Shooter Tab Wiring
+  -- Shooter Tab Wiring (Draft-buffered until Update clicked; Default Adjacent presets)
   local sBody = panels.shooter:getChildById('bodyPanel')
   local ed = sBody:getChildById('shooterEditorBox')
-  local function getSelRule()
-    local vp = getVocProfile()
-    local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
-    return selectedShooterRuleIdx and rules[selectedShooterRuleIdx] or nil
+  local function ensureDraft()
+    if not shooterDraftRule then
+      local vp = getVocProfile()
+      local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
+      if selectedShooterRuleIdx and rules[selectedShooterRuleIdx] then
+        shooterDraftRule = normalizeShooterRule(deepCopy(rules[selectedShooterRuleIdx]))
+      else
+        shooterDraftRule = normalizeShooterRule({ type = 'S', words = '', name = 'New', countVal = 1, countOp = '>=' })
+      end
+    end
+    return shooterDraftRule
+  end
+  local function renderDraftSlotPreview(d)
+    local slot = ed:getChildById('ruleSpellSlot')
+    if not d then return end
+    if d.type == 'R' and d.itemId and d.itemId > 0 then
+      slot:getChildById('icon'):setVisible(false)
+      local itemW = slot:getChildById('dropItem') or g_ui.createWidget('UIItem', slot)
+      itemW:setId('dropItem')
+      itemW:setSize({ width = 32, height = 32 })
+      itemW:addAnchor(AnchorHorizontalCenter, 'parent', AnchorHorizontalCenter)
+      itemW:addAnchor(AnchorVerticalCenter, 'parent', AnchorVerticalCenter)
+      itemW:setVirtual(true)
+      itemW:setPhantom(true)
+      setVirtualUIItem(itemW, d.itemId)
+      ed:getChildById('ruleSpellNameLabel'):setText((d.name or ht('Rune')) .. ' (#' .. d.itemId .. ')')
+    else
+      local oldItem = slot:getChildById('dropItem')
+      if oldItem then oldItem:setVisible(false) end
+      renderSpellSlot(slot, d)
+      ed:getChildById('ruleSpellNameLabel'):setText((d.words ~= '' and d.words) or d.name or ht('Click slot'))
+    end
   end
   bindSlotClicks(ed:getChildById('ruleSpellSlot'), function()
-    local r = getSelRule()
-    if not r then return end
-    if r.type == 'R' then
-      openItemSelector('Select Attack Rune', 'rune', r.itemId, function(it)
-        r.itemId, r.name, r.words = it.id, it.name, it.name
-        refreshShooterRulesUI()
-        saveCurrentProfile()
+    local d = ensureDraft()
+    if d.type == 'R' then
+      openItemSelector('Select Attack Rune', 'rune', d.itemId, function(it)
+        d.itemId, d.name, d.words = it.id, it.name, it.name
+        renderDraftSlotPreview(d)
       end)
     else
-      openSpellSelector('Select Caster Spell', 1, r, function(sp)
-        r.words, r.name, r.clientId = sp.words, sp.name, sp.clientId
-        refreshShooterRulesUI()
-        saveCurrentProfile()
+      openSpellSelector('Select Caster Spell', 1, d, function(sp)
+        d.words, d.name, d.clientId = sp.words, sp.name, sp.clientId
+        local low = (sp.words or ''):lower()
+        if DEFAULT_ADJACENT_SPELLS[low] ~= nil then
+          d.cond = d.cond or {}
+          d.cond.adjacent = DEFAULT_ADJACENT_SPELLS[low]
+        end
+        if low == 'exeta amp res' or low == 'exeta res' or low == 'utito tempo' or low == 'exori mas' then
+          d.requiresTarget = false
+          ed:getChildById('ruleTargetReqCheck'):setChecked(false)
+        end
+        renderDraftSlotPreview(d)
       end)
     end
   end, function()
-    local r = getSelRule()
-    if not r then return end
-    r.words, r.itemId, r.name, r.clientId = '', 0, '', 0
-    refreshShooterRulesUI()
-    saveCurrentProfile()
+    local d = ensureDraft()
+    d.words, d.itemId, d.name, d.clientId = '', 0, '', 0
+    renderDraftSlotPreview(d)
   end)
 
   local ruleTypeCb = ed:getChildById('ruleTypeCombo')
   for _, opt in ipairs({ 'Spell', 'Rune' }) do ruleTypeCb:addOption(ht(opt), opt) end
   ruleTypeCb.onOptionChange = function(w, text, data)
     if refreshingShooterUI or refreshingLanguageCombos then return end
-    local r = getSelRule()
-    if not r then return end
+    local d = ensureDraft()
     local key = getComboOptionData(w, data or text)
-    r.type = (key == 'Rune') and 'R' or 'S'
-    refreshShooterRulesUI()
-    saveCurrentProfile()
+    d.type = (key == 'Rune') and 'R' or 'S'
+    renderDraftSlotPreview(d)
   end
   ed:getChildById('ruleTargetReqCheck').onCheckChange = function(w, ch)
     if refreshingShooterUI then return end
-    local r = getSelRule()
-    if r then r.requiresTarget = ch saveCurrentProfile() end
+    ensureDraft().requiresTarget = ch
   end
   local rulePrioCb = ed:getChildById('rulePriorityCombo')
   for _, opt in ipairs({ 'All Monsters', 'Target Name' }) do rulePrioCb:addOption(ht(opt), opt) end
   rulePrioCb.onOptionChange = function(w, text, data)
     if refreshingShooterUI or refreshingLanguageCombos then return end
-    local r = getSelRule()
-    if not r then return end
-    r.priority = getComboOptionData(w, data or text) or 'All Monsters'
-    refreshShooterRulesUI()
-    saveCurrentProfile()
+    local d = ensureDraft()
+    d.priority = getComboOptionData(w, data or text) or 'All Monsters'
+    ed:getChildById('ruleTargetNameEdit'):setVisible(d.priority == 'Target Name')
   end
   ed:getChildById('ruleTargetNameEdit').onTextChange = function(w, txt)
     if isLoadingUI or refreshingShooterUI then return end
-    local r = getSelRule()
-    if r then r.targetName = txt updateSelectedShooterRowLabels() saveCurrentProfile() end
+    ensureDraft().targetName = txt
   end
   ed:getChildById('ruleMpEdit').onTextChange = function(w, txt)
     if isLoadingUI or refreshingShooterUI then return end
-    local r = getSelRule()
     local n = tonumber(txt)
-    if r and n then r.mpPct = math.max(0, math.min(100, math.floor(n))) updateSelectedShooterRowLabels() saveCurrentProfile() end
+    if n then ensureDraft().mpPct = math.max(0, math.min(100, math.floor(n))) end
   end
   local ruleCountCb = ed:getChildById('ruleCountModeCombo')
   for _, opt in ipairs({ '>=', '=', '<' }) do ruleCountCb:addOption(opt) end
   ruleCountCb.onOptionChange = function(w, text)
     if isLoadingUI or refreshingShooterUI then return end
-    local r = getSelRule()
-    if not r then return end
-    r.countOp = text or '>='
-    updateSelectedShooterRowLabels()
-    saveCurrentProfile()
+    ensureDraft().countOp = text or '>='
   end
   ed:getChildById('ruleCreaturesEdit').onTextChange = function(w, txt)
     if isLoadingUI or refreshingShooterUI then return end
-    local r = getSelRule()
     local n = tonumber(txt)
-    if r and n then r.countVal = math.max(0, math.min(30, math.floor(n))) updateSelectedShooterRowLabels() saveCurrentProfile() end
+    if n then ensureDraft().countVal = math.max(0, math.min(30, math.floor(n))) end
   end
   ed:getChildById('ruleHpMinEdit').onTextChange = function(w, txt)
     if isLoadingUI or refreshingShooterUI then return end
-    local r = getSelRule()
     local n = tonumber(txt)
-    if r and n then r.hpMin = math.max(0, math.min(100, math.floor(n))) updateSelectedShooterRowLabels() saveCurrentProfile() end
+    if n then ensureDraft().hpMin = math.max(0, math.min(100, math.floor(n))) end
   end
   ed:getChildById('ruleHpMaxEdit').onTextChange = function(w, txt)
     if isLoadingUI or refreshingShooterUI then return end
-    local r = getSelRule()
     local n = tonumber(txt)
-    if r and n then r.hpMax = math.max(0, math.min(100, math.floor(n))) updateSelectedShooterRowLabels() saveCurrentProfile() end
+    if n then ensureDraft().hpMax = math.max(0, math.min(100, math.floor(n))) end
   end
   ed:getChildById('ruleDelayEdit').onTextChange = function(w, txt)
     if isLoadingUI or refreshingShooterUI then return end
-    local r = getSelRule()
     local n = tonumber(txt)
-    if r and n then r.delay = math.max(0, math.min(600000, math.floor(n))) updateSelectedShooterRowLabels() saveCurrentProfile() end
+    if n then ensureDraft().delay = math.max(0, math.min(600000, math.floor(n))) end
   end
   ed:getChildById('ruleUpBtn').onClick = function()
     local vp = getVocProfile()
@@ -4452,6 +4671,19 @@ function setupWidgetsAndCallbacks()
       saveCurrentProfile()
     end
   end
+  ed:getChildById('ruleUpdateBtn').onClick = function()
+    local vp = getVocProfile()
+    local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
+    local d = ensureDraft()
+    if selectedShooterRuleIdx and rules[selectedShooterRuleIdx] then
+      rules[selectedShooterRuleIdx] = normalizeShooterRule(deepCopy(d))
+    else
+      table.insert(rules, normalizeShooterRule(deepCopy(d)))
+      selectedShooterRuleIdx = #rules
+    end
+    refreshShooterRulesUI()
+    saveCurrentProfile()
+  end
   ed:getChildById('ruleDelBtn').onClick = function()
     local vp = getVocProfile()
     local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
@@ -4466,7 +4698,7 @@ function setupWidgetsAndCallbacks()
   ed:getChildById('ruleNewBtn').onClick = function()
     local vp = getVocProfile()
     local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
-    local nr = normalizeShooterRule({ type = 'S', words = '', name = 'New Rule', countVal = 1, countOp = '>=' })
+    local nr = normalizeShooterRule({ type = 'S', words = '', name = 'New', countVal = 1, countOp = '>=' })
     table.insert(rules, nr)
     selectedShooterRuleIdx = #rules
     refreshShooterRulesUI()
@@ -5436,17 +5668,25 @@ function onHelperTick()
   end
   if cavebotAutoRec and pPos then
     local recDist = math.max(1, tonumber(charConfig.cavebot.autoRecDist) or 3)
+    local wps = charConfig.cavebot.waypoints
+    local lastWpPos = (#wps > 0) and getWaypointPos(wps[#wps]) or nil
     if lastAutoRecPos and (lastAutoRecPos.z ~= pPos.z or getDistanceBetween(lastAutoRecPos, pPos) >= 8) then
-      table.insert(charConfig.cavebot.waypoints, string.format('Stand: %d, %d, %d', lastAutoRecPos.x, lastAutoRecPos.y, lastAutoRecPos.z))
-      table.insert(charConfig.cavebot.waypoints, string.format('Node: %d, %d, %d', pPos.x, pPos.y, pPos.z))
+      if not lastWpPos or lastWpPos.x ~= lastAutoRecPos.x or lastWpPos.y ~= lastAutoRecPos.y or lastWpPos.z ~= lastAutoRecPos.z then
+        table.insert(wps, string.format('Stand: %d, %d, %d', lastAutoRecPos.x, lastAutoRecPos.y, lastAutoRecPos.z))
+      end
+      table.insert(wps, string.format('Node: %d, %d, %d', pPos.x, pPos.y, pPos.z))
       lastAutoRecPos = { x = pPos.x, y = pPos.y, z = pPos.z }
+      selectedCavebotWpIdx = #wps
       refreshCavebotUI(true)
       saveCurrentProfile()
     elseif not lastAutoRecPos or getDistanceBetween(lastAutoRecPos, pPos) >= recDist then
+      if not lastWpPos or lastWpPos.x ~= pPos.x or lastWpPos.y ~= pPos.y or lastWpPos.z ~= pPos.z then
+        table.insert(wps, string.format('Node: %d, %d, %d', pPos.x, pPos.y, pPos.z))
+        selectedCavebotWpIdx = #wps
+        refreshCavebotUI(true)
+        saveCurrentProfile()
+      end
       lastAutoRecPos = { x = pPos.x, y = pPos.y, z = pPos.z }
-      table.insert(charConfig.cavebot.waypoints, string.format('Node: %d, %d, %d', pPos.x, pPos.y, pPos.z))
-      refreshCavebotUI(true)
-      saveCurrentProfile()
     end
   end
 
@@ -5486,7 +5726,8 @@ function onHelperTick()
 
     if (now - lastCastTime) >= 950 then
       for _, sp in ipairs(vp.healing.spells) do
-        if sp and sp.enabled ~= false and sp.words and sp.words ~= '' and mpPct >= (tonumber(sp.minMp) or 0) then
+        if sp and sp.enabled ~= false and sp.words and sp.words ~= '' and mpPct >= (tonumber(sp.minMp) or 0)
+           and not isSpellOnClientCooldown(sp.words, now) then
           local thresh = tonumber(sp.pct) or 80
           local triggered = false
           if sp.mode == 'mp_low' then
@@ -5512,9 +5753,7 @@ function onHelperTick()
           local shouldUse = false
           if pt.ptype == 'mp' and mpPct <= thresh then
             shouldUse = true
-          elseif pt.ptype == 'hp' and hpPct <= thresh then
-            shouldUse = true
-          elseif pt.ptype == 'spirit' and (hpPct <= thresh or mpPct <= thresh) then
+          elseif pt.ptype ~= 'mp' and hpPct <= thresh then
             shouldUse = true
           end
           if shouldUse then
@@ -5760,92 +5999,112 @@ function onHelperTick()
     end
   end
 
-  if charConfig.masterEnabled == true and vp.shooter.enabled == true and #nearbyMonsters > 0 and (not vp.shooter.disablePz or not inPz) and (now - lastShooterCastTime) >= 1000 then
+  if charConfig.masterEnabled == true and vp.shooter.enabled == true and #nearbyMonsters > 0 and (not vp.shooter.disablePz or not inPz) then
     local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
-    local hasMomentum = (PlayerStates.Momentum ~= nil) and player:hasState(PlayerStates.Momentum) or false
-    local evalOrder = {}
-    if hasMomentum then
-      for idx, r in ipairs(rules) do
-        if r.cond and r.cond.momentum then table.insert(evalOrder, idx) end
-      end
-      for idx, r in ipairs(rules) do
-        if not (r.cond and r.cond.momentum) then table.insert(evalOrder, idx) end
-      end
-    else
-      for idx = 1, #rules do table.insert(evalOrder, idx) end
-    end
+    local attackCastThisTick = (now - lastShooterCastTime) < 1000
+    local supportCastThisTick = (now - lastSupportShooterCastTime) < 400
 
-    for _, rIdx in ipairs(evalOrder) do
+    for rIdx = 1, #rules do
       local rule = rules[rIdx]
       if rule and rule.enabled ~= false then
         local c = rule.cond or {}
-        local needTgt = (rule.requiresTarget ~= false)
-        local tgt = isValidMonsterCreature(currentTarget) and currentTarget or nil
-        if (not needTgt) or tgt then
-          local tgtHp = tgt and tgt:getHealthPercent() or 100
-          local matchingCount = #nearbyMonsters
-          local nameOk = true
-          if rule.priority == 'Target Name' and rule.targetName and rule.targetName ~= '' then
-            local filt = rule.targetName:lower()
-            matchingCount = 0
-            for _, m in ipairs(nearbyMonsters) do
-              if m.name:lower():find(filt, 1, true) then
-                matchingCount = matchingCount + 1
+        local trimmedWords = (rule.words or ''):gsub('^%s+', ''):gsub('%s+$', '')
+        local spData = (rule.type ~= 'R') and findSpellByWords(trimmedWords) or nil
+        local isSupportSpell = (spData and type(spData.group) == 'table' and spData.group[3] ~= nil and spData.group[1] == nil) and true or false
+        local groupCadenceOk = isSupportSpell and (not supportCastThisTick) or (not isSupportSpell and not attackCastThisTick)
+        if groupCadenceOk then
+          local needTgt = (rule.requiresTarget ~= false)
+          local tgt = isValidMonsterCreature(currentTarget) and currentTarget or nil
+          if (not needTgt) or tgt then
+            local tgtHp = tgt and tgt:getHealthPercent() or 100
+            local matchingCount = #nearbyMonsters
+            local nameOk = true
+            local firstMatchedCreature = nil
+            if rule.priority == 'Target Name' and rule.targetName and rule.targetName ~= '' then
+              local filtSet = parseCommaSet(rule.targetName)
+              matchingCount = 0
+              for _, m in ipairs(nearbyMonsters) do
+                local mLow = m.name:lower()
+                local hit = false
+                for tok, _ in pairs(filtSet) do
+                  if mLow:find(tok, 1, true) then hit = true break end
+                end
+                if hit then
+                  matchingCount = matchingCount + 1
+                  if not firstMatchedCreature then firstMatchedCreature = m.creature end
+                end
+              end
+              nameOk = matchingCount > 0
+            end
+
+            local countOk = checkCountCondition(matchingCount, rule.countOp or '>=', rule.countVal or 1)
+            local hpMinOk = (not tgt) or (tgtHp >= (tonumber(rule.hpMin) or 0))
+            local maxVal = tonumber(rule.hpMax) or 100
+            local hpMaxOk = (not tgt) or (maxVal <= 0) or (tgtHp <= maxVal)
+            local mpOk = mpPct >= (tonumber(rule.mpPct) or 0)
+            local delayMs = tonumber(rule.delay) or 0
+            local lastRuleCast = rule._lastCastAt or 0
+            local cdOk = ((delayMs <= 0) or ((now - lastRuleCast) >= delayMs))
+              and (rule.type == 'R' or not isSpellOnClientCooldown(trimmedWords, now))
+            local trapMin = math.max(1, math.min(8, tonumber(c.trappedCount) or 8))
+            local trapOk = (not c.trapped) or (adjacentMonsters >= trapMin)
+            local adjOk = true
+            if c.adjacent then
+              if tgt and tgt:getPosition() then
+                adjOk = (getDistanceBetween(pPos, tgt:getPosition()) <= 1)
+              else
+                adjOk = (adjacentMonsters >= 1)
               end
             end
-            nameOk = (tgt and tgt:getName():lower():find(filt, 1, true) ~= nil) or (not needTgt and matchingCount > 0)
-          end
+            local stopOk = (not c.stopped) or ((now - playerStopTracker.since) >= (c.stoppedMs or 1000))
 
-          local countOk = checkCountCondition(matchingCount, rule.countOp or '>=', rule.countVal or 1)
-          local hpMinOk = (not tgt) or (tgtHp >= (tonumber(rule.hpMin) or 0))
-          local maxVal = tonumber(rule.hpMax) or 100
-          local hpMaxOk = (not tgt) or (maxVal <= 0) or (tgtHp <= maxVal)
-          local mpOk = mpPct >= (tonumber(rule.mpPct) or 0)
-          local delayMs = tonumber(rule.delay) or 0
-          local trimmedWords = (rule.words or ''):gsub('^%s+', ''):gsub('%s+$', '')
-          local cdOk = ((delayMs <= 0) or ((now - (ruleCooldowns[rIdx] or 0)) >= delayMs))
-            and (rule.type == 'R' or not isSpellOnClientCooldown(trimmedWords, now))
-          local trapOk = (not c.trapped) or (adjacentMonsters >= 5)
-          local adjOk = (not c.adjacent) or (adjacentMonsters >= 1)
-          local stopOk = (not c.stopped) or ((now - playerStopTracker.since) >= (c.stoppedMs or 1000))
-
-          if nameOk and countOk and hpMinOk and hpMaxOk and mpOk and cdOk and trapOk and adjOk and stopOk then
-            if c.faceTarget then
-              local dirCounts = { [North] = 0, [South] = 0, [East] = 0, [West] = 0 }
-              for _, m in ipairs(nearbyMonsters) do
-                local mp = m.creature:getPosition()
-                if mp then
-                  local dx, dy = mp.x - pPos.x, mp.y - pPos.y
-                  if math.abs(dx) >= math.abs(dy) then
-                    if dx > 0 then dirCounts[East] = dirCounts[East] + 1 elseif dx < 0 then dirCounts[West] = dirCounts[West] + 1 end
+            if nameOk and countOk and hpMinOk and hpMaxOk and mpOk and cdOk and trapOk and adjOk and stopOk then
+              if c.faceTarget then
+                local dirCounts = { [North] = 0, [South] = 0, [East] = 0, [West] = 0 }
+                for _, m in ipairs(nearbyMonsters) do
+                  local mp = m.creature:getPosition()
+                  if mp then
+                    local dx, dy = mp.x - pPos.x, mp.y - pPos.y
+                    if math.abs(dx) >= math.abs(dy) then
+                      if dx > 0 then dirCounts[East] = dirCounts[East] + 1 elseif dx < 0 then dirCounts[West] = dirCounts[West] + 1 end
+                    else
+                      if dy > 0 then dirCounts[South] = dirCounts[South] + 1 elseif dy < 0 then dirCounts[North] = dirCounts[North] + 1 end
+                    end
+                  end
+                end
+                local bestDir, bestCnt = nil, 0
+                for d, cnt in pairs(dirCounts) do
+                  if cnt > bestCnt then bestDir, bestCnt = d, cnt end
+                end
+                if bestDir and player:getDirection() ~= bestDir then
+                  g_game.turn(bestDir)
+                elseif tgt then
+                  faceCreatureDirection(player, tgt)
+                end
+              end
+              local runeTarget = firstMatchedCreature or tgt or (nearbyMonsters[1] and nearbyMonsters[1].creature) or nil
+              if rule.type == 'R' then
+                if rule.itemId and rule.itemId > 0 and isValidMonsterCreature(runeTarget) then
+                  g_game.useInventoryItemWith(rule.itemId, runeTarget)
+                  rule._lastCastAt = now
+                  lastShooterCastTime = now
+                  attackCastThisTick = true
+                  break
+                end
+              else
+                if trimmedWords ~= '' then
+                  g_game.talk(trimmedWords)
+                  rule._lastCastAt = now
+                  if isSupportSpell then
+                    lastSupportShooterCastTime = now
+                    supportCastThisTick = true
                   else
-                    if dy > 0 then dirCounts[South] = dirCounts[South] + 1 elseif dy < 0 then dirCounts[North] = dirCounts[North] + 1 end
+                    lastShooterCastTime = now
+                    attackCastThisTick = true
+                    break
                   end
                 end
               end
-              local bestDir, bestCnt = nil, 0
-              for d, cnt in pairs(dirCounts) do
-                if cnt > bestCnt then bestDir, bestCnt = d, cnt end
-              end
-              if bestDir and player:getDirection() ~= bestDir then
-                g_game.turn(bestDir)
-              elseif tgt then
-                faceCreatureDirection(player, tgt)
-              end
-            end
-            local runeTarget = tgt or (nearbyMonsters[1] and nearbyMonsters[1].creature) or nil
-            if rule.type == 'R' then
-              if rule.itemId and rule.itemId > 0 and isValidMonsterCreature(runeTarget) then
-                g_game.useInventoryItemWith(rule.itemId, runeTarget)
-                ruleCooldowns[rIdx] = now
-                lastShooterCastTime = now
-                break
-              end
-            elseif trimmedWords ~= '' then
-              g_game.talk(trimmedWords)
-              ruleCooldowns[rIdx] = now
-              lastShooterCastTime = now
-              break
             end
           end
         end
@@ -5855,14 +6114,17 @@ function onHelperTick()
 
   -- 3. TOOLS AUTOMATION
   local tl = charConfig.tools
-  if tl.haste.enabled and tl.haste.words ~= '' and not hasHaste and (tl.haste.pzCast or not inPz) and (now - lastHasteTime) >= 2000 then
+  if tl.haste.enabled and tl.haste.words ~= '' and not hasHaste and (tl.haste.pzCast or not inPz)
+     and (now - lastHasteTime) >= 2000 and not isSpellOnClientCooldown(tl.haste.words, now) then
     g_game.talk(tl.haste.words)
     lastHasteTime = now
   end
 
   if tl.manaTrain.enabled and tl.manaTrain.words ~= '' and (tl.manaTrain.pzCast or not inPz)
-     and mpPct >= (tonumber(tl.manaTrain.pct) or 85) and (now - lastManaTrainTime) >= 2200 then
+     and mpPct >= (tonumber(tl.manaTrain.pct) or 85) and (now - lastManaTrainTime) >= 2200
+     and (now - lastCastTime) >= 1000 and not isSpellOnClientCooldown(tl.manaTrain.words, now) then
     g_game.talk(tl.manaTrain.words)
+    lastCastTime = now
     lastManaTrainTime = now
   end
 
@@ -5900,7 +6162,7 @@ function onHelperTick()
     lastEatTime = now
   end
 
-  if tl.changeGold and (now - lastGoldTime) >= 350 then
+  if tl.changeGold and (now - lastGoldTime) >= 150 then
     for _, cid in ipairs({ 3031, 3035 }) do
       local used = false
       for _, cont in pairs(g_game.getContainers()) do
@@ -5973,29 +6235,56 @@ function onHelperTick()
     elseif (now - lastCavebotTime) >= cadenceMs then
       local stopCount = tonumber(cbS.stopMonsters) or 3
       local resumeCount = tonumber(cbS.walkMonsters) or 1
-      if cbS.dynamicLure ~= false or cavebotLureActive then
+      local isGlobalLure = (cbS.lureMode == 'global')
+      local wps = cb.waypoints or {}
+      local idx = cb.currentWpIndex or 1
+      if idx > #wps or idx < 1 then idx = 1 end
+      local wpStr = wps[idx] or ''
+      local wpLower = wpStr:lower()
+
+      if isGlobalLure then
+        if #wps > 0 and (wpLower:find('^start lure') or wpLower:find('^end lure')) then
+          cb.currentWpIndex = (idx % #wps) + 1
+          idx = cb.currentWpIndex
+          wpStr = wps[idx] or ''
+          wpLower = wpStr:lower()
+          refreshCavebotUI()
+        end
         if #nearbyMonsters >= stopCount then
           cbPauseState = true
         elseif #nearbyMonsters <= resumeCount then
           cbPauseState = false
         end
       else
-        cbPauseState = (#nearbyMonsters > 0 and currentTarget ~= nil)
-      end
-
-      if not cbPauseState then
-        local wps = cb.waypoints or {}
         if #wps > 0 then
-          local idx = cb.currentWpIndex or 1
-          if idx > #wps then idx = 1 end
-          local wpStr = wps[idx] or ''
-          local wpLower = wpStr:lower()
-
           if wpLower:find('^start lure') then
             cavebotLureActive = true
           elseif wpLower:find('^end lure') then
-            cavebotLureActive = false
+            if #nearbyMonsters >= stopCount then
+              cbPauseState = true
+            elseif #nearbyMonsters <= resumeCount then
+              cbPauseState = false
+              cavebotLureActive = false
+            end
           end
+        end
+        if cavebotLureActive then
+          if #nearbyMonsters >= stopCount then
+            cbPauseState = true
+          elseif #nearbyMonsters <= resumeCount then
+            cbPauseState = false
+          end
+        else
+          cbPauseState = false
+        end
+      end
+
+      if not cbPauseState then
+        if #wps > 0 then
+          idx = cb.currentWpIndex or 1
+          if idx > #wps or idx < 1 then idx = 1 end
+          wpStr = wps[idx] or ''
+          wpLower = wpStr:lower()
 
           local x, y, z = wpStr:match('(%d+),%s*(%d+),%s*(%d+)')
           if x and y and z then
@@ -6059,8 +6348,7 @@ end
 
 function init()
   g_ui.importStyle('modals')
-  local gameRoot = modules.game_interface and modules.game_interface.getRootPanel and modules.game_interface.getRootPanel() or rootWidget
-  helperWindow = g_ui.loadUI('helper', gameRoot)
+  helperWindow = g_ui.loadUI('helper', rootWidget)
   local container = helperWindow:getChildById('contentContainer')
   panels.healing  = g_ui.loadUI('healing', container)
   panels.tools    = g_ui.loadUI('tools', container)
@@ -6088,11 +6376,12 @@ function init()
     helperButton = modules.game_mainpanel.addToggleButton(
       'davCasterBtn',
       tr('DAVCaster Helper'),
-      '/mods/game_helper/images/ui/KACaster',
+      '/mods/game_helper/images/custom/helper_closed',
       toggle,
       false,
       1
     )
+    updateHelperButtonIcon(false)
   end
 
   if CharConfig then CharConfig.migrateLegacyNode(DAVHELPER_NS, DAVHELPER_LEGACY_NODE) end

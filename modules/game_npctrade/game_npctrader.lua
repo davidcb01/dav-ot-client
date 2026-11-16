@@ -150,7 +150,7 @@ function controllerNpcTrader:onGameStart()
             if self:isLegacyMode() then
                 self:legacy_hide()
             else
-                self:onCloseNpcTrade()
+                self:onCloseNpcDialog()
             end
         end,
         onCloseNpcTrade = function()
@@ -190,7 +190,7 @@ function controllerNpcTrader:onTerminate()
     if self:isLegacyMode() then
         self:legacy_terminate()
     else
-        self:onCloseNpcTrade()
+        self:onCloseNpcDialog()
     end
 end
 
@@ -198,33 +198,50 @@ function controllerNpcTrader:onGameEnd()
     if self:isLegacyMode() then
         self:legacy_hide()
     else
-        self:onCloseNpcTrade()
+        self:onCloseNpcDialog()
     end
+end
+
+function controllerNpcTrader:clearTradeState()
+    self.isTradeOpen = false
+    self.hasSellItems = false
+    self.isSellingAll = false
+    self.widthConsole = self.DEFAULT_CONSOLE_WIDTH
+    if self.sellAllWithDelayEvent then
+        removeEvent(self.sellAllWithDelayEvent)
+        self.sellAllWithDelayEvent = nil
+    end
+    self:closeQuickSellWindow()
+    self.buyItems = {}
+    self.sellItems = {}
+    self.playerItems = {}
+    self.playerMoney = nil
+    self.selectedItem = nil
+    self.tradeItems = {}
+    self.currentList = {}
+    self.allTradeItems = {}
 end
 
 function controllerNpcTrader:onCloseNpcTrade()
     if self:isLegacyMode() then
         self:legacy_hide()
     else
+        self:clearTradeState()
+    end
+end
+
+function controllerNpcTrader:onCloseNpcDialog()
+    if self:isLegacyMode() then
+        self:legacy_hide()
+    else
         self:disconnectNpcTalkEvent()
+        if self.isTradeOpen then
+            g_game.closeNpcTrade()
+        end
         if controllerNpcTrader.ui and controllerNpcTrader.ui:isVisible() then
             controllerNpcTrader:unloadHtml()
         end
-        controllerNpcTrader.isTradeOpen = false
-        controllerNpcTrader.isSellingAll = false
-        if controllerNpcTrader.sellAllWithDelayEvent then
-            removeEvent(controllerNpcTrader.sellAllWithDelayEvent)
-            controllerNpcTrader.sellAllWithDelayEvent = nil
-        end
-        -- Clean up state
-        controllerNpcTrader.buyItems = {}
-        controllerNpcTrader.sellItems = {}
-        controllerNpcTrader.playerItems = {}
-        controllerNpcTrader.playerMoney = nil
-        controllerNpcTrader.selectedItem = nil
-        controllerNpcTrader.tradeItems = {}
-        controllerNpcTrader.currentList = {}
-        controllerNpcTrader.allTradeItems = {}
+        self:clearTradeState()
     end
 end
 

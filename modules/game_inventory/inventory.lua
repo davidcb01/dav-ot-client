@@ -112,6 +112,45 @@ local function combatEvent()
     end
 end
 
+local function applyInventoryQuickLootBadge(itemWidget, item)
+    if not itemWidget then
+        return
+    end
+    local badge = itemWidget:getChildById('quickLootMark')
+    local ql = modules.game_quickloot and modules.game_quickloot.QuickLoot
+    local role = (item and item:isContainer() and ql and ql.getContainerRoleForWidget)
+        and ql.getContainerRoleForWidget(item, nil, nil, InventorySlotBack) or nil
+    if role then
+        if not badge then
+            badge = g_ui.createWidget('UIWidget', itemWidget)
+            badge:setId('quickLootMark')
+            badge:setSize({ width = 11, height = 11 })
+            badge:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+            badge:addAnchor(AnchorRight, 'parent', AnchorRight)
+            badge:setMarginBottom(1)
+            badge:setMarginRight(1)
+            badge:setPhantom(true)
+            badge:setImageSource('/game_quickloot/images/container_badge')
+        end
+        badge:setImageColor(role == 'obtain' and '#4fc3f7' or (role == 'both' and '#ffd54f' or '#ffffff'))
+        badge:show()
+        badge:raise()
+    elseif badge then
+        badge:hide()
+    end
+end
+
+function refreshQuickLootBadges()
+    if inventoryShrink then
+        return
+    end
+    local ui = getInventoryUi()
+    local player = g_game.getLocalPlayer()
+    if ui and ui.backpack and ui.backpack.item and player then
+        applyInventoryQuickLootBadge(ui.backpack.item, player:getInventoryItem(InventorySlotBack))
+    end
+end
+
 local function inventoryEvent(player, slot, item, oldItem)
     if inventoryShrink then
         return
@@ -146,6 +185,9 @@ local function inventoryEvent(player, slot, item, oldItem)
     slotPanel.item:setShowDuration(g_game.getFeature(GameThingClock) and modules.client_options.getOption('showExpiryInInvetory'))
     slotPanel.item:setShowCharges(g_game.getFeature(GameThingCounter) and modules.client_options.getOption('showExpiryInInvetory'))
     ItemsDatabase.setTier(slotPanel.item, item)
+    if slot == InventorySlotBack then
+        applyInventoryQuickLootBadge(slotPanel.item, item)
+    end
 
     if slot == InventorySlotLeft then
         if item and modules.game_proficiency then

@@ -582,6 +582,8 @@ function onWeaponProficiency(itemId, experience, perks, marketCategory)
         -- If this is the currently selected item, update display with cached perks
         if WeaponProficiency.selectedItemId == itemId then
             WeaponProficiency:displayProficiencyData(itemId, experience, cachePerks)
+        elseif not WeaponProficiency.selectedItemId then
+            autoSelectItem()
         end
     end
 
@@ -708,20 +710,30 @@ function autoSelectItem()
     -- Get all items from all categories
     local allItems = WeaponProficiency.itemList[MarketCategory.WeaponsAll] or {}
 
-    -- First, check if player has an equipped weapon
+    -- First, check if player has an equipped weapon (Left slot, fallback Right slot)
     local player = g_game.getLocalPlayer()
     if player then
-        local leftSlotItem = player:getInventoryItem(InventorySlotLeft)
-        if leftSlotItem then
-            local equippedId = leftSlotItem:getId()
-            -- Search for this item in our list
-            for _, marketItem in ipairs(allItems) do
-                local itemId = marketItem.originalId or (marketItem.displayItem and marketItem.displayItem:getId())
-                local displayId = marketItem.displayId or itemId
-                if itemId == equippedId or displayId == equippedId then
-                    targetItemId = itemId
-                    targetMarketItem = marketItem
-                    break
+        local eqSlotItem = player:getInventoryItem(InventorySlotLeft)
+        if not eqSlotItem or (eqSlotItem.getWeaponType and (eqSlotItem:getWeaponType() or 0) == 0) then
+            local rightSlotItem = player:getInventoryItem(InventorySlotRight)
+            if rightSlotItem and rightSlotItem.getWeaponType and (rightSlotItem:getWeaponType() or 0) > 0 then
+                eqSlotItem = rightSlotItem
+            end
+        end
+        if eqSlotItem then
+            local equippedId = eqSlotItem:getId()
+            targetMarketItem = WeaponProficiency:findMarketItem(equippedId)
+            if targetMarketItem then
+                targetItemId = targetMarketItem.originalId or (targetMarketItem.displayItem and targetMarketItem.displayItem:getId()) or equippedId
+            else
+                for _, marketItem in ipairs(allItems) do
+                    local itemId = marketItem.originalId or (marketItem.displayItem and marketItem.displayItem:getId())
+                    local displayId = marketItem.displayId or itemId
+                    if itemId == equippedId or displayId == equippedId then
+                        targetItemId = itemId
+                        targetMarketItem = marketItem
+                        break
+                    end
                 end
             end
         end
@@ -774,7 +786,7 @@ function autoSelectItem()
     else
         -- Retry if no item found yet (cache might not be ready)
         WeaponProficiency.autoSelectRetries = (WeaponProficiency.autoSelectRetries or 0) + 1
-        if WeaponProficiency.autoSelectRetries < 5 then
+        if WeaponProficiency.autoSelectRetries < 12 then
             scheduleEvent(function()
                 autoSelectItem()
             end, 200)

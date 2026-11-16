@@ -43,8 +43,8 @@ HealingSpellListRow < UIWidget
     id: modeCombo
     anchors.verticalCenter: parent.verticalCenter
     anchors.right: pctEdit.left
-    margin-right: 4
-    width: 68
+    margin-right: 3
+    width: 56
     height: 19
     tooltip: Select trigger condition: HP% <= X, MP% <= X or MP% >= X
 
@@ -52,8 +52,8 @@ HealingSpellListRow < UIWidget
     id: pctEdit
     anchors.verticalCenter: parent.verticalCenter
     anchors.right: minMpLbl.left
-    margin-right: 6
-    width: 38
+    margin-right: 4
+    width: 34
     text: 80
 
   Label
@@ -70,8 +70,8 @@ HealingSpellListRow < UIWidget
     id: minMpEdit
     anchors.verticalCenter: parent.verticalCenter
     anchors.right: enableCheck.left
-    margin-right: 6
-    width: 34
+    margin-right: 4
+    width: 32
     text: 0
 
   CheckBox
@@ -178,7 +178,7 @@ HealingPotionListRow < UIWidget
     anchors.left: barType.right
     margin-left: 6
     margin-top: 2
-    width: 84
+    width: 62
     height: 18
 
   Label

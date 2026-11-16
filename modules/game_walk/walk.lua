@@ -21,12 +21,51 @@ local keys = {
     { "Numpad7", NorthWest },
 }
 
-local turnKeys = {
-    { "Control+Up",    North },
-    { "Control+Right", East },
-    { "Control+Down",  South },
-    { "Control+Left",  West },
+local turnDirs = {
+    { "Up",    North },
+    { "Right", East },
+    { "Down",  South },
+    { "Left",  West },
 }
+
+local boundTurnKeys = {}
+
+local function isTextInputFocused()
+    local root = g_ui.getRootWidget()
+    local widget = root
+    while widget do
+        local child = widget:getFocusedChild()
+        if not child then
+            break
+        end
+        widget = child
+    end
+    if widget and widget ~= root and widget:isVisible() and widget:isEnabled() then
+        local cls = widget:getClassName()
+        if (cls == 'UITextEdit' or cls == 'UISpinBox') and (not widget.isEditable or widget:isEditable()) then
+            return true
+        end
+    end
+    return false
+end
+
+local function getActiveRotateModifiers()
+    local mods = {}
+    if modules.client_options then
+        if modules.client_options.getOption('rotateHoldCtrl') ~= false then
+            table.insert(mods, "Control")
+        end
+        if modules.client_options.getOption('rotateHoldShift') == true then
+            table.insert(mods, "Shift")
+        end
+        if modules.client_options.getOption('rotateHoldAlt') == true then
+            table.insert(mods, "Alt")
+        end
+    else
+        table.insert(mods, "Control")
+    end
+    return mods
+end
 
 WalkController = Controller:new()
 
@@ -73,6 +112,9 @@ end
 
 --- Makes the player walk in the given direction.
 local function walk(dir)
+    if isTextInputFocused() then
+        return
+    end
     local player = g_game.getLocalPlayer()
     if not player or g_game.isDead() or player:isDead() then
         return
@@ -109,6 +151,12 @@ local function walk(dir)
         local toTile = g_map.getTile(toPos)
         if not toTile or not toTile:isWalkable() then
             if not canChangeFloor(toPos, 1) and not canChangeFloor(toPos, -1) then
+                if modules.client_options and modules.client_options.getOption('alwaysTurnTowardsDirection') and dir <= West and player:getDirection() ~= dir then
+                    if lastTurn + 150 < g_clock.millis() then
+                        g_game.turn(dir)
+                        lastTurn = g_clock.millis()
+                    end
+                end
                 return false
             end
         else
@@ -123,6 +171,9 @@ end
 
 --- Adds a walk event with an optional delay.
 local function addWalkEvent(dir, delay)
+    if isTextInputFocused() then
+        return
+    end
     if g_clock.millis() - lastCancelWalkTime > 20 then
         cancelWalkEvent()
         lastCancelWalkTime = g_clock.millis()
@@ -139,11 +190,17 @@ end
 
 --- Initiates a smart walk in the given direction.
 function smartWalk(dir)
+    if isTextInputFocused() then
+        return
+    end
     addWalkEvent(dir)
 end
 
 --- Changes the current walking direction.
 local function changeWalkDir(dir, pop)
+    if not pop and isTextInputFocused() then
+        return
+    end
     -- Remove all occurrences of the specified direction
     while table.removevalue(smartWalkDirs, dir) do end
 
@@ -177,8 +234,11 @@ end
 
 --- Handles turning the player.
 local function turn(dir, repeated)
+    if isTextInputFocused() then
+        return
+    end
     local player = g_game.getLocalPlayer()
-    if player:isWalking() and player:getDirection() == dir then
+    if not player or (player:isWalking() and player:getDirection() == dir) then
         return
     end
 
@@ -197,17 +257,40 @@ local function turn(dir, repeated)
     end
 end
 
+local function bindTurnKeysOnly()
+    local mods = getActiveRotateModifiers()
+    for _, mod in ipairs(mods) do
+        for _, keyDir in ipairs(turnDirs) do
+            local combo = mod .. "+" .. keyDir[1]
+            bindTurnKey(combo, keyDir[2])
+            table.insert(boundTurnKeys, combo)
+        end
+    end
+end
+
+local function unbindTurnKeysOnly()
+    for _, combo in ipairs(boundTurnKeys) do
+        unbindTurnKey(combo)
+    end
+    boundTurnKeys = {}
+end
+
+function refreshTurnKeys()
+    unbindTurnKeysOnly()
+    bindTurnKeysOnly()
+end
+
 --- Binds movement keys to their respective directions.
 local function bindKeys()
     modules.game_interface.getRootPanel():setAutoRepeatDelay(200)
 
     for _, keyDir in ipairs(keys) do bindWalkKey(keyDir[1], keyDir[2]) end
-    for _, keyDir in ipairs(turnKeys) do bindTurnKey(keyDir[1], keyDir[2]) end
+    refreshTurnKeys()
 end
 
 local function unbindKeys()
     for _, keyDir in ipairs(keys) do unbindWalkKey(keyDir[1]) end
-    for _, keyDir in ipairs(turnKeys) do unbindTurnKey(keyDir[1]) end
+    unbindTurnKeysOnly()
 end
 
 --- Handles player teleportation events.
@@ -295,6 +378,10 @@ function bindWalkKey(key, dir)
     g_keyboard.bindKeyUp(key, function()
         g_keyboard.setKeyDelay(key, 30)
         changeWalkDir(dir, true)
+        if #smartWalkDirs == 0 or nextWalkDir == dir then
+            nextWalkDir = nil
+            cancelWalkEvent()
+        end
     end, gameRootPanel, true)
 
     g_keyboard.bindKeyPress(key, function() smartWalk(dir) end, gameRootPanel)

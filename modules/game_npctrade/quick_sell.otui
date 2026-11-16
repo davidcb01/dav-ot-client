@@ -1,0 +1,159 @@
+QuickSellItemTile < Panel
+  size: 36 36
+  image-source: /images/ui/item
+  image-border: 2
+  border-width: 1
+  border-color: alpha
+  focusable: true
+  phantom: false
+
+  $focus:
+    border-width: 1
+    border-color: #ffffff
+
+  UIItem
+    id: item
+    anchors.fill: parent
+    margin: 2
+    virtual: true
+    phantom: true
+
+QuickSellWindow < MainWindow
+  id: quickSellWindow
+  size: 380 315
+  !text: tr('Quick Sell')
+  @onEscape: modules.game_npctrade.controllerNpcTrader:closeQuickSellWindow()
+
+  Panel
+    id: tabsRow
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 22
+
+    Button
+      id: sellAllTabBtn
+      !text: tr('Sell All')
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      width: 170
+      @onClick: modules.game_npctrade.controllerNpcTrader:setQuickSellTab('sell')
+
+    Button
+      id: blacklistTabBtn
+      !text: tr('BlackList')
+      anchors.top: parent.top
+      anchors.left: sellAllTabBtn.right
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-left: 6
+      @onClick: modules.game_npctrade.controllerNpcTrader:setQuickSellTab('blacklist')
+
+  Label
+    id: sectionHeader
+    !text: tr('Sale Progress')
+    anchors.top: tabsRow.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    height: 18
+    text-align: center
+    background-color: #162535
+    color: #dfdfdf
+    font: verdana-11px-rounded
+
+  ProgressBar
+    id: saleProgressBar
+    anchors.top: sectionHeader.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 2
+    height: 10
+    background-color: #3a8f3a
+    border-width: 1
+    border-color: #141414
+
+  FlatPanel
+    id: gridContainer
+    anchors.top: saleProgressBar.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: bottomSeparator.top
+    margin-top: 4
+    margin-bottom: 6
+
+    ScrollablePanel
+      id: itemsGrid
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: gridScrollBar.left
+      anchors.bottom: parent.bottom
+      margin: 4
+      vertical-scrollbar: gridScrollBar
+      layout:
+        type: grid
+        cell-size: 36 36
+        cell-spacing: 3
+        flow: true
+
+    VerticalScrollBar
+      id: gridScrollBar
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
+      anchors.right: parent.right
+      margin: 2
+      step: 18
+      pixels-scroll: true
+
+  HorizontalSeparator
+    id: bottomSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: bottomBar.top
+    margin-bottom: 6
+
+  Panel
+    id: bottomBar
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    height: 22
+
+    Label
+      id: saleValueLabel
+      !text: tr('Sale value: 0 gold')
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      text-auto-resize: true
+      color: #dfdfdf
+      font: verdana-11px-rounded
+
+    Button
+      id: closeBtn
+      !text: tr('Close')
+      width: 58
+      anchors.right: parent.right
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
+      @onClick: modules.game_npctrade.controllerNpcTrader:closeQuickSellWindow()
+
+    Button
+      id: executeSellAllBtn
+      !text: tr('Sell All')
+      width: 58
+      anchors.right: closeBtn.left
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
+      margin-right: 4
+      @onClick: modules.game_npctrade.controllerNpcTrader:startQuickSellAll()
+
+    Button
+      id: sellItemBtn
+      !text: tr('Sell Item')
+      width: 64
+      anchors.right: executeSellAllBtn.left
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
+      margin-right: 4
+      @onClick: modules.game_npctrade.controllerNpcTrader:sellSelectedQuickSellItem()

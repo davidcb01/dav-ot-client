@@ -55,9 +55,32 @@ TargetRuleRow < UIWidget
   CheckBox
     id: ruleEnableCheck
     anchors.verticalCenter: parent.verticalCenter
-    anchors.right: parent.right
-    margin-right: 6
+    anchors.right: upBtn.left
+    margin-right: 4
     width: 16
+    checked: true
+
+  RowActionButton
+    id: upBtn
+    text: ^
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: downBtn.left
+    margin-right: 2
+
+  RowActionButton
+    id: downBtn
+    text: v
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: delBtn.left
+    margin-right: 2
+
+  RowActionButton
+    id: delBtn
+    text: X
+    color: #ff6666
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    margin-right: 2
     checked: true
 
 Panel
@@ -171,7 +194,7 @@ Panel
     border-width: 1
     border-color: #191919
     vertical-scrollbar: targetRulesScrollBar
-    auto-focus: first
+    auto-focus: none
 
   VerticalScrollBar
     id: targetRulesScrollBar
@@ -180,7 +203,7 @@ Panel
     height: 132
     anchors.right: parent.right
     step: 22
-    pixels-scroll: true
+    pixel-scroll: true
 
   Panel
     id: targetEditorBox
@@ -322,8 +345,8 @@ Panel
 
     HelperSmallButton
       id: tgtNewBtn
-      text: New Rule
-      width: 70
+      text: New
+      width: 58
       height: 19
       color: #5ce65c
       anchors.verticalCenter: tgtHpMinEdit.verticalCenter

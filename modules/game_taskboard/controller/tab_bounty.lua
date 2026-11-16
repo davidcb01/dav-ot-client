@@ -7,22 +7,39 @@ local function formatPercent(value)
     end
 end
 
-local function normalizeTalismanValues(index, currentRaw, nextRaw)
-    local currentValue = tonumber(currentRaw) or 0
-    local nextValue = tonumber(nextRaw) or 0
-
-    -- Some payloads report level 0 as current=0 with a legacy next value.
-    -- Normalize the level-0 baseline so UI always starts at 2.5/5.0%.
-    if currentValue == 0 and nextValue > 0 then
-        local baseCurrent = (index == 4) and 500 or 250
-        local baseStep = (index == 4) and 100 or 50
-        currentValue = baseCurrent
-        if nextValue <= currentValue then
-            nextValue = currentValue + baseStep
+local function inferTalismanLevel(index, currentRaw)
+    local raw = tonumber(currentRaw) or 0
+    if raw <= 0 then
+        return 0
+    end
+    if index == 4 then
+        -- Native wire formula for slot 4: (5+L)*100 for L<=15, (20+(L-15)*0.5)*100 for L<=55, (40+(L-55)*0.2)*100 above
+        if raw <= 2000 then
+            return math.max(0, math.floor(((raw / 100) - 5) + 0.5))
+        elseif raw <= 4000 then
+            return math.max(15, math.floor(15 + (((raw / 100) - 20) / 0.5) + 0.5))
+        else
+            return math.max(55, math.floor(55 + (((raw / 100) - 40) / 0.2) + 0.5))
+        end
+    else
+        -- Native wire formula for slots 1..3: (2.5+L*0.5)*100 for L<=15, (10+(L-15)*0.25)*100 for L<=55, (20+(L-55)*0.1)*100 above
+        if raw <= 1000 then
+            return math.max(0, math.floor(((raw / 100) - 2.5) / 0.5 + 0.5))
+        elseif raw <= 2000 then
+            return math.max(15, math.floor(15 + (((raw / 100) - 10) / 0.25) + 0.5))
+        else
+            return math.max(55, math.floor(55 + (((raw / 100) - 20) / 0.1) + 0.5))
         end
     end
+end
 
-    return currentValue / 100, nextValue / 100
+local TALISMAN_MAX_LEVEL = 40
+
+local function normalizeTalismanValues(index, currentRaw, nextRaw)
+    local level = math.min(TALISMAN_MAX_LEVEL, inferTalismanLevel(index, currentRaw))
+    local currentPct = math.min(25.0, 5.0 + (level * 0.5))
+    local nextPct = (level >= TALISMAN_MAX_LEVEL) and 0 or math.min(25.0, 5.0 + ((level + 1) * 0.5))
+    return currentPct, nextPct, level
 end
 
 --  Server data handler 
@@ -81,10 +98,10 @@ function TaskBoardController:onBountyServerData(header, monsters, talisman)
     for i = 1, 4 do
         local s = type(talisman) == 'table' and talisman[i] or nil
         if s then
-            local currentValue, nextValue = normalizeTalismanValues(i, s.currentValue, s.nextValue)
+            local currentValue, nextValue, level = normalizeTalismanValues(i, s.currentValue, s.nextValue)
             local upgradeCost = tonumber(s.upgradeCost) or 0
             local rawNextValue = tonumber(s.nextValue) or 0
-            local isMaxed = rawNextValue == 0 and upgradeCost == 0
+            local isMaxed = (level >= TALISMAN_MAX_LEVEL) or (rawNextValue == 0 and upgradeCost == 0)
             table.insert(tals, {
                 icon = TALISMAN_ICONS[i],
                 title = TALISMAN_TITLES[i],

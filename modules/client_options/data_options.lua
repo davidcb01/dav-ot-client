@@ -180,9 +180,79 @@ return {
             g_app.setMaxFps(v)
         end
     },
-    -- Kept only so g_sounds.setAudioEnabled has a persisted default at client startup;
-    -- muting/unmuting at runtime is handled by the master volume slider (see soundMaster below).
-    enableAudio                       = true,
+    -- Master sound switch
+    enableAudio                       = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if not g_sounds then
+                return
+            end
+            local masterVal = (options.soundMaster and options.soundMaster.value) or 0
+            local enabled = (value ~= false) and (masterVal > 0)
+            local channelSliders = {
+                Music = (options.soundMusic and options.soundMusic.value) or 100,
+                Ambient = (options.soundAmbience and options.soundAmbience.value) or 100,
+                Item = (options.soundItems and options.soundItems.value) or 100,
+                Event = (options.soundEventVolume and options.soundEventVolume.value) or 100,
+                SoundUI = (options.soundUI and options.soundUI.value) or 100,
+                Effect = 100,
+            }
+            if g_sounds.setAudioEnabled then
+                g_sounds.setAudioEnabled(enabled)
+            end
+            for channelName, channelId in pairs(SoundChannels) do
+                local channel = g_sounds.getChannel(channelId)
+                if channel then
+                    local sliderVal = channelSliders[channelName]
+                    if sliderVal == nil then
+                        sliderVal = 100
+                    end
+                    local channelEnabled = enabled and (sliderVal > 0)
+                    if channelName == 'SoundUI' and options.soundUIsubChannelsInteractions and options.soundUIsubChannelsInteractions.value == false then
+                        channelEnabled = false
+                    end
+                    local gain = channelEnabled and ((sliderVal / 100) * (masterVal / 100)) or 0
+                    channel:setGain(gain)
+                    channel:setEnabled(channelEnabled)
+                end
+            end
+            if extraWidgets and extraWidgets.audioButton then
+                extraWidgets.audioButton:setIcon(enabled and '/images/topbuttons/button_mute_up' or '/images/topbuttons/button_mute_pressed')
+            end
+            local function togglePanel(panel)
+                if not panel then
+                    return
+                end
+                local infoPanel = panel:recursiveGetChildById('info')
+                local children = panel:getChildren()
+                for _, widget in ipairs(children) do
+                    local id = widget:getId()
+                    if widget:getStyle().__class ~= "UILabel" and id ~= 'enableAudio' and id ~= 'zeroAllSoundsBtn' then
+                        local keepEnabled = true
+                        for _, sub in ipairs(widget:getChildren()) do
+                            if sub:getId() == 'enableAudio' then
+                                keepEnabled = false
+                                break
+                            end
+                        end
+                        if keepEnabled then
+                            widget:setEnabled(enabled)
+                        end
+                    end
+                end
+                if infoPanel then
+                    infoPanel:setVisible(not enabled)
+                    infoPanel:setHeight(enabled and 0 or 30)
+                end
+            end
+            togglePanel(panels.soundPanel)
+            togglePanel(panels.battleSoundsPanel)
+            togglePanel(panels.iuSoundPanel)
+            if g_sounds.refreshProtocolSoundSettings then
+                g_sounds.refreshProtocolSoundSettings()
+            end
+        end
+    },
     enableLights                      = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
@@ -647,7 +717,7 @@ return {
         value = true,
         event = nil,
         action = function(value, options, controller, panels, extraWidgets)
-            if options.showExpiryInContainers.event ~= nil then
+            if options.showExpiryInInvetory.event ~= nil then
                 removeEvent(options.showExpiryInInvetory.event)
             end
             options.showExpiryInInvetory.event = scheduleEvent(function()
@@ -769,16 +839,9 @@ return {
     soundUIsubChannelsInteractions = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
-            if not g_sounds then
-                return
+            if options.enableAudio and options.enableAudio.action then
+                options.enableAudio.action(options.enableAudio.value, options, controller, panels, extraWidgets)
             end
-
-            local uiChannel = g_sounds.getChannel(SoundChannels.SoundUI)
-            if not uiChannel then
-                return
-            end
-
-            uiChannel:setEnabled(value)
         end
     },
     soundUIsubChannelsJoinLeaveParty = true,
@@ -864,17 +927,9 @@ return {
         value = 100,
         action = function(value, options, controller, panels, extraWidgets)
             panels.iuSoundPanel:recursiveGetChildById('soundUI'):setText(tr('UI Volume: %d %%', value))
-            if not g_sounds then
-                return
+            if options.enableAudio and options.enableAudio.action then
+                options.enableAudio.action(options.enableAudio.value, options, controller, panels, extraWidgets)
             end
-
-            local uiChannel = g_sounds.getChannel(SoundChannels.SoundUI)
-            if not uiChannel then
-                return
-            end
-
-            local masterVolume = (options.soundMaster.value or 100) / 100
-            uiChannel:setGain(value / 100 * masterVolume)
         end
     },
     soundDevice = {
@@ -892,92 +947,31 @@ return {
     },
     soundMaster = {
         value = 25,
-        aux = true,
+        aux = false,
         lastVolume = 25,
         action = function(value, options, controller, panels, extraWidgets)
-            if not g_sounds then
-                return
-            end
-            local soundMasterWidget = panels.soundPanel:recursiveGetChildById('soundMaster')
-            soundMasterWidget:setText(string.format('Master Volume: %d %%', value))
-            local channelVolumes = {
-                Music = options.soundMusic.value,
-                Ambient = options.soundAmbience.value,
-                Item = options.soundItems.value,
-                Event = options.soundEventVolume.value,
-                SoundUI = options.soundUI.value,
-            }
-            for channelName, channelId in pairs(SoundChannels) do
-                local channel = g_sounds.getChannel(channelId)
-                if channel then
-                    local channelVolume = channelVolumes[channelName] or 100
-                    channel:setGain(channelVolume / 100 * value / 100)
+            if panels and panels.soundPanel then
+                local soundMasterWidget = panels.soundPanel:recursiveGetChildById('soundMaster')
+                if soundMasterWidget then
+                    soundMasterWidget:setText(string.format('Master Volume: %d %%', value))
                 end
             end
-            local shouldDisable = value <= 1
-            local hasChanged = shouldDisable ~= (options.soundMaster.aux or false)
-            if not hasChanged then
-                return
+            if value > 0 then
+                options.soundMaster.lastVolume = value
             end
-            options.soundMaster.aux = shouldDisable
-            if shouldDisable then
-                g_sounds.setAudioEnabled(false)
-                extraWidgets.audioButton:setIcon('/images/topbuttons/button_mute_pressed')
-            else
-                g_sounds.setAudioEnabled(true)
-                extraWidgets.audioButton:setIcon('/images/topbuttons/button_mute_up')
+            if options.enableAudio and options.enableAudio.action then
+                options.enableAudio.action(options.enableAudio.value, options, controller, panels, extraWidgets)
             end
-            local function togglePanel(panel)
-                if not panel then
-                    return
-                end
-                local infoPanel = panel:recursiveGetChildById('info')
-                local children = panel:getChildren()
-                for _, widget in ipairs(children) do
-                    if widget:getStyle().__class ~= "UILabel" then
-                        widget:setEnabled(not shouldDisable)
-                    end
-                end
-                infoPanel:setVisible(shouldDisable)
-                infoPanel:setHeight(shouldDisable and 30 or 0)
-            end
-            togglePanel(panels.battleSoundsPanel)
-            togglePanel(panels.iuSoundPanel)
         end
-        },
+    },
     soundMusic = {
         value = 100,
         aux = true,
         event = nil,
         action = function(value, options, controller, panels, extraWidgets)
             panels.soundPanel:recursiveGetChildById('soundMusic'):setText(tr('Music Volume: %d %%', value))
-            if not g_sounds then
-                return
-            end
-            local musicChannel = g_sounds.getChannel(SoundChannels.Music)
-            if musicChannel then
-                local masterVolume = (options.soundMaster.value or 100) / 100
-                musicChannel:setGain(value / 100 * masterVolume)
-            end
-            local shouldBeDisabled = value <= 1
-            if shouldBeDisabled ~= (not options.soundMusic.aux) then
-                options.soundMusic.aux = not shouldBeDisabled
-                if options.soundMusic.event ~= nil then
-                    removeEvent(options.soundMusic.event)
-                end
-                options.soundMusic.event = scheduleEvent(function()
-                    if shouldBeDisabled then
-                        local channel = g_sounds.getChannel(SoundChannels.Music)
-                        if channel then
-                            channel:setEnabled(false)
-                        end
-                    else
-                        local channel = g_sounds.getChannel(SoundChannels.Music)
-                        if channel then
-                            channel:setEnabled(true)
-                        end
-                    end
-                end, 100)  
+            if options.enableAudio and options.enableAudio.action then
+                options.enableAudio.action(options.enableAudio.value, options, controller, panels, extraWidgets)
             end
         end
     },
@@ -985,12 +979,8 @@ return {
         value = 100,
         action = function(value, options, controller, panels, extraWidgets)
             panels.soundPanel:recursiveGetChildById('soundAmbience'):setText(tr('Ambience Volume: %d %%', value))
-            if g_sounds then
-                local channel = g_sounds.getChannel(SoundChannels.Ambient)
-                if channel then
-                    local masterVolume = (options.soundMaster.value or 100) / 100
-                    channel:setGain(value / 100 * masterVolume)
-                end
+            if options.enableAudio and options.enableAudio.action then
+                options.enableAudio.action(options.enableAudio.value, options, controller, panels, extraWidgets)
             end
         end
     },
@@ -998,12 +988,8 @@ return {
         value = 100,
         action = function(value, options, controller, panels, extraWidgets)
             panels.soundPanel:recursiveGetChildById('soundItems'):setText(tr('Item Volume: %d %%', value))
-            if g_sounds then
-                local channel = g_sounds.getChannel(SoundChannels.Item)
-                if channel then
-                    local masterVolume = (options.soundMaster.value or 100) / 100
-                    channel:setGain(value / 100 * masterVolume)
-                end
+            if options.enableAudio and options.enableAudio.action then
+                options.enableAudio.action(options.enableAudio.value, options, controller, panels, extraWidgets)
             end
         end
     },
@@ -1011,12 +997,8 @@ return {
         value = 100,
         action = function(value, options, controller, panels, extraWidgets)
             panels.soundPanel:recursiveGetChildById('soundEventVolume'):setText(tr('Event Volume: %d %%', value))
-            if g_sounds then
-                local channel = g_sounds.getChannel(SoundChannels.Event)
-                if channel then
-                    local masterVolume = (options.soundMaster.value or 100) / 100
-                    channel:setGain(value / 100 * masterVolume)
-                end
+            if options.enableAudio and options.enableAudio.action then
+                options.enableAudio.action(options.enableAudio.value, options, controller, panels, extraWidgets)
             end
         end
     },
@@ -1201,4 +1183,42 @@ return {
         end
     },
     showInfoBanner = true,
+    openNpcChatPopup = true,
+    alwaysTurnTowardsDirection = false,
+    rotateHoldCtrl = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_walk and modules.game_walk.refreshTurnKeys then
+                modules.game_walk.refreshTurnKeys()
+            end
+            if modules.game_console and modules.game_console.refreshWasdTurnKeys then
+                modules.game_console.refreshWasdTurnKeys()
+            end
+        end
+    },
+    rotateHoldShift = {
+        value = false,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_walk and modules.game_walk.refreshTurnKeys then
+                modules.game_walk.refreshTurnKeys()
+            end
+            if modules.game_console and modules.game_console.refreshWasdTurnKeys then
+                modules.game_console.refreshWasdTurnKeys()
+            end
+        end
+    },
+    rotateHoldAlt = {
+        value = false,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_walk and modules.game_walk.refreshTurnKeys then
+                modules.game_walk.refreshTurnKeys()
+            end
+            if modules.game_console and modules.game_console.refreshWasdTurnKeys then
+                modules.game_console.refreshWasdTurnKeys()
+            end
+        end
+    },
+    openNewTabOnPrivateMessage = true,
+    showOwnSpellWordsOnScreen = true,
+    showOtherPlayersSpellWordsOnScreen = true,
 }

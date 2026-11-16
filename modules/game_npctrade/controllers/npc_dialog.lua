@@ -94,7 +94,7 @@ function controllerNpcTrader:onConsoleTextClicked(widget, text)
         onNpcTalk(g_game.getCharacterName(), 0, MessageModes.NpcTo, text)
     end
     if text == "bye" then
-        controllerNpcTrader:onCloseNpcTrade()
+        controllerNpcTrader:onCloseNpcDialog()
     end
 end
 
@@ -135,18 +135,26 @@ function controllerNpcTrader:initNpcWindow(creature, buttons)
         return
     end
     self:connectNpcTalkEvent()
-    self.widthConsole = self.DEFAULT_CONSOLE_WIDTH
-    self.isTradeOpen = false
+
+    local newName = creature and (creature:getName() or "Unknown") or "Unknown"
+    local isAlreadyVisible = self.ui and self.ui:isVisible()
+    local isSameNpc = isAlreadyVisible and self.creatureName == newName
+
+    if not isSameNpc then
+        self.widthConsole = self.DEFAULT_CONSOLE_WIDTH
+        self.isTradeOpen = false
+        self.hasSellItems = false
+    end
+
+    self.creatureName = newName
     if creature then
-        self.creatureName = creature:getName() or "Unknown"
         self.outfit = creature:getOutfit()
     else
-        self.creatureName = "Unknown"
         self.outfit = "/game_npctrade/assets/images/icon-npcdialog-multiplenpcs"
     end
     self.buttons = buttons or self.buttons or self.buttonsDefault
     self:updateChatButton()
-    if not self.ui or not self.ui:isVisible() then
+    if not isAlreadyVisible then
         self:loadHtml('templates/game_npctrader.html')
     end
     self:setupWindowDragBehavior()
@@ -158,10 +166,15 @@ function controllerNpcTrader:initNpcWindow(creature, buttons)
             creatureOutfit:setOutfit(self.outfit)
         end
     end
-    self:cloneConsoleMessages()
+    if not isSameNpc then
+        self:cloneConsoleMessages()
+    end
 end
 
 function onNpcChatWindow(data)
+    if modules.client_options and modules.client_options.getOption('openNpcChatPopup') == false then
+        return
+    end
     if controllerNpcTrader:isLegacyMode() then
         controllerNpcTrader:legacy_show()
         return
@@ -231,7 +244,7 @@ function controllerNpcTrader:updateChatButton()
     self.chatMode = isChatEnabled and tr('Chat On') or tr('Chat Off')
     local inputConsole = self:findWidget(".inputConsole")
     if inputConsole then
-        inputConsole:setEnabled(isChatEnabled)
+        inputConsole:setEnabled(true)
     end
 end
 

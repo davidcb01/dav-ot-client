@@ -225,3 +225,4 @@ UIDragIcon < UIItem
   virtual: true
   focusable: false
   phantom: true
+  phantom: true

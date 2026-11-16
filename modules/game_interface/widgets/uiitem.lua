@@ -50,7 +50,10 @@ function UIItem:onDrop(widget, mousePos, forced)
     end
 
     if self:isVirtual() then
-        UIDragIcon:hide()
+        local draggingWidget = g_ui.getDraggingWidget()
+        if not draggingWidget or draggingWidget == self then
+            UIDragIcon:hide()
+        end
     end
 
     local itemPos = item:getPosition()
@@ -98,7 +101,10 @@ function UIItem:onDestroy()
     end
 
     if self:isVirtual() then
-        UIDragIcon:hide()
+        local draggingWidget = g_ui.getDraggingWidget()
+        if not draggingWidget or draggingWidget == self then
+            UIDragIcon:hide()
+        end
     end
 
     if self.hoveredWho then
@@ -169,7 +175,9 @@ function UIItem:onMouseRelease(mousePosition, mouseButton)
     end
 
     if self:isVirtual() then
-        UIDragIcon:hide()
+        if not g_ui.getDraggingWidget() then
+            UIDragIcon:hide()
+        end
         return false
     end
 

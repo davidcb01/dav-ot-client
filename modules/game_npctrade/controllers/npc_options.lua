@@ -16,7 +16,7 @@ function controllerNpcTrader:onOptionsClick()
             self:toggleIgnoreCapacity()
         end)
         if self.currencyId == controllerNpcTrader.DEFAULT_CURRENCY_ID then
-            menu:addCheckBox("Buy with Backpack", self.buyWithBackpack, function(widget, checked)
+            menu:addCheckBox("Buy in Shopping Bags", self.buyWithBackpack, function(widget, checked)
                 self:toggleBuyWithBackpack()
             end)
         end
@@ -65,6 +65,10 @@ end
 
 function controllerNpcTrader:toggleBuyWithBackpack()
     self.buyWithBackpack = not self.buyWithBackpack
+    local cb = self:findWidget("#buyShoppingBagsCheck")
+    if cb and cb.setChecked then
+        cb:setChecked(self.buyWithBackpack)
+    end
     self:updateAmount(self.amount)
 end
 

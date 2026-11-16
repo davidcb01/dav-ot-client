@@ -33,6 +33,17 @@ local selectedRaceEntryBySlot = {}
 local selectedRaceWidgetBySlot = {}
 local raceSearchTextsBySlot = {}
 
+local function getTaskboardPreyTracker()
+    local tb = modules and modules.game_taskboard
+    if tb and tb.Tracker and tb.Tracker.Prey then
+        return tb.Tracker.Prey
+    end
+    if Tracker and Tracker.Prey then
+        return Tracker.Prey
+    end
+    return nil
+end
+
 local refreshRaceList
 local setRaceSelection
 local updateRaceSelectionDisplay
@@ -468,6 +479,7 @@ function onPreyTimeLeft(slot, timeLeft)
     }
     local text = preyDescription[slot].one .. timeleftTranslation(timeLeft, true) .. preyDescription[slot].two
     -- tracker
+    local slotNum = slot
     local percent = (timeLeft / (2 * 60 * 60)) * 100
     slot = 'slot' .. (slot + 1)
     local tracker = preyTracker.contentsPanel[slot]
@@ -478,6 +490,10 @@ function onPreyTimeLeft(slot, timeLeft)
         element.onClick = function()
             show()
         end
+    end
+    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    if tbPrey and tbPrey.updateTimeLeft then
+        tbPrey.updateTimeLeft(slotNum, timeLeft)
     end
     -- main window
     local prey = preyWindow[slot]
@@ -542,6 +558,7 @@ end
 function onPreyLocked(slot, unlockState, timeUntilFreeReroll, wildcards)
     setPickSpecificPreyBonus(slot)
 
+    local slotNum = slot
     -- tracker
     slot = 'slot' .. (slot + 1)
     local tracker = preyTracker.contentsPanel[slot]
@@ -558,6 +575,10 @@ function onPreyLocked(slot, unlockState, timeUntilFreeReroll, wildcards)
     prey.inactive:hide()
     prey.active:hide()
     prey.locked:show()
+    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    if tbPrey and tbPrey.updateWidget then
+        tbPrey.updateWidget(slotNum, 0, nil, prey, show)
+    end
 end
 
 function onPreyInactive(slot, timeUntilFreeReroll, wildcards)
@@ -582,6 +603,8 @@ function onPreyInactive(slot, timeUntilFreeReroll, wildcards)
     if not prey then
         return
     end
+    prey.bonusType = PREY_BONUS_NONE
+    prey.lockType = 0
     prey.active:hide()
     prey.locked:hide()
     prey.inactive:show()
@@ -599,6 +622,10 @@ function onPreyInactive(slot, timeUntilFreeReroll, wildcards)
 
     setPickSpecificPreyBonus(slot)
     updatePickSpecificPreyButton(slot, wildcards)
+    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    if tbPrey and tbPrey.updateWidget then
+        tbPrey.updateWidget(slot, 1, nil, prey, show)
+    end
 end
 
 function setBonusGradeStars(slot, grade)
@@ -1673,12 +1700,17 @@ function onPreyActive(slot, currentHolderName, currentHolderOutfit, bonusType, b
     if not prey then
         return
     end
+    prey.bonusType = bonusType
+    prey.lockType = option
     prey.inactive:hide()
     prey.locked:hide()
     prey.active:show()
     prey.title:setText(currentHolderName)
     local creatureAndBonus = prey.active.creatureAndBonus
     creatureAndBonus.creature:setOutfit(currentHolderOutfit)
+    if creatureAndBonus.creature.setCenter then
+        creatureAndBonus.creature:setCenter(true)
+    end
     setTimeUntilFreeReroll(slot, timeUntilFreeReroll)
     creatureAndBonus.bonus.icon:setImageSource(getBigIconPath(bonusType))
     creatureAndBonus.bonus.icon.onHoverChange = function(widget, hovered)
@@ -1709,6 +1741,10 @@ function onPreyActive(slot, currentHolderName, currentHolderOutfit, bonusType, b
     end
 
     updatePickSpecificPreyButton(slot, wildcards)
+    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    if tbPrey and tbPrey.updateWidget then
+        tbPrey.updateWidget(slot, 2, currentHolderOutfit, prey, show)
+    end
 end
 
 function onPreySelection(slot, names, outfits, timeUntilFreeReroll, wildcards, option)
@@ -1750,18 +1786,36 @@ function onPreySelection(slot, names, outfits, timeUntilFreeReroll, wildcards, o
         end
     end
     local list = prey.inactive.list
+    list:setVisible(true)
     list:destroyChildren()
-    for i, name in ipairs(names) do
-        local box = g_ui.createWidget('PreyCreatureBox', list)
-        name = capitalFormatStr(name)
-        box:setTooltip(name)
-        box.creature:setOutfit(outfits[i])
-        local backgroundColor = (i % 2 == 1) and '#484848' or '#414141'
-        box:setBackgroundColor(backgroundColor)
+    if #names == 0 then
+        local emptyLbl = g_ui.createWidget('Label', list)
+        emptyLbl:setText(tr('Click Reroll to load creatures'))
+        emptyLbl:setTextAlign(AlignCenter)
+        emptyLbl:setTextWrap(true)
+        emptyLbl:setColor('#b0b0b0')
+        emptyLbl:setSize({ width = 185, height = 60 })
+    else
+        for i, name in ipairs(names) do
+            local box = g_ui.createWidget('PreyCreatureBox', list)
+            name = capitalFormatStr(name)
+            box:setTooltip(name)
+            if outfits and outfits[i] then
+                box.creature:setOutfit(outfits[i])
+            end
+            if box.creature.setCenter then
+                box.creature:setCenter(true)
+            end
+            local backgroundColor = (i % 2 == 1) and '#484848' or '#414141'
+            box:setBackgroundColor(backgroundColor)
+        end
+    end
+    if list.getLayout and list:getLayout() then
+        list:getLayout():update()
     end
     prey.inactive.choose.choosePreyButton.onClick = function()
         for i, child in pairs(list:getChildren()) do
-            if child:isChecked() then
+            if child.isChecked and child:isChecked() then
                 return g_game.preyAction(slot, PREY_ACTION_MONSTERSELECTION, i - 1)
             end
         end
@@ -1770,6 +1824,12 @@ function onPreySelection(slot, names, outfits, timeUntilFreeReroll, wildcards, o
 
     updateChoosePreyButtonState(slot)
     updatePickSpecificPreyButton(slot, wildcards)
+    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    if tbPrey and tbPrey.updateWidget then
+        prey.bonusType = PREY_BONUS_NONE
+        prey.lockType = option or 0
+        tbPrey.updateWidget(slot, 1, nil, prey, show)
+    end
 end
 
 function onPreySelectionChangeMonster(slot, names, outfits, bonusType, bonusValue, bonusGrade, timeUntilFreeReroll,
@@ -1812,18 +1872,36 @@ function onPreySelectionChangeMonster(slot, names, outfits, bonusType, bonusValu
         end
     end
     local list = prey.inactive.list
+    list:setVisible(true)
     list:destroyChildren()
-    for i, name in ipairs(names) do
-        local box = g_ui.createWidget('PreyCreatureBox', list)
-        name = capitalFormatStr(name)
-        box:setTooltip(name)
-        box.creature:setOutfit(outfits[i])
-        local backgroundColor = (i % 2 == 1) and '#484848' or '#414141'
-        box:setBackgroundColor(backgroundColor)
+    if #names == 0 then
+        local emptyLbl = g_ui.createWidget('Label', list)
+        emptyLbl:setText(tr('Click Reroll to load creatures'))
+        emptyLbl:setTextAlign(AlignCenter)
+        emptyLbl:setTextWrap(true)
+        emptyLbl:setColor('#b0b0b0')
+        emptyLbl:setSize({ width = 185, height = 60 })
+    else
+        for i, name in ipairs(names) do
+            local box = g_ui.createWidget('PreyCreatureBox', list)
+            name = capitalFormatStr(name)
+            box:setTooltip(name)
+            if outfits and outfits[i] then
+                box.creature:setOutfit(outfits[i])
+            end
+            if box.creature.setCenter then
+                box.creature:setCenter(true)
+            end
+            local backgroundColor = (i % 2 == 1) and '#484848' or '#414141'
+            box:setBackgroundColor(backgroundColor)
+        end
+    end
+    if list.getLayout and list:getLayout() then
+        list:getLayout():update()
     end
     prey.inactive.choose.choosePreyButton.onClick = function()
         for i, child in pairs(list:getChildren()) do
-            if child:isChecked() then
+            if child.isChecked and child:isChecked() then
                 return g_game.preyAction(slot, PREY_ACTION_MONSTERSELECTION, i - 1)
             end
         end
@@ -1832,6 +1910,12 @@ function onPreySelectionChangeMonster(slot, names, outfits, bonusType, bonusValu
 
     updateChoosePreyButtonState(slot)
     updatePickSpecificPreyButton(slot, wildcards)
+    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    if tbPrey and tbPrey.updateWidget then
+        prey.bonusType = bonusType or PREY_BONUS_NONE
+        prey.lockType = option or 0
+        tbPrey.updateWidget(slot, 1, nil, prey, show)
+    end
 end
 
 function onPreyListSelection(slot, races, nextFreeReroll, wildcards, option)
@@ -1902,6 +1986,11 @@ function onPreyListSelection(slot, races, nextFreeReroll, wildcards, option)
 
     updateChoosePreyButtonState(slot)
     updatePickSpecificPreyButton(slot, wildcards)
+    if g_game.getFeature(GameTaskboard) and Tracker and Tracker.Prey and Tracker.Prey.updateWidget then
+        prey.bonusType = PREY_BONUS_NONE
+        prey.lockType = option or 0
+        Tracker.Prey.updateWidget(slot, 1, nil, prey, show)
+    end
 end
 
 function onPreyWildcardSelection(slot, races, nextFreeReroll, wildcards, option)

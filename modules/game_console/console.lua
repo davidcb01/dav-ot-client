@@ -372,6 +372,61 @@ function updateChatMode()
     switchChat(not consoleToggleChat.isChecked)
 end
 
+local wasdTurnKeysBound = {}
+
+local wasdTurnDirs = {
+    { 'W', North },
+    { 'D', East },
+    { 'S', South },
+    { 'A', West },
+}
+
+local function unbindWasdTurnKeys()
+    local gameWalk = modules.game_walk
+    if not gameWalk then
+        return
+    end
+    for _, combo in ipairs(wasdTurnKeysBound) do
+        gameWalk.unbindTurnKey(combo)
+    end
+    wasdTurnKeysBound = {}
+end
+
+local function bindWasdTurnKeys()
+    local gameWalk = modules.game_walk
+    if not gameWalk then
+        return
+    end
+    local mods = {}
+    if modules.client_options then
+        if modules.client_options.getOption('rotateHoldCtrl') ~= false then
+            table.insert(mods, 'Control')
+        end
+        if modules.client_options.getOption('rotateHoldShift') == true then
+            table.insert(mods, 'Shift')
+        end
+        if modules.client_options.getOption('rotateHoldAlt') == true then
+            table.insert(mods, 'Alt')
+        end
+    else
+        table.insert(mods, 'Control')
+    end
+    for _, mod in ipairs(mods) do
+        for _, pair in ipairs(wasdTurnDirs) do
+            local combo = mod .. '+' .. pair[1]
+            gameWalk.bindTurnKey(combo, pair[2])
+            table.insert(wasdTurnKeysBound, combo)
+        end
+    end
+end
+
+function refreshWasdTurnKeys()
+    unbindWasdTurnKeys()
+    if consoleToggleChat and consoleToggleChat.isChecked then
+        bindWasdTurnKeys()
+    end
+end
+
 local function unbindMovingKeys()
     local gameWalk = modules.game_walk
     gameWalk.unbindWalkKey('W')
@@ -384,10 +439,7 @@ local function unbindMovingKeys()
     gameWalk.unbindWalkKey('C')
     gameWalk.unbindWalkKey('Z')
 
-    gameWalk.unbindTurnKey('Control+W')
-    gameWalk.unbindTurnKey('Control+D')
-    gameWalk.unbindTurnKey('Control+S')
-    gameWalk.unbindTurnKey('Control+A')
+    unbindWasdTurnKeys()
 end
 
 local function bindMovingKeys()
@@ -402,10 +454,8 @@ local function bindMovingKeys()
     gameWalk.bindWalkKey('C', SouthEast)
     gameWalk.bindWalkKey('Z', SouthWest)
 
-    gameWalk.bindTurnKey('Control+W', North)
-    gameWalk.bindTurnKey('Control+D', East)
-    gameWalk.bindTurnKey('Control+S', South)
-    gameWalk.bindTurnKey('Control+A', West)
+    unbindWasdTurnKeys()
+    bindWasdTurnKeys()
 end
 
 function switchChat(enabled)
@@ -917,7 +967,9 @@ function addPrivateText(text, speaktype, name, isPrivateCommand, creatureName)
 
     local privateTab = getTab(name)
     if privateTab == nil then
-        if (modules.client_options.getOption('showPrivateMessagesInConsole') and not focus) or
+        local openNewTabs = modules.client_options.getOption('openNewTabOnPrivateMessage')
+        if (openNewTabs == false and not focus) or
+            (modules.client_options.getOption('showPrivateMessagesInConsole') and not focus) or
             (isPrivateCommand and not privateTab) then
             privateTab = defaultTab
         else
@@ -1834,28 +1886,40 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
     if (mode == MessageModes.Say or mode == MessageModes.Whisper or mode == MessageModes.Yell or mode == MessageModes.Spell or
         mode == MessageModes.MonsterSay or mode == MessageModes.MonsterYell or mode == MessageModes.NpcFrom or mode ==
         MessageModes.BarkLow or mode == MessageModes.BarkLoud or mode == MessageModes.NpcFromStartBlock) and creaturePos then
-        local staticText = StaticText.create()
-        local staticMessage = message
-        if isNpcMode then
-            local highlightedText = getHighlightedText(staticMessage, speaktype.color, "#1f9ffe")
-
-            local processedText = staticMessage
-            local colorPattern = "{([^,]+),[ ]*[^}]+}"
-            for textContent in highlightedText:gmatch(colorPattern) do
-                local plainText = textContent:gsub("%[text%-event%](.-)%[/text%-event%]", "%1")
-                -- remove possible no-underline marker (0x01) inserted by getHighlightedText
-                if plainText:sub(1,1) == string.char(1) then
-                    plainText = plainText:sub(2)
-                end
-                processedText = processedText:gsub("{" .. textContent .. "}", plainText)
+        local showStaticText = true
+        if mode == MessageModes.Spell and modules.client_options then
+            local localPlayer = g_game.getLocalPlayer()
+            local isOwnSpell = localPlayer and localPlayer:getName() == name
+            if isOwnSpell then
+                showStaticText = modules.client_options.getOption('showOwnSpellWordsOnScreen') ~= false
+            else
+                showStaticText = modules.client_options.getOption('showOtherPlayersSpellWordsOnScreen') ~= false
             end
-            processedText = processedText:gsub("{([^}]+)}", "%1")
-            staticMessage = processedText
-            staticText:setColor(speaktype.color)
         end
+        if showStaticText then
+            local staticText = StaticText.create()
+            local staticMessage = message
+            if isNpcMode then
+                local highlightedText = getHighlightedText(staticMessage, speaktype.color, "#1f9ffe")
 
-        staticText:addMessage(name, mode, staticMessage)
-        g_map.addStaticText(staticText, creaturePos)
+                local processedText = staticMessage
+                local colorPattern = "{([^,]+),[ ]*[^}]+}"
+                for textContent in highlightedText:gmatch(colorPattern) do
+                    local plainText = textContent:gsub("%[text%-event%](.-)%[/text%-event%]", "%1")
+                    -- remove possible no-underline marker (0x01) inserted by getHighlightedText
+                    if plainText:sub(1,1) == string.char(1) then
+                        plainText = plainText:sub(2)
+                    end
+                    processedText = processedText:gsub("{" .. textContent .. "}", plainText)
+                end
+                processedText = processedText:gsub("{([^}]+)}", "%1")
+                staticMessage = processedText
+                staticText:setColor(speaktype.color)
+            end
+
+            staticText:addMessage(name, mode, staticMessage)
+            g_map.addStaticText(staticText, creaturePos)
+        end
     end
 
     local defaultMessage = mode <= 3 and true or false

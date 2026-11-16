@@ -98,7 +98,7 @@ local function showSelectionList(data, tempValue, tempField, onSelectCallback)
 
     local focused = nil
     do
-        local button = g_ui.createWidget("SelectionButton", window.selectionList)
+        local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
         button:setId("0")
 
         button.name:setText("None")
@@ -108,7 +108,7 @@ local function showSelectionList(data, tempValue, tempField, onSelectCallback)
     end
     if data and #data > 0 then
         for _, itemData in ipairs(data) do
-            local button = g_ui.createWidget("SelectionButton", window.selectionList)
+            local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
             button:setId(tostring(itemData[1]))
 
             local Category = modules.game_attachedeffects.getCategory(itemData[1])
@@ -872,7 +872,7 @@ function showOutfits()
 
     local focused = nil
     for _, outfitData in ipairs(ServerData.outfits) do
-        local button = g_ui.createWidget("SelectionButton", window.selectionList)
+        local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
         button:setId(outfitData[1])
 
         local outfit = table.copy(previewCreature:getCreature():getOutfit())
@@ -894,6 +894,14 @@ function showOutfits()
             button.state = state
             if state ~= statesOutft.available then
                 button:setImageSource("/images/ui/button-blue-qt")
+                button:setTooltip(tr("Click to view '%s' in the Store", outfitData[2] or "Outfit"))
+                local offerName = outfitData[2]
+                button.onClick = function()
+                    if modules.game_store and modules.game_store.openCatalogOffer then
+                        hide()
+                        modules.game_store.openCatalogOffer("Outfits", offerName)
+                    end
+                end
             end
         end
 
@@ -929,14 +937,14 @@ function showMounts()
 
     local focused = nil
 
-    local button = g_ui.createWidget("SelectionButton", window.selectionList)
+    local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
     button:setId(0)
     button.name:setText("None")
     button.state = 0
     focused = 0
 
     for _, mountData in ipairs(ServerData.mounts) do
-        local button = g_ui.createWidget("SelectionButton", window.selectionList)
+        local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
         button:setId(mountData[1])
 
         button.outfit:setOutfit({
@@ -955,6 +963,14 @@ function showMounts()
             button.state = state
             if state ~= statesOutft.available then
                 button:setImageSource("/images/ui/button-blue-qt")
+                button:setTooltip(tr("Click to view '%s' in the Store", mountData[2] or "Mount"))
+                local offerName = mountData[2]
+                button.onClick = function()
+                    if modules.game_store and modules.game_store.openCatalogOffer then
+                        hide()
+                        modules.game_store.openCatalogOffer("Mounts", offerName)
+                    end
+                end
             end
         end
     end
@@ -991,12 +1007,12 @@ function showFamiliars()
 
     local focused = nil
 
-    local button = g_ui.createWidget("SelectionButton", window.selectionList)
+    local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
     button:setId(0)
     button.name:setText("None")
     focused = 0
     for _, familiarData in ipairs(ServerData.familiars) do
-        local button = g_ui.createWidget("SelectionButton", window.selectionList)
+        local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
         button:setId(familiarData[1])
 
         button.outfit:setOutfit({
@@ -1041,7 +1057,7 @@ function showShaders()
 
     local focused = nil
     do
-        local button = g_ui.createWidget("SelectionButton", window.selectionList)
+        local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
         button:setId("Outfit - Default")
 
         button.outfit:setOutfit({
@@ -1060,7 +1076,7 @@ function showShaders()
 
     if ServerData.shaders and #ServerData.shaders > 0 then
         for _, shaderData in ipairs(ServerData.shaders) do
-            local button = g_ui.createWidget("SelectionButton", window.selectionList)
+            local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
             button:setId(shaderData[2])
 
             button.outfit:setOutfit({
@@ -1105,7 +1121,7 @@ function showHealthBars()
 
     local focused = nil
     do
-        local button = g_ui.createWidget("SelectionButton", window.selectionList)
+        local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
         button:setId("0")
 
         button.outfit:hide()
@@ -1116,7 +1132,7 @@ function showHealthBars()
     end
     if ServerData.healthBars and #ServerData.healthBars > 0 then
         for _, barData in ipairs(ServerData.healthBars) do
-            local button = g_ui.createWidget("SelectionButton", window.selectionList)
+            local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
             button:setId(barData)
 
             local Category = modules.game_attachedeffects.getCategory(barData)
@@ -1162,7 +1178,7 @@ function showTitle()
 
     local focused = nil
     do
-        local button = g_ui.createWidget("SelectionButton", window.selectionList)
+        local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
         button:setId("0")
 
 
@@ -1173,7 +1189,7 @@ function showTitle()
     end
     if ServerData.title and #ServerData.title > 0 then
         for _, titleData in ipairs(ServerData.title) do
-            local button = g_ui.createWidget("SelectionButton", window.selectionList)
+            local button = g_ui.createWidget("OutfitSelectionButton", window.selectionList)
             button:setId(tostring(titleData))
 
             button.outfit:setOutfit(previewCreature:getCreature():getOutfit())

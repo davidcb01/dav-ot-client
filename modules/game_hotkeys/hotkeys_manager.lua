@@ -66,17 +66,8 @@ local hotkeysWindowButton = nil
 
 -- public functions
 function init()
-
-    Keybind.new("Windows", "Show/hide Hotkeys", "Ctrl+K", "")
-    Keybind.bind("Windows", "Show/hide Hotkeys", {
-      {
-        type = KEY_DOWN,
-        callback = toggle,
-      }
-    })
     hotkeysWindow = g_ui.displayUI('hotkeys_manager')
     hotkeysWindow:setVisible(false)
-    hotkeysWindowButton = modules.client_topmenu.addRightGameToggleButton('hotkeysWindowButton', tr('Hotkeys'), '/images/options/hotkeys', toggle)
 
     currentHotkeys = hotkeysWindow:getChildById('currentHotkeys')
     currentItemPreview = hotkeysWindow:getChildById('itemPreview')
@@ -138,8 +129,6 @@ function terminate()
         onGameStart = online,
         onGameEnd = offline
     })
-
-    Keybind.delete("Windows", "Show/hide Hotkeys")
 
     unload()
 

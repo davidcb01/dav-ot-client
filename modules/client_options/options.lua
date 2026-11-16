@@ -118,6 +118,7 @@ local extraWidgets = {
 }
 
 local protocolSoundSettingsKeys = {
+    enableAudio = true,
     battleSoundOwnBattle = true,
     battleSoundOtherPlayers = true,
     battleSoundCreature = true,
@@ -188,17 +189,21 @@ end
 
 -- Toggles mute without discarding the user's previously saved master volume
 local function toggleMute()
-    local current = getOption('soundMaster')
-    if current <= 1 then
-        local restoreVolume = options.soundMaster.lastVolume or g_settings.getNumber('soundMasterLastVolume', 25)
-        if not restoreVolume or restoreVolume <= 1 then
-            restoreVolume = 25
+    local audioEnabled = getOption('enableAudio') ~= false
+    local current = getOption('soundMaster') or 0
+    if not audioEnabled or current <= 0 then
+        if current <= 0 then
+            local restoreVolume = options.soundMaster.lastVolume or g_settings.getNumber('soundMasterLastVolume', 25)
+            if not restoreVolume or restoreVolume <= 0 then
+                restoreVolume = 25
+            end
+            setOption('soundMaster', restoreVolume)
         end
-        setOption('soundMaster', restoreVolume)
+        setOption('enableAudio', true)
     else
         options.soundMaster.lastVolume = current
         g_settings.setNumber('soundMasterLastVolume', current)
-        setOption('soundMaster', 1)
+        setOption('enableAudio', false)
     end
 end
 
@@ -337,6 +342,12 @@ local function setup()
             local value = g_settings.getString(k, v)
             setOption(k, value, true)
         end
+    end
+
+    -- Every persisted option has been applied, so ensure master audio state overrides
+    -- any channel-specific calls made in random pairs() order during setup.
+    if options.enableAudio and options.enableAudio.action then
+        options.enableAudio.action(getOption('enableAudio'), options, controller, panels, extraWidgets)
     end
 
     -- Every persisted option has been applied, so widgets that mirror option
@@ -514,6 +525,14 @@ function controller:onInit()
         }
     })
 
+    Keybind.new("UI", "Show/hide Options", "Ctrl+K", "")
+    Keybind.bind("UI", "Show/hide Options", {
+        {
+            type = KEY_DOWN,
+            callback = toggle,
+        }
+    })
+
     Keybind.new("Sound", "Mute/unmute", "", "")
     Keybind.bind("Sound", "Mute/unmute", {
         {
@@ -540,6 +559,7 @@ function controller:onTerminate()
     Keybind.delete("UI", "Toggle Fullscreen")
     Keybind.delete("UI", "Show/hide Creature Names and Bars")
     Keybind.delete("UI", "Show/hide FPS / lag indicator")
+    Keybind.delete("UI", "Show/hide Options")
     Keybind.delete("Sound", "Mute/unmute")
 
     terminate_binds()

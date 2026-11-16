@@ -11,7 +11,7 @@ end
 function UISplitter:onHoverChange(hovered)
     -- Check if margin can be changed
     local margin = (self.vertical and self:getMarginBottom() or self:getMarginRight())
-    if hovered and (self:canUpdateMargin(margin + 1) ~= margin or self:canUpdateMargin(margin - 1) ~= margin) then
+    if hovered and not g_ui.isMouseGrabbed() and (self:canUpdateMargin(margin + 1) ~= margin or self:canUpdateMargin(margin - 1) ~= margin) then
         local nativeCursor = modules.client_options and modules.client_options.getOption('nativeCursor')
         
         -- Check isCursorChanged only when NOT using native cursor
@@ -38,7 +38,9 @@ function UISplitter:onHoverChange(hovered)
         if not self:isPressed() and self.hovering then
             -- Restore cursor when hovering ends
             if modules.client_options and modules.client_options.getOption('nativeCursor') then
-                g_window.restoreMouseCursor()
+                if not g_ui.isMouseGrabbed() then
+                    g_window.restoreMouseCursor()
+                end
             else
                 g_mouse.popCursor(self.cursortype)
             end

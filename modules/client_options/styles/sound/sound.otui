@@ -2,13 +2,24 @@ UIWidget
   anchors.fill: parent
   visible: false
 
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    height: 22
+
+    OptionCheckBox
+      id: enableAudio
+      !text: tr('Enable Sound (Master Switch)')
+
   Label
     id: soundDeviceLabel
     !text: 'Sound Device'
     anchors.left: parent.left
     margin-left: 2
+    margin-top: 8
     color: #c0c0c0ff
-    anchors.top: parent.top
+    anchors.top: prev.bottom
 
   QtComboBox
     id: soundDevice
@@ -16,7 +27,6 @@ UIWidget
     anchors.verticalCenter: soundDeviceLabel.verticalCenter
     anchors.right: parent.right
     margin-right: 1
-    margin-top: 2
     mouse-scroll: false
 
   SmallReversedQtPanel
@@ -145,6 +155,7 @@ UIWidget
     margin-top: 8
     height: 22
     @onClick: |
+      pcall(function() modules.client_options.setOption('enableAudio', false) end)
       for _, opt in ipairs({'soundMusic','soundAmbience','soundItems','soundEventVolume','battleSoundOwnBattle','battleSoundOtherPlayers','battleSoundCreature','soundUI','soundMaster'}) do
         pcall(function() modules.client_options.setOption(opt, 0) end)
       end

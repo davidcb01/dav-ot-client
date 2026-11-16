@@ -85,8 +85,41 @@ UIWidget
     height: 22
   
     OptionCheckBox
+      id: openNewTabOnPrivateMessage
+      !text: tr('Open new tabs when receiving private messages')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+  
+    OptionCheckBox
       id: showPrivateMessagesOnScreen
       !text: tr('Show private messages on screen')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+  
+    OptionCheckBox
+      id: showOwnSpellWordsOnScreen
+      !text: tr('Show own spell words on screen')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+  
+    OptionCheckBox
+      id: showOtherPlayersSpellWordsOnScreen
+      !text: tr('Show other players spell words on screen')
 
   SmallReversedQtPanel
     anchors.left: parent.left

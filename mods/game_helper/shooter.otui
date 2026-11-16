@@ -67,26 +67,23 @@ ShooterRuleRow < UIWidget
     width: 16
     checked: true
 
-  HelperSmallButton
+  RowActionButton
     id: upBtn
     text: ^
-    size: 16 17
     anchors.verticalCenter: parent.verticalCenter
     anchors.right: downBtn.left
     margin-right: 2
 
-  HelperSmallButton
+  RowActionButton
     id: downBtn
     text: v
-    size: 16 17
     anchors.verticalCenter: parent.verticalCenter
     anchors.right: delBtn.left
     margin-right: 2
 
-  HelperSmallButton
+  RowActionButton
     id: delBtn
     text: X
-    size: 18 18
     color: #ff6666
     anchors.verticalCenter: parent.verticalCenter
     anchors.right: parent.right
@@ -148,7 +145,7 @@ Panel
       border-width: 1
       border-color: #191919
       vertical-scrollbar: rulesScrollBar
-      auto-focus: first
+      auto-focus: none
 
     VerticalScrollBar
       id: rulesScrollBar
@@ -158,7 +155,7 @@ Panel
       margin-top: 6
       margin-bottom: 6
       step: 22
-      pixels-scroll: true
+      pixel-scroll: true
 
     Panel
       id: shooterEditorBox
@@ -323,7 +320,7 @@ Panel
       HelperSmallButton
         id: ruleUpBtn
         text: Up
-        width: 42
+        width: 38
         height: 19
         anchors.bottom: parent.bottom
         anchors.left: parent.left
@@ -331,30 +328,40 @@ Panel
       HelperSmallButton
         id: ruleDownBtn
         text: Down
-        width: 48
+        width: 46
         height: 19
         anchors.bottom: parent.bottom
         anchors.left: ruleUpBtn.right
         margin-left: 4
 
       HelperSmallButton
-        id: ruleDelBtn
-        text: Delete
-        width: 54
+        id: ruleNewBtn
+        text: New
+        width: 48
         height: 19
-        color: #ff6666
+        color: #5ce65c
         anchors.bottom: parent.bottom
         anchors.left: ruleDownBtn.right
         margin-left: 4
 
       HelperSmallButton
-        id: ruleNewBtn
-        text: New Rule
-        width: 72
+        id: ruleUpdateBtn
+        text: Update
+        width: 56
         height: 19
-        color: #5ce65c
+        color: #ffdd66
         anchors.bottom: parent.bottom
-        anchors.left: ruleDelBtn.right
+        anchors.left: ruleNewBtn.right
+        margin-left: 4
+
+      HelperSmallButton
+        id: ruleDelBtn
+        text: Delete
+        width: 52
+        height: 19
+        color: #ff6666
+        anchors.bottom: parent.bottom
+        anchors.left: ruleUpdateBtn.right
         margin-left: 4
 
       HelperBlueButton

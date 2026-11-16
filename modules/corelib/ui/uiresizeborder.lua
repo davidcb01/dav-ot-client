@@ -19,10 +19,14 @@ end
 
 function UIResizeBorder:onDestroy()
     if self.hovering then
-        -- Restore cursor when widget is destroyed while hovering
-        if modules.client_options and modules.client_options.getOption('nativeCursor') then
-            g_window.restoreMouseCursor()
-        else
+        if not g_ui.isMouseGrabbed() then
+            -- Restore cursor when widget is destroyed while hovering
+            if modules.client_options and modules.client_options.getOption('nativeCursor') then
+                g_window.restoreMouseCursor()
+            else
+                g_mouse.popCursor(self.cursortype)
+            end
+        elseif not (modules.client_options and modules.client_options.getOption('nativeCursor')) then
             g_mouse.popCursor(self.cursortype)
         end
     end
@@ -30,6 +34,9 @@ end
 
 function UIResizeBorder:onHoverChange(hovered)
     if hovered then
+        if g_ui.isMouseGrabbed() then
+            return
+        end
         local nativeCursor = modules.client_options and modules.client_options.getOption('nativeCursor')
         
         -- Check isCursorChanged only when NOT using native cursor
@@ -58,9 +65,11 @@ function UIResizeBorder:onHoverChange(hovered)
         end
     else
         if not self:isPressed() and self.hovering then
-            -- Restore cursor when hovering ends
+            -- Restore cursor when hovering ends (unless target/crosshair grab is active)
             if modules.client_options and modules.client_options.getOption('nativeCursor') then
-                g_window.restoreMouseCursor()
+                if not g_ui.isMouseGrabbed() then
+                    g_window.restoreMouseCursor()
+                end
             else
                 g_mouse.popCursor(self.cursortype)
             end
