@@ -1,0 +1,52 @@
+MiniWindow
+  id: helperStatsWindow
+  !text: tr('davhud shortcuts')
+  height: 148
+  icon: /mods/game_helper/images/ui/KACaster
+  &save: true
+  &autoOpen: false
+
+  MiniWindowContents
+    padding-left: 5
+    padding-right: 5
+    padding-top: 4
+    layout:
+      type: verticalBox
+      spacing: 3
+
+    Label
+      id: vocLabel
+      !text: tr('Voc: Unknown')
+      font: verdana-11px-rounded
+      color: #f0d080
+      text-align: center
+
+    HelperToggleButton
+      id: statHealBtn
+      !text: tr('Healing: OFF')
+      height: 18
+      @onClick: modules.game_helper.quickToggleFeature('healing')
+
+    HelperToggleButton
+      id: statTargetBtn
+      !text: tr('Auto Target: OFF')
+      height: 18
+      @onClick: modules.game_helper.quickToggleFeature('target')
+
+    HelperToggleButton
+      id: statShooterBtn
+      !text: tr('DAVCaster: OFF')
+      height: 18
+      @onClick: modules.game_helper.quickToggleFeature('shooter')
+
+    HelperToggleButton
+      id: statCavebotBtn
+      !text: tr('Cavebot: OFF')
+      height: 18
+      @onClick: modules.game_helper.quickToggleFeature('cavebot')
+
+    HelperBlueButton
+      id: openHelperBtn
+      !text: tr('Open DAVCaster')
+      height: 19
+      @onClick: modules.game_helper.toggle()

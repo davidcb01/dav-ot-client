@@ -1,0 +1,116 @@
+UIWidget
+  id: casterTab
+
+  Label
+    id: targetingLabel
+    !text: tr('Auto Target & Combat')
+    font: verdana-11px-rounded
+    anchors.top: parent.top
+    anchors.left: parent.left
+    color: #dfdfdf
+
+  CheckBox
+    id: autoTarget
+    !text: tr('Auto Target Nearest Monster')
+    anchors.top: targetingLabel.bottom
+    anchors.left: parent.left
+    margin-top: 6
+
+  CheckBox
+    id: autoAttack
+    !text: tr('Keep Attacking Current Target')
+    anchors.top: autoTarget.bottom
+    anchors.left: parent.left
+    margin-top: 6
+
+  Label
+    id: spellCombatLabel
+    !text: tr('Spell Combos & Rotation')
+    font: verdana-11px-rounded
+    anchors.top: autoAttack.bottom
+    anchors.left: parent.left
+    margin-top: 15
+    color: #dfdfdf
+
+  Label
+    id: mainSpellLabel
+    !text: tr('Single Target Spell:')
+    anchors.top: spellCombatLabel.bottom
+    anchors.left: parent.left
+    margin-top: 8
+
+  TextEdit
+    id: mainSpell
+    text: exori
+    width: 120
+    anchors.verticalCenter: mainSpellLabel.verticalCenter
+    anchors.left: mainSpellLabel.right
+    margin-left: 10
+
+  CheckBox
+    id: enableMainSpell
+    !text: tr('Enabled')
+    anchors.verticalCenter: mainSpellLabel.verticalCenter
+    anchors.left: mainSpell.right
+    margin-left: 10
+
+  Label
+    id: areaSpellLabel
+    !text: tr('Area Spell / Rune:')
+    anchors.top: mainSpellLabel.bottom
+    anchors.left: parent.left
+    margin-top: 10
+
+  TextEdit
+    id: areaSpell
+    text: exori gran
+    width: 120
+    anchors.verticalCenter: areaSpellLabel.verticalCenter
+    anchors.left: areaSpellLabel.right
+    margin-left: 18
+
+  Label
+    id: minMonstersLabel
+    !text: tr('Min Monsters:')
+    anchors.verticalCenter: areaSpellLabel.verticalCenter
+    anchors.left: areaSpell.right
+    margin-left: 10
+
+  SpinBox
+    id: minMonsters
+    width: 50
+    minimum: 1
+    maximum: 10
+    value: 2
+    anchors.verticalCenter: areaSpellLabel.verticalCenter
+    anchors.left: minMonstersLabel.right
+    margin-left: 6
+
+  CheckBox
+    id: enableAreaSpell
+    !text: tr('Enabled')
+    anchors.verticalCenter: areaSpellLabel.verticalCenter
+    anchors.left: minMonsters.right
+    margin-left: 10
+
+  Label
+    id: tauntLabel
+    !text: tr('Taunt / Challenge:')
+    anchors.top: areaSpellLabel.bottom
+    anchors.left: parent.left
+    margin-top: 10
+
+  TextEdit
+    id: tauntSpell
+    text: exeta res
+    width: 120
+    anchors.verticalCenter: tauntLabel.verticalCenter
+    anchors.left: tauntLabel.right
+    margin-left: 20
+
+  CheckBox
+    id: enableTaunt
+    !text: tr('Enabled (1+ Monster)')
+    anchors.verticalCenter: tauntLabel.verticalCenter
+    anchors.left: tauntSpell.right
+    margin-left: 10

@@ -1,0 +1,589 @@
+CavebotWpRow < UIWidget
+  height: 20
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #222222
+  focusable: true
+  $focus:
+    background-color: #505050
+
+  Label
+    id: wpIndexLabel
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    width: 24
+    font: verdana-11px-monochrome
+    color: #999999
+    text: 1
+    phantom: true
+
+  Label
+    id: wpTypeLabel
+    anchors.left: wpIndexLabel.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    width: 72
+    font: verdana-11px-rounded
+    color: #f0d080
+    text: Stand
+    phantom: true
+
+  Label
+    id: wpPosLabel
+    anchors.left: wpTypeLabel.right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    margin-right: 4
+    font: verdana-11px-monochrome
+    color: #efefef
+    text: 32000, 32000, 7
+    phantom: true
+
+CavebotDirBtn < HelperSmallButton
+  size: 28 20
+  margin-left: 2
+  $on:
+    color: #ffffff
+    background-color: #1f7a1f
+    border-color-top: #5ce65c
+    border-color-left: #5ce65c
+
+Panel
+  id: cavebotTabPanel
+  anchors.fill: parent
+
+  Panel
+    id: bodyPanel
+    anchors.fill: parent
+
+    Panel
+      id: cbTopControlsBox
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 78
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 6
+
+      CheckBox
+        id: enableCavebotCheck
+        anchors.top: parent.top
+        anchors.left: parent.left
+        width: 130
+        !text: tr('Enable Cavebot')
+
+      HelperSmallButton
+        id: cavebotSetKeyBtn
+        text: Set Key
+        width: 148
+        height: 18
+        anchors.top: parent.top
+        anchors.left: enableCavebotCheck.right
+        margin-left: 6
+        @onClick: modules.game_helper.openKeyCapture('cavebotKey', self)
+
+      CheckBox
+        id: autoRecCheck
+        anchors.top: parent.top
+        anchors.left: cavebotSetKeyBtn.right
+        margin-left: 8
+        width: 92
+        !text: tr('Auto Rec')
+        @onCheckChange: modules.game_helper.onToggleCavebotAutoRec(self:isChecked())
+
+      Label
+        id: autoRecDistLbl
+        text: Dist (SQM):
+        anchors.verticalCenter: autoRecCheck.verticalCenter
+        anchors.left: autoRecCheck.right
+        margin-left: 4
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: autoRecDistEdit
+        anchors.verticalCenter: autoRecCheck.verticalCenter
+        anchors.left: autoRecDistLbl.right
+        margin-left: 4
+        width: 30
+        text: 3
+        !tooltip: tr('Distance between recorded Nodes. Rope / Ladder / Hole / Shovel are always recorded, regardless of distance.')
+
+      CheckBox
+        id: startNearestCheck
+        anchors.top: parent.top
+        anchors.left: autoRecDistEdit.right
+        margin-left: 8
+        width: 112
+        !text: tr('Start Nearest')
+        checked: true
+
+      HelperSmallButton
+        id: showCbHudBtn
+        text: Show CB Mini-HUD
+        width: 120
+        height: 19
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        color: #ffcc33
+        @onClick: modules.game_helper.toggleCbControlHud()
+
+      CheckBox
+        id: showWaypointsCheck
+        anchors.bottom: parent.bottom
+        anchors.left: showCbHudBtn.right
+        margin-left: 14
+        width: 170
+        !text: tr('Show Waypoints on Map')
+        checked: true
+        @onCheckChange: modules.game_helper.onToggleShowWaypoints(self:isChecked())
+
+      Label
+        id: walkSpeedLbl
+        text: Speed (%):
+        anchors.verticalCenter: showWaypointsCheck.verticalCenter
+        anchors.left: showWaypointsCheck.right
+        margin-left: 12
+        color: #f0d080
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: cbWalkSpeedEdit
+        anchors.verticalCenter: showWaypointsCheck.verticalCenter
+        anchors.left: walkSpeedLbl.right
+        margin-left: 4
+        width: 44
+        text: 100
+        tooltip: Cavebot walking speed (0-100%). 100% = full character speed, 0% = stopped. Updates automatically when Dynamic Lure is active.
+
+      Label
+        id: walkSpeedInfoLbl
+        text: (i)
+        anchors.verticalCenter: showWaypointsCheck.verticalCenter
+        anchors.left: cbWalkSpeedEdit.right
+        margin-left: 4
+        color: #8ec5ff
+        text-auto-resize: true
+        phantom: false
+        tooltip: 100% = character walks at full native speed. Lower % slows step frequency. 0% = stopped. Dynamic Lure adapts speed % by monster count.
+
+      HelperBlueButton
+        id: cavebotSettingsBtn
+        text: Settings
+        width: 80
+        height: 19
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        @onClick: modules.game_helper.openCavebotSettingsModal()
+
+    Panel
+      id: cbMiddleRow
+      anchors.top: cbTopControlsBox.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+      height: 224
+
+      Panel
+        id: cbActionToolsBox
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.right: cavebotMapBorder.left
+        margin-right: 8
+        image-source: /images/ui/2pixel_up_frame_borderimage
+        image-border: 4
+        padding: 8
+
+        Panel
+          id: dirGridPanel
+          anchors.top: parent.top
+          anchors.left: parent.left
+          size: 92 66
+
+          CavebotDirBtn
+            id: dirNW
+            text: NW
+            anchors.top: parent.top
+            anchors.left: parent.left
+            margin-left: 0
+            @onClick: modules.game_helper.setCavebotDirOffset('NW')
+
+          CavebotDirBtn
+            id: dirN
+            text: N
+            anchors.top: parent.top
+            anchors.left: dirNW.right
+            @onClick: modules.game_helper.setCavebotDirOffset('N')
+
+          CavebotDirBtn
+            id: dirNE
+            text: NE
+            anchors.top: parent.top
+            anchors.left: dirN.right
+            @onClick: modules.game_helper.setCavebotDirOffset('NE')
+
+          CavebotDirBtn
+            id: dirW
+            text: W
+            anchors.top: dirNW.bottom
+            anchors.left: parent.left
+            margin-left: 0
+            margin-top: 3
+            @onClick: modules.game_helper.setCavebotDirOffset('W')
+
+          CavebotDirBtn
+            id: dirC
+            text: C
+            on: true
+            anchors.top: dirW.top
+            anchors.left: dirW.right
+            @onClick: modules.game_helper.setCavebotDirOffset('C')
+
+          CavebotDirBtn
+            id: dirE
+            text: E
+            anchors.top: dirW.top
+            anchors.left: dirC.right
+            @onClick: modules.game_helper.setCavebotDirOffset('E')
+
+          CavebotDirBtn
+            id: dirSW
+            text: SW
+            anchors.top: dirW.bottom
+            anchors.left: parent.left
+            margin-left: 0
+            margin-top: 3
+            @onClick: modules.game_helper.setCavebotDirOffset('SW')
+
+          CavebotDirBtn
+            id: dirS
+            text: S
+            anchors.top: dirSW.top
+            anchors.left: dirSW.right
+            @onClick: modules.game_helper.setCavebotDirOffset('S')
+
+          CavebotDirBtn
+            id: dirSE
+            text: SE
+            anchors.top: dirSW.top
+            anchors.left: dirS.right
+            @onClick: modules.game_helper.setCavebotDirOffset('SE')
+
+        HelperSmallButton
+          id: wpStandBtn
+          text: Stand
+          width: 78
+          height: 20
+          anchors.top: parent.top
+          anchors.left: dirGridPanel.right
+          margin-left: 12
+          @onClick: modules.game_helper.addCavebotWaypoint('Stand')
+
+        HelperSmallButton
+          id: wpNodeBtn
+          text: Node
+          width: 78
+          height: 20
+          anchors.top: parent.top
+          anchors.left: wpStandBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.addCavebotWaypoint('Node')
+
+        HelperSmallButton
+          id: wpRopeBtn
+          text: Rope
+          width: 78
+          height: 20
+          anchors.top: parent.top
+          anchors.left: wpNodeBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.addCavebotWaypoint('Rope')
+
+        HelperSmallButton
+          id: wpShovelBtn
+          text: Shovel
+          width: 78
+          height: 20
+          anchors.top: wpStandBtn.bottom
+          anchors.left: dirGridPanel.right
+          margin-left: 12
+          margin-top: 3
+          @onClick: modules.game_helper.addCavebotWaypoint('Shovel')
+
+        HelperSmallButton
+          id: wpLadderBtn
+          text: Ladder
+          width: 78
+          height: 20
+          anchors.top: wpShovelBtn.top
+          anchors.left: wpShovelBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.addCavebotWaypoint('Ladder')
+
+        HelperSmallButton
+          id: wpHoleBtn
+          text: Hole
+          width: 78
+          height: 20
+          anchors.top: wpShovelBtn.top
+          anchors.left: wpLadderBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.addCavebotWaypoint('Hole')
+
+        HelperSmallButton
+          id: wpUseBtn
+          text: Use Tile
+          width: 78
+          height: 20
+          anchors.top: wpShovelBtn.bottom
+          anchors.left: dirGridPanel.right
+          margin-left: 12
+          margin-top: 3
+          @onClick: modules.game_helper.addCavebotWaypoint('Use')
+
+        HelperSmallButton
+          id: wpStartLureBtn
+          text: Start Lure
+          width: 78
+          height: 20
+          color: #5ce65c
+          anchors.top: wpUseBtn.top
+          anchors.left: wpUseBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.addCavebotWaypoint('Start Lure')
+
+        HelperSmallButton
+          id: wpEndLureBtn
+          text: End Lure
+          width: 78
+          height: 20
+          color: #ff9944
+          anchors.top: wpUseBtn.top
+          anchors.left: wpStartLureBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.addCavebotWaypoint('End Lure')
+
+        HorizontalSeparator
+          id: toolsSlotSep
+          anchors.top: dirGridPanel.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: 10
+
+        Label
+          text: Rope Item:
+          anchors.top: toolsSlotSep.bottom
+          anchors.left: parent.left
+          margin-top: 14
+          color: #cccccc
+          text-auto-resize: true
+
+        HelperItemSlot
+          id: ropeSlot
+          anchors.top: toolsSlotSep.bottom
+          anchors.left: prev.right
+          margin-top: 8
+          margin-left: 6
+
+        Label
+          text: Shovel Item:
+          anchors.top: toolsSlotSep.bottom
+          anchors.left: ropeSlot.right
+          margin-top: 14
+          margin-left: 18
+          color: #cccccc
+          text-auto-resize: true
+
+        HelperItemSlot
+          id: shovelSlot
+          anchors.top: toolsSlotSep.bottom
+          anchors.left: prev.right
+          margin-top: 8
+          margin-left: 6
+
+        Label
+          id: cavebotStatusLabel
+          text: Status: Idle (0 WPs)
+          anchors.bottom: parent.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          color: #f0d080
+          font: verdana-11px-rounded
+
+      UIWidget
+        id: cavebotMapBorder
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 280
+        image-source: /images/ui/1pixel_down_frame
+
+        Minimap
+          id: cavebotMinimap
+          anchors.fill: parent
+          margin: 1
+
+        HelperSmallButton
+          id: cbMapZoomIn
+          text: +
+          size: 20 18
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-right: 4
+          margin-bottom: 4
+          @onClick: modules.game_helper.zoomCavebotMinimap(1)
+
+        HelperSmallButton
+          id: cbMapZoomOut
+          text: -
+          size: 20 18
+          anchors.right: cbMapZoomIn.left
+          anchors.bottom: parent.bottom
+          margin-right: 2
+          margin-bottom: 4
+          @onClick: modules.game_helper.zoomCavebotMinimap(-1)
+
+        HelperSmallButton
+          id: cbMapCenterBtn
+          text: Center
+          size: 48 18
+          anchors.left: parent.left
+          anchors.bottom: parent.bottom
+          margin-left: 4
+          margin-bottom: 4
+          @onClick: modules.game_helper.centerCavebotMinimap()
+
+    Panel
+      id: cbListRow
+      anchors.top: cbMiddleRow.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 6
+
+      TextList
+        id: cavebotWpList
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: wpScrollBar.left
+        anchors.bottom: wpManageRow.top
+        margin-bottom: 6
+        padding: 2
+        background-color: #2b2b2b
+        border-width: 1
+        border-color: #191919
+        vertical-scrollbar: wpScrollBar
+        auto-focus: first
+
+      VerticalScrollBar
+        id: wpScrollBar
+        anchors.top: parent.top
+        anchors.bottom: wpManageRow.top
+        anchors.right: parent.right
+        margin-bottom: 6
+        step: 20
+        pixels-scroll: true
+
+      Panel
+        id: wpManageRow
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 50
+
+        HelperSmallButton
+          id: wpUpBtn
+          text: Up
+          width: 46
+          height: 20
+          anchors.top: parent.top
+          anchors.left: parent.left
+          @onClick: modules.game_helper.moveCavebotWaypoint(-1)
+
+        HelperSmallButton
+          id: wpDownBtn
+          text: Down
+          width: 50
+          height: 20
+          anchors.top: parent.top
+          anchors.left: wpUpBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.moveCavebotWaypoint(1)
+
+        HelperSmallButton
+          id: wpDelBtn
+          text: Delete
+          width: 54
+          height: 20
+          color: #ff6666
+          anchors.top: parent.top
+          anchors.left: wpDownBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.deleteSelectedCavebotWaypoint()
+
+        HelperSmallButton
+          id: wpUndoBtn
+          text: Undo
+          width: 64
+          height: 20
+          color: #ff9966
+          anchors.top: parent.top
+          anchors.left: wpDelBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.undoCavebotWaypoint()
+
+        HelperSmallButton
+          id: wpClearBtn
+          text: Clear All
+          width: 72
+          height: 20
+          color: #ff5555
+          anchors.top: parent.top
+          anchors.left: wpUndoBtn.right
+          margin-left: 4
+          @onClick: modules.game_helper.clearCavebotWaypoints()
+
+        Label
+          id: huntNameLbl
+          text: Hunt name:
+          anchors.top: wpUpBtn.bottom
+          anchors.left: parent.left
+          margin-top: 9
+          color: #cccccc
+          text-auto-resize: true
+
+        TextEdit
+          id: huntNameEdit
+          anchors.top: wpUpBtn.bottom
+          anchors.left: huntNameLbl.right
+          anchors.right: wpLoadBtn.left
+          margin-top: 5
+          margin-left: 6
+          margin-right: 6
+          height: 20
+          !placeholder: tr('type the hunt name, then Save')
+
+        HelperBlueButton
+          id: wpSaveBtn
+          text: Save Hunt
+          width: 80
+          height: 20
+          anchors.top: wpUpBtn.bottom
+          anchors.right: parent.right
+          margin-top: 5
+          @onClick: modules.game_helper.saveCavebotWaypoints()
+
+        HelperBlueButton
+          id: wpLoadBtn
+          text: Load Hunt
+          width: 80
+          height: 20
+          anchors.top: wpUpBtn.bottom
+          anchors.right: wpSaveBtn.left
+          margin-top: 5
+          margin-right: 4
+          @onClick: modules.game_helper.openHuntList()

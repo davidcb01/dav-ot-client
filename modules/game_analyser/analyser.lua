@@ -327,7 +327,7 @@ function onlineAnalyser()
   end
 
   local char = g_game.getCharacterName()
-  local allMiniSettings = (char and #char > 0) and (g_settings.getNode('CharMiniWindows') or {})[char] or nil
+  local allMiniSettings = (char and #char > 0) and (CharConfig and CharConfig.getOrCreate('char_miniwindows', char, 'CharMiniWindows') or (g_settings.getNode('CharMiniWindows') or {})[char]) or nil
 
   if analyserMiniWindow then
     if allMiniSettings and allMiniSettings[analyserMiniWindow:getId()] then

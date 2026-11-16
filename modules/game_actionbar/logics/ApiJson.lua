@@ -5,8 +5,18 @@ local state = {
     clientOptions = {},
     chatOptions = {},
     isChatOnEnabled = false,
-    bootstrapComplete = false
+    bootstrapComplete = false,
+    dirtyHotkeySets = {},
+    deletedHotkeySets = {}
 }
+
+local function markHotkeySetDirty(name)
+    local target = name or (state and state.currentHotkeySetName)
+    if target and target ~= "" then
+        state.dirtyHotkeySets[target] = true
+        state.deletedHotkeySets[target] = nil
+    end
+end
 
 local DEFAULT_SETTINGS_FILE = "/settings/clientoptions.json"
 local DEFAULT_OPTIONS_FILE = "/modules/game_actionbar/json/cipsoft-default-options-minimal.json"
@@ -414,6 +424,7 @@ local function getOrCreateMappingEntry(barId, buttonId)
     end
 
     local mappings = ensureMappings()
+    markHotkeySetDirty()
     local entry = findMappingEntry(mappings, barId, buttonId)
     if not entry then
         entry = {
@@ -518,6 +529,33 @@ function ApiJson.saveData()
     end
 
     local data = sanitizeTopLevelArray(state.array)
+
+    -- Preserve presets modified by other open client instances
+    local diskData = readJsonFile(DEFAULT_SETTINGS_FILE)
+    if type(diskData) == 'table' then
+        local diskHotkeyOpts = diskData.hotkeyOptions
+        local diskSets = diskHotkeyOpts and diskHotkeyOpts.hotkeySets
+        if type(diskSets) == 'table' then
+            data.hotkeyOptions = data.hotkeyOptions or {}
+            data.hotkeyOptions.hotkeySets = data.hotkeyOptions.hotkeySets or {}
+            for setName, setVal in pairs(diskSets) do
+                if not state.dirtyHotkeySets[setName] and not state.deletedHotkeySets[setName] then
+                    data.hotkeyOptions.hotkeySets[setName] = sanitizeValue(setVal, {})
+                end
+            end
+        end
+        if type(diskData.profiles) == 'table' then
+            data.profiles = data.profiles or {}
+            for _, pName in ipairs(diskData.profiles) do
+                if not state.deletedHotkeySets[pName] and data.hotkeyOptions and data.hotkeyOptions.hotkeySets and data.hotkeyOptions.hotkeySets[pName] then
+                    if not table.contains(data.profiles, pName) then
+                        table.insert(data.profiles, pName)
+                    end
+                end
+            end
+        end
+    end
+
     local status, result = pcall(function()
         return json.encode(data)
     end)
@@ -659,6 +697,7 @@ function ApiJson.removeAction(barId, buttonId)
     end
 
     local mappings = ApiJson.getMappings()
+    markHotkeySetDirty()
     local key = getMappingKey(barId, buttonId)
     for index = #mappings, 1, -1 do
         local entry = mappings[index]
@@ -752,6 +791,7 @@ function ApiJson.removeMultiAction(barId, buttonId, slotIndex)
 
     if slotIndex >= 1 and slotIndex <= 3 then
         multiActions[slotIndex] = {}
+        markHotkeySetDirty()
     end
 
     local allEmpty = true
@@ -783,6 +823,7 @@ function ApiJson.removeHotkey(buttonId)
         if data["actionsetting"] and data["actionsetting"]["action"] and data["actionsetting"]["action"] ==
             "TriggerActionButton_" .. buttonId then
             table.remove(entries, index)
+            markHotkeySetDirty()
             break
         end
     end
@@ -804,12 +845,15 @@ function ApiJson.clearHotkey(hotkey)
         if isCustomAction(data) then
             if data.keysequence == hotkey then
                 data.keysequence = ""
+                markHotkeySetDirty()
             end
             if data.secondarySequence == hotkey then
                 data.secondarySequence = ""
+                markHotkeySetDirty()
             end
         elseif data.keysequence == hotkey then
             table.remove(entries, index)
+            markHotkeySetDirty()
         end
     end
 end
@@ -842,6 +886,7 @@ function ApiJson.updateActionBarHotkey(actionName, hotkey)
             ["keysequence"] = hotkey
         }
     end
+    markHotkeySetDirty()
 end
 
 function ApiJson.getActionBar(barIndex)
@@ -863,6 +908,7 @@ function ApiJson.setBarLocked(barIndex, locked)
     local bar = ApiJson.getActionBar(barIndex)
     if bar then
         bar.isLocked = locked and true or false
+        markHotkeySetDirty()
     end
 end
 
@@ -874,6 +920,7 @@ function ApiJson.setBarVisibility(barIndex, optionKey, visible, markCreated)
         if markCreated then
             bar.created = true
         end
+        markHotkeySetDirty()
     end
 
     if state.array then
@@ -909,6 +956,14 @@ function ApiJson.setCurrentHotkeySetName(name)
 
     local hotkeySets = hotkeyOptions.hotkeySets or options.hotkeySets or {}
     hotkeyOptions.hotkeySets = hotkeySets
+
+    if not state.dirtyHotkeySets[name] then
+        local diskData = readJsonFile(DEFAULT_SETTINGS_FILE)
+        local diskSet = diskData and diskData.hotkeyOptions and diskData.hotkeyOptions.hotkeySets and diskData.hotkeyOptions.hotkeySets[name]
+        if type(diskSet) == 'table' then
+            hotkeySets[name] = sanitizeValue(diskSet, {})
+        end
+    end
 
     if not hotkeySets[name] then
         return false
@@ -974,6 +1029,7 @@ function ApiJson.createHotkeySet(name, sourceName)
     }
 
     hotkeySets[name] = newSet
+    markHotkeySetDirty(name)
 
     local profiles = array.profiles or options.profiles or {}
     array.profiles = profiles
@@ -1010,6 +1066,9 @@ function ApiJson.renameHotkeySet(oldName, newName)
 
     hotkeySets[newName] = hotkeySets[oldName]
     hotkeySets[oldName] = nil
+    markHotkeySetDirty(newName)
+    state.dirtyHotkeySets[oldName] = nil
+    state.deletedHotkeySets[oldName] = true
 
     local profiles = array.profiles or options.profiles or {}
     array.profiles = profiles
@@ -1060,6 +1119,8 @@ function ApiJson.removeHotkeySet(name)
     end
 
     hotkeySets[name] = nil
+    state.dirtyHotkeySets[name] = nil
+    state.deletedHotkeySets[name] = true
 
     local profiles = array.profiles or options.profiles or {}
     array.profiles = profiles

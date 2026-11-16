@@ -1,0 +1,358 @@
+TargetRuleRow < UIWidget
+  height: 22
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #222222
+  focusable: true
+  $focus:
+    background-color: #4f4f4f
+
+  Label
+    id: ruleIdxLabel
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    width: 18
+    font: verdana-11px-monochrome
+    color: #999999
+    text: 1
+    phantom: true
+
+  Label
+    id: ruleNameLabel
+    anchors.left: ruleIdxLabel.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    width: 190
+    font: verdana-11px-rounded
+    color: #efefef
+    text: All Monsters
+    phantom: true
+
+  Label
+    id: ruleModeLabel
+    anchors.left: ruleNameLabel.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    width: 56
+    font: verdana-11px-rounded
+    color: #ffdd66
+    text: Mode A
+    phantom: true
+
+  Label
+    id: ruleInfoLabel
+    anchors.left: ruleModeLabel.right
+    anchors.right: ruleEnableCheck.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    margin-right: 6
+    font: verdana-11px-monochrome
+    color: #cccccc
+    text: HP 0-100%
+    phantom: true
+
+  CheckBox
+    id: ruleEnableCheck
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    margin-right: 6
+    width: 16
+    checked: true
+
+Panel
+  id: targetTabPanel
+  anchors.fill: parent
+
+  Panel
+    id: targetTopBox
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 74
+    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-border: 4
+    padding: 8
+
+    CheckBox
+      id: targetEnableCheck
+      anchors.top: parent.top
+      anchors.left: parent.left
+      width: 150
+      !text: tr('Enable Auto Target')
+
+    HelperSmallButton
+      id: targetSetKeyBtn
+      text: Set Key
+      width: 155
+      height: 18
+      anchors.verticalCenter: targetEnableCheck.verticalCenter
+      anchors.left: targetEnableCheck.right
+      margin-left: 6
+      @onClick: modules.game_helper.openKeyCapture('targetKey', self)
+
+    CheckBox
+      id: targetDisablePzCheck
+      anchors.verticalCenter: targetEnableCheck.verticalCenter
+      anchors.right: parent.right
+      width: 112
+      !text: tr('Disable in PZ')
+      checked: true
+
+    Label
+      text: Default mode:
+      anchors.bottom: parent.bottom
+      anchors.left: parent.left
+      margin-bottom: 4
+      color: #f0d080
+      text-auto-resize: true
+
+    ComboBox
+      id: targetModeCombo
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 6
+      width: 58
+
+    Label
+      id: targetModeInfoLabel
+      text: (i)
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 6
+      color: #8ec5ff
+      text-auto-resize: true
+      phantom: false
+      !tooltip: tr('Mode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best target for area runes / diamond arrow (most monsters around it)\nMode F: closest target, prioritizing lowest health\nMode G: closest target with highest health\nMode H: farthest target with lowest health\nMode I: farthest target with highest health')
+
+    Label
+      text: Max range:
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 16
+      color: #cccccc
+      text-auto-resize: true
+
+    HelperNumericEdit
+      id: targetRangeEdit
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 4
+      width: 34
+      text: 7
+
+    ComboBox
+      id: targetChaseCombo
+      width: 86
+      height: 19
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 14
+      !tooltip: tr('Stand = do not chase the target. Chase = walk after the target.')
+
+    CheckBox
+      id: targetKeepCheck
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 12
+      width: 150
+      !text: tr('Keep target until dead')
+      checked: true
+
+  TextList
+    id: targetRulesList
+    anchors.top: targetTopBox.bottom
+    anchors.left: parent.left
+    anchors.right: targetRulesScrollBar.left
+    margin-top: 6
+    height: 132
+    padding: 2
+    background-color: #2b2b2b
+    border-width: 1
+    border-color: #191919
+    vertical-scrollbar: targetRulesScrollBar
+    auto-focus: first
+
+  VerticalScrollBar
+    id: targetRulesScrollBar
+    anchors.top: targetTopBox.bottom
+    margin-top: 6
+    height: 132
+    anchors.right: parent.right
+    step: 22
+    pixels-scroll: true
+
+  Panel
+    id: targetEditorBox
+    anchors.top: targetRulesList.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    height: 86
+    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-border: 4
+    padding: 8
+
+    Label
+      id: tgtNameLbl
+      text: Monster:
+      anchors.top: parent.top
+      anchors.left: parent.left
+      margin-top: 3
+      color: #f0d080
+      text-auto-resize: true
+
+    ComboBox
+      id: tgtFilterCombo
+      width: 132
+      height: 20
+      anchors.top: parent.top
+      anchors.left: tgtNameLbl.right
+      margin-left: 6
+
+    TextEdit
+      id: tgtNameEdit
+      anchors.top: parent.top
+      anchors.left: tgtFilterCombo.right
+      margin-left: 6
+      width: 185
+      height: 20
+      visible: false
+      !placeholder: tr('type the monster name')
+
+    Label
+      id: tgtModeLbl
+      text: Mode:
+      anchors.top: parent.top
+      anchors.left: tgtNameEdit.right
+      margin-left: 12
+      margin-top: 3
+      color: #f0d080
+      text-auto-resize: true
+
+    ComboBox
+      id: tgtModeCombo
+      anchors.top: parent.top
+      anchors.left: tgtModeLbl.right
+      margin-left: 6
+      width: 66
+
+    Label
+      id: tgtModeInfoLabel
+      text: (i)
+      anchors.verticalCenter: tgtModeCombo.verticalCenter
+      anchors.left: tgtModeCombo.right
+      margin-left: 6
+      color: #8ec5ff
+      text-auto-resize: true
+      phantom: false
+      !tooltip: tr('Default: uses top Default Mode\nMode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best area rune / diamond arrow cluster\nMode F: closest + lowest HP\nMode G: closest + highest HP\nMode H: farthest + lowest HP\nMode I: farthest + highest HP')
+
+    Label
+      text: HP%:
+      anchors.top: tgtFilterCombo.bottom
+      anchors.left: parent.left
+      margin-top: 12
+      color: #cccccc
+      text-auto-resize: true
+
+    HelperNumericEdit
+      id: tgtHpMinEdit
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 4
+      width: 34
+      text: 0
+
+    Label
+      text: -
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 2
+      color: #cccccc
+      text-auto-resize: true
+
+    HelperNumericEdit
+      id: tgtHpMaxEdit
+      anchors.verticalCenter: prev.verticalCenter
+      anchors.left: prev.right
+      margin-left: 2
+      width: 36
+      text: 100
+
+    CheckBox
+      id: tgtInterruptCheck
+      anchors.verticalCenter: tgtHpMinEdit.verticalCenter
+      anchors.left: tgtHpMaxEdit.right
+      margin-left: 16
+      width: 165
+      !text: tr('Switch Immediately')
+      !tooltip: tr('When enabled, switches immediately to a monster matching this rule (even with Keep target until dead active). Rules at the top have higher priority.')
+
+    HelperSmallButton
+      id: tgtUpBtn
+      text: Up
+      width: 30
+      height: 19
+      anchors.verticalCenter: tgtHpMinEdit.verticalCenter
+      anchors.right: tgtDownBtn.left
+      margin-right: 3
+      @onClick: modules.game_helper.moveTargetRule(-1)
+
+    HelperSmallButton
+      id: tgtDownBtn
+      text: Dn
+      width: 30
+      height: 19
+      anchors.verticalCenter: tgtHpMinEdit.verticalCenter
+      anchors.right: tgtDelBtn.left
+      margin-right: 3
+      @onClick: modules.game_helper.moveTargetRule(1)
+
+    HelperSmallButton
+      id: tgtDelBtn
+      text: Del
+      width: 36
+      height: 19
+      color: #ff6666
+      anchors.verticalCenter: tgtHpMinEdit.verticalCenter
+      anchors.right: tgtNewBtn.left
+      margin-right: 3
+      @onClick: modules.game_helper.deleteTargetRule()
+
+    HelperSmallButton
+      id: tgtNewBtn
+      text: New Rule
+      width: 70
+      height: 19
+      color: #5ce65c
+      anchors.verticalCenter: tgtHpMinEdit.verticalCenter
+      anchors.right: parent.right
+      @onClick: modules.game_helper.newTargetRule()
+
+  Panel
+    id: targetListsBox
+    anchors.top: targetEditorBox.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 6
+    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-border: 4
+    padding: 8
+
+    Label
+      id: ignoreLbl
+      text: Ignore creatures (comma separated):
+      anchors.top: parent.top
+      anchors.left: parent.left
+      color: #cccccc
+
+    TextEdit
+      id: targetIgnoreEdit
+      anchors.top: ignoreLbl.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 4
+      height: 20
+      !placeholder: tr('rat, cave rat, trainer')

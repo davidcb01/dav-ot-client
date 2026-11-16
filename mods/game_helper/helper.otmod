@@ -1,0 +1,9 @@
+Module
+  name: game_helper
+  description: Native Helper & Automation
+  author: David
+  sandboxed: true
+  autoload: true
+  scripts: [ i18n, helper ]
+  @onLoad: init()
+  @onUnload: terminate()

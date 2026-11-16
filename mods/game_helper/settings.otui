@@ -1,0 +1,291 @@
+ProfileListRow < UIWidget
+  height: 22
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #222222
+  focusable: true
+  $focus:
+    background-color: #4f4f4f
+
+  Label
+    id: profileNameLabel
+    anchors.left: parent.left
+    anchors.right: profileMetaLabel.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    margin-right: 6
+    font: verdana-11px-rounded
+    color: #efefef
+    text: Character
+    phantom: true
+
+  Label
+    id: profileMetaLabel
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 8
+    width: 185
+    font: verdana-11px-monochrome
+    color: #b5b5b5
+    text-align: right
+    text: EN | 1 voc
+    phantom: true
+
+Panel
+  id: settingsTabPanel
+  anchors.fill: parent
+
+  Panel
+    id: currentProfileBox
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 118
+    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-border: 4
+    padding: 8
+
+    Label
+      id: currentProfileTitle
+      text: Current Character Profile
+      anchors.top: parent.top
+      anchors.left: parent.left
+      font: verdana-11px-rounded
+      color: #f0d080
+      text-auto-resize: true
+
+    Label
+      id: curCharLbl
+      text: Character:
+      anchors.top: currentProfileTitle.bottom
+      anchors.left: parent.left
+      margin-top: 8
+      color: #cccccc
+      text-auto-resize: true
+
+    Label
+      id: settingsCharValueLabel
+      text: Offline
+      anchors.verticalCenter: curCharLbl.verticalCenter
+      anchors.left: curCharLbl.right
+      margin-left: 6
+      width: 190
+      font: verdana-11px-rounded
+      color: #efefef
+
+    Label
+      id: curVocLbl
+      text: Vocation:
+      anchors.verticalCenter: curCharLbl.verticalCenter
+      anchors.left: settingsCharValueLabel.right
+      margin-left: 12
+      color: #cccccc
+      text-auto-resize: true
+
+    Label
+      id: settingsVocValueLabel
+      text: Unknown
+      anchors.verticalCenter: curVocLbl.verticalCenter
+      anchors.left: curVocLbl.right
+      margin-left: 6
+      width: 120
+      font: verdana-11px-rounded
+      color: #ffdd66
+
+    Label
+      id: curLangLbl
+      text: Helper Language:
+      anchors.top: curCharLbl.bottom
+      anchors.left: parent.left
+      margin-top: 10
+      color: #cccccc
+      text-auto-resize: true
+
+    ComboBox
+      id: settingsLangCombo
+      anchors.verticalCenter: curLangLbl.verticalCenter
+      anchors.left: curLangLbl.right
+      margin-left: 8
+      width: 118
+      height: 20
+
+    HelperBlueButton
+      id: saveCurrentProfileBtn
+      text: Save Profile Now
+      width: 130
+      height: 20
+      anchors.bottom: parent.bottom
+      anchors.left: parent.left
+      @onClick: modules.game_helper.onSettingsSaveCurrent()
+
+    HelperSmallButton
+      id: reloadSavedProfileBtn
+      text: Reload Saved
+      width: 126
+      height: 20
+      anchors.bottom: parent.bottom
+      anchors.left: saveCurrentProfileBtn.right
+      margin-left: 8
+      @onClick: modules.game_helper.onSettingsReloadCurrent()
+
+    HelperSmallButton
+      id: resetDefaultProfileBtn
+      text: Reset to Default
+      width: 136
+      height: 20
+      anchors.bottom: parent.bottom
+      anchors.left: reloadSavedProfileBtn.right
+      margin-left: 8
+      color: #ff9999
+      @onClick: modules.game_helper.onSettingsResetDefault()
+
+  Panel
+    id: saveTemplateBox
+    anchors.top: currentProfileBox.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    height: 62
+    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-border: 4
+    padding: 8
+
+    Label
+      id: templateTitle
+      text: Save Named Backup / Template
+      anchors.top: parent.top
+      anchors.left: parent.left
+      font: verdana-11px-rounded
+      color: #f0d080
+      text-auto-resize: true
+
+    Label
+      id: templateNameLbl
+      text: Template name:
+      anchors.bottom: parent.bottom
+      anchors.left: parent.left
+      margin-bottom: 3
+      color: #cccccc
+      text-auto-resize: true
+
+    TextEdit
+      id: templateNameEdit
+      anchors.verticalCenter: templateNameLbl.verticalCenter
+      anchors.left: templateNameLbl.right
+      anchors.right: saveTemplateBtn.left
+      margin-left: 8
+      margin-right: 8
+      height: 20
+
+    HelperSmallButton
+      id: saveTemplateBtn
+      text: Save Copy
+      width: 116
+      height: 20
+      anchors.verticalCenter: templateNameLbl.verticalCenter
+      anchors.right: parent.right
+      @onClick: modules.game_helper.onSettingsSaveTemplate()
+
+  Panel
+    id: savedProfilesBox
+    anchors.top: saveTemplateBox.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 6
+    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-border: 4
+    padding: 8
+
+    Label
+      id: savedProfilesTitle
+      text: Saved Profiles (Load or Copy to Current Character)
+      anchors.top: parent.top
+      anchors.left: parent.left
+      font: verdana-11px-rounded
+      color: #f0d080
+      text-auto-resize: true
+
+    Label
+      id: savedProfilesHint
+      text: Select a character or template below to copy its entire Helper setup (healing, shooter, target, tools, cavebot & hotkeys) to your current character.
+      anchors.top: savedProfilesTitle.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 3
+      font: verdana-11px-monochrome
+      color: #aaaaaa
+      text-wrap: true
+      text-auto-resize: true
+
+    TextList
+      id: profilesList
+      anchors.top: savedProfilesHint.bottom
+      anchors.left: parent.left
+      anchors.right: profilesScrollBar.left
+      anchors.bottom: profileActionsRow.top
+      margin-top: 6
+      margin-bottom: 6
+      padding: 2
+      background-color: #2b2b2b
+      border-width: 1
+      border-color: #191919
+      vertical-scrollbar: profilesScrollBar
+      auto-focus: first
+
+    VerticalScrollBar
+      id: profilesScrollBar
+      anchors.top: savedProfilesHint.bottom
+      anchors.bottom: profileActionsRow.top
+      anchors.right: parent.right
+      margin-top: 6
+      margin-bottom: 6
+      step: 22
+      pixels-scroll: true
+
+    Panel
+      id: profileActionsRow
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: settingsStatusLabel.top
+      height: 22
+      margin-bottom: 4
+
+      HelperSmallButton
+        id: refreshProfilesBtn
+        text: Refresh List
+        width: 118
+        height: 20
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        @onClick: modules.game_helper.refreshSettingsTabUI()
+
+      HelperBlueButton
+        id: copyProfileBtn
+        text: Load / Copy to Current Char
+        width: 215
+        height: 20
+        anchors.left: refreshProfilesBtn.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 8
+        @onClick: modules.game_helper.onSettingsCopySelectedProfile()
+
+      HelperSmallButton
+        id: deleteProfileBtn
+        text: Delete Selected
+        width: 136
+        height: 20
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        color: #ff6666
+        @onClick: modules.game_helper.onSettingsDeleteSelectedProfile()
+
+    Label
+      id: settingsStatusLabel
+      text: Ready.
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      font: verdana-11px-monochrome
+      color: #88ff88
+      text-auto-resize: true

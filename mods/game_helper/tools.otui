@@ -1,0 +1,432 @@
+Panel
+  id: toolsTabPanel
+  anchors.fill: parent
+
+  Panel
+    id: leftToolsCol
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    anchors.right: centerToolsSep.left
+    margin-right: 6
+
+    Panel
+      id: manaTrainBox
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 82
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Label
+        text: Mana Training
+        anchors.top: parent.top
+        anchors.left: parent.left
+        font: verdana-11px-rounded
+        color: #f0d080
+
+      HelperSpellSlot
+        id: manaTrainSlot
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 6
+
+      Label
+        text: MP% >=
+        anchors.verticalCenter: manaTrainSlot.verticalCenter
+        anchors.left: manaTrainSlot.right
+        margin-left: 10
+        color: #8ec5ff
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: manaTrainPctEdit
+        anchors.verticalCenter: manaTrainSlot.verticalCenter
+        anchors.left: prev.right
+        margin-left: 6
+        width: 44
+        text: 85
+
+      CheckBox
+        id: manaTrainPzCheck
+        anchors.top: manaTrainSlot.top
+        anchors.left: manaTrainPctEdit.right
+        margin-left: 14
+        width: 95
+        !text: tr('Cast in PZ')
+        checked: true
+
+      CheckBox
+        id: manaTrainCheck
+        anchors.bottom: manaTrainSlot.bottom
+        anchors.left: manaTrainPctEdit.right
+        margin-left: 14
+        width: 95
+        !text: tr('Enable')
+
+    Panel
+      id: hasteBox
+      anchors.top: manaTrainBox.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+      height: 82
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Label
+        text: Auto Haste
+        anchors.top: parent.top
+        anchors.left: parent.left
+        font: verdana-11px-rounded
+        color: #f0d080
+
+      HelperSpellSlot
+        id: hasteSlot
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 6
+
+      CheckBox
+        id: hastePzCheck
+        anchors.top: hasteSlot.top
+        anchors.left: hasteSlot.right
+        margin-left: 12
+        width: 140
+        !text: tr('Cast in PZ')
+        checked: true
+
+      CheckBox
+        id: hasteEnableCheck
+        anchors.bottom: hasteSlot.bottom
+        anchors.left: hasteSlot.right
+        margin-left: 12
+        width: 140
+        !text: tr('Enable Auto Haste')
+
+    Panel
+      id: exerciseBox
+      anchors.top: hasteBox.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+      height: 160
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Label
+        id: exTitleLbl
+        text: Exercise Training (Click Icon to Select)
+        anchors.top: parent.top
+        anchors.left: parent.left
+        font: verdana-11px-rounded
+        color: #f0d080
+
+      HelperSmallButton
+        id: exerciseRefreshBtn
+        text: Scan
+        width: 48
+        height: 17
+        anchors.top: parent.top
+        anchors.right: parent.right
+        @onClick: modules.game_helper.scanExerciseAssets(true)
+
+      Label
+        id: exWepLbl
+        text: BP Weapons:
+        anchors.top: exTitleLbl.bottom
+        anchors.left: parent.left
+        margin-top: 8
+        color: #cccccc
+        text-auto-resize: true
+
+      Panel
+        id: exerciseWeaponIcons
+        anchors.top: exTitleLbl.bottom
+        anchors.left: exWepLbl.right
+        anchors.right: parent.right
+        margin-top: 4
+        margin-left: 6
+        height: 36
+        layout:
+          type: horizontalBox
+          spacing: 4
+
+      Label
+        id: exDumLbl
+        text: Screen Dummys:
+        anchors.top: exerciseWeaponIcons.bottom
+        anchors.left: parent.left
+        margin-top: 10
+        color: #cccccc
+        text-auto-resize: true
+
+      Panel
+        id: exerciseDummyIcons
+        anchors.top: exerciseWeaponIcons.bottom
+        anchors.left: exDumLbl.right
+        anchors.right: parent.right
+        margin-top: 6
+        margin-left: 6
+        height: 36
+        layout:
+          type: horizontalBox
+          spacing: 4
+
+      Label
+        id: exerciseSelectedLabel
+        text: Weapon: Auto | Dummy: Auto
+        anchors.bottom: exerciseEnableCheck.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-bottom: 4
+        font: verdana-11px-monochrome
+        color: #99dd99
+
+      CheckBox
+        id: exerciseEnableCheck
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        width: 260
+        !text: tr('Enable Auto Exercise Training')
+
+    Panel
+      id: itemTimerBox
+      anchors.top: exerciseBox.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 6
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Label
+        text: Item Timer (Drag Item from BP)
+        anchors.top: parent.top
+        anchors.left: parent.left
+        font: verdana-11px-rounded
+        color: #f0d080
+
+      HelperItemSlot
+        id: itemTimerSlot
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 8
+
+      Label
+        text: Every (sec):
+        anchors.top: itemTimerSlot.top
+        anchors.left: itemTimerSlot.right
+        margin-left: 10
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: itemTimerSecEdit
+        anchors.verticalCenter: prev.verticalCenter
+        anchors.left: prev.right
+        margin-left: 6
+        width: 54
+        text: 610
+
+      Label
+        id: itemTimerCountdownLabel
+        text: Next: Ready
+        anchors.bottom: itemTimerSlot.bottom
+        anchors.left: itemTimerSlot.right
+        margin-left: 10
+        color: #77ff77
+        text-auto-resize: true
+
+      CheckBox
+        id: itemTimerEnableCheck
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        width: 200
+        !text: tr('Enable Item Timer')
+
+  VerticalSeparator
+    id: centerToolsSep
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+
+  Panel
+    id: rightToolsCol
+    anchors.top: parent.top
+    anchors.left: centerToolsSep.right
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-left: 6
+
+    Panel
+      id: followBox
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 168
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Label
+        text: Follow
+        anchors.top: parent.top
+        anchors.left: parent.left
+        font: verdana-11px-rounded
+        color: #f0d080
+
+      Label
+        id: followTargetLbl
+        text: Target Player:
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 8
+        color: #cccccc
+
+      TextEdit
+        id: followNameEdit
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        anchors.right: followClearBtn.left
+        margin-top: 4
+        margin-right: 4
+        height: 20
+        editable: false
+        focusable: false
+        !placeholder: tr('Follow someone in-game or click Pick')
+
+      HelperSmallButton
+        id: followClearBtn
+        text: X
+        width: 20
+        height: 20
+        color: #ff6666
+        anchors.top: followTargetLbl.bottom
+        anchors.right: followPickBtn.left
+        margin-top: 4
+        margin-right: 4
+        !tooltip: tr('Clear follow target')
+        @onClick: modules.game_helper.clearFollowTargetName()
+
+      HelperSmallButton
+        id: followPickBtn
+        text: Pick
+        width: 54
+        height: 20
+        anchors.top: followTargetLbl.bottom
+        anchors.right: parent.right
+        margin-top: 4
+        !tooltip: tr('Copy current followed creature name')
+        @onClick: modules.game_helper.pickFollowTargetName()
+
+      Label
+        text: Mode:
+        anchors.top: followNameEdit.bottom
+        anchors.left: parent.left
+        margin-top: 10
+        color: #cccccc
+        text-auto-resize: true
+
+      ComboBox
+        id: followModeCombo
+        width: 92
+        height: 19
+        anchors.verticalCenter: prev.verticalCenter
+        anchors.left: prev.right
+        margin-left: 6
+
+      Label
+        text: Dist:
+        anchors.verticalCenter: followModeCombo.verticalCenter
+        anchors.left: followModeCombo.right
+        margin-left: 8
+        color: #cccccc
+        text-auto-resize: true
+
+      ComboBox
+        id: followDistCombo
+        anchors.verticalCenter: followModeCombo.verticalCenter
+        anchors.left: prev.right
+        margin-left: 4
+        width: 44
+        height: 19
+
+      CheckBox
+        id: followTurnCheck
+        anchors.verticalCenter: followModeCombo.verticalCenter
+        anchors.left: followDistCombo.right
+        margin-left: 10
+        width: 60
+        !text: tr('Turn')
+
+      CheckBox
+        id: followEnableCheck
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        width: 150
+        !text: tr('Enable Follow')
+
+      HelperSmallButton
+        id: followSetKeyBtn
+        text: Set Key
+        width: 145
+        height: 19
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        @onClick: modules.game_helper.openKeyCapture('followKey', self)
+
+    Panel
+      id: utilsBox
+      anchors.top: followBox.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 6
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Label
+        text: Character Utilities
+        anchors.top: parent.top
+        anchors.left: parent.left
+        font: verdana-11px-rounded
+        color: #f0d080
+
+      CheckBox
+        id: changeGoldCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 12
+        width: 280
+        !text: tr('Change Gold')
+
+      CheckBox
+        id: autoEatCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 10
+        width: 280
+        !text: tr('Auto Eat Food (All Server Food IDs)')
+
+      CheckBox
+        id: autoBlessCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 10
+        width: 280
+        !text: tr('Auto Bless (!bless only if missing blessings)')
+
+      CheckBox
+        id: antiAfkCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 10
+        width: 280
+        !text: tr('Anti-AFK (Rotate Direction Every 10 min)')

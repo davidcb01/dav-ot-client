@@ -1,0 +1,816 @@
+HealingSpellListRow < UIWidget
+  height: 40
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #232323
+  focusable: true
+  $focus:
+    background-color: #464646
+
+  HelperSpellSlot
+    id: spellSlot
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+
+  Label
+    id: spellNameLabel
+    anchors.top: parent.top
+    anchors.left: spellSlot.right
+    anchors.right: modeCombo.left
+    margin-left: 6
+    margin-top: 2
+    margin-right: 4
+    font: verdana-11px-rounded
+    color: #efefef
+    text: Empty Spell
+    phantom: true
+
+  Label
+    id: spellWordsLabel
+    anchors.top: spellNameLabel.bottom
+    anchors.left: spellSlot.right
+    anchors.right: modeCombo.left
+    margin-left: 6
+    margin-top: 1
+    margin-right: 4
+    font: verdana-11px-monochrome
+    color: #aaaaaa
+    text: Click slot
+    phantom: true
+
+  ComboBox
+    id: modeCombo
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: pctEdit.left
+    margin-right: 4
+    width: 68
+    height: 19
+    tooltip: Select trigger condition: HP% <= X, MP% <= X or MP% >= X
+
+  HelperNumericEdit
+    id: pctEdit
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: minMpLbl.left
+    margin-right: 6
+    width: 38
+    text: 80
+
+  Label
+    id: minMpLbl
+    text: MP>=
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: minMpEdit.left
+    margin-right: 3
+    color: #8ec5ff
+    font: verdana-11px-monochrome
+    text-auto-resize: true
+
+  HelperNumericEdit
+    id: minMpEdit
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: enableCheck.left
+    margin-right: 6
+    width: 34
+    text: 0
+
+  CheckBox
+    id: enableCheck
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: upBtn.left
+    margin-right: 4
+    width: 16
+    checked: true
+
+  HelperSmallButton
+    id: upBtn
+    text: ^
+    size: 16 18
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: downBtn.left
+    margin-right: 2
+
+  HelperSmallButton
+    id: downBtn
+    text: v
+    size: 16 18
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: delBtn.left
+    margin-right: 2
+
+  HelperSmallButton
+    id: delBtn
+    text: X
+    size: 18 18
+    color: #ff6666
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    margin-right: 2
+
+HealingPotionListRow < UIWidget
+  height: 40
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #232323
+  focusable: true
+  $focus:
+    background-color: #464646
+
+  HelperItemSlot
+    id: itemSlot
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+
+  UIButton
+    id: barType
+    size: 8 36
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: itemSlot.right
+    margin-left: 3
+    border-width: 1
+    border-color: #1e1e1e
+    !tooltip: tr('Click to toggle Potion Trigger (HP / MP / Spirit)')
+
+    UIWidget
+      id: bar1
+      height: 11
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      background-color: #cc3333
+      phantom: true
+
+    UIWidget
+      id: bar2
+      height: 12
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      background-color: #cc3333
+      phantom: true
+
+    UIWidget
+      id: bar3
+      anchors.top: prev.bottom
+      anchors.bottom: parent.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      background-color: #cc3333
+      phantom: true
+
+  Label
+    id: itemNameLabel
+    anchors.top: parent.top
+    anchors.left: barType.right
+    anchors.right: condLbl.left
+    margin-left: 6
+    margin-top: 2
+    margin-right: 4
+    font: verdana-11px-rounded
+    color: #efefef
+    text: Empty Potion
+    phantom: true
+
+  ComboBox
+    id: ptypeCombo
+    anchors.top: itemNameLabel.bottom
+    anchors.left: barType.right
+    margin-left: 6
+    margin-top: 2
+    width: 84
+    height: 18
+
+  Label
+    id: condLbl
+    text: <=%
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: pctEdit.left
+    margin-right: 4
+    color: #cccccc
+    text-auto-resize: true
+
+  HelperNumericEdit
+    id: pctEdit
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: enableCheck.left
+    margin-right: 6
+    width: 40
+    text: 50
+
+  CheckBox
+    id: enableCheck
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: upBtn.left
+    margin-right: 4
+    width: 16
+    checked: true
+
+  HelperSmallButton
+    id: upBtn
+    text: ^
+    size: 16 18
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: downBtn.left
+    margin-right: 2
+
+  HelperSmallButton
+    id: downBtn
+    text: v
+    size: 16 18
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: delBtn.left
+    margin-right: 2
+
+  HelperSmallButton
+    id: delBtn
+    text: X
+    size: 18 18
+    color: #ff6666
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    margin-right: 2
+
+HelperSioVocRow < Panel
+  height: 22
+
+  CheckBox
+    id: vocCheck
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    width: 82
+    text: Knight
+
+  Label
+    text: HP% <=
+    anchors.left: vocCheck.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    color: #cccccc
+    text-auto-resize: true
+
+  HelperNumericEdit
+    id: vocHpEdit
+    anchors.left: prev.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    width: 38
+    text: 85
+
+  Label
+    text: Prio:
+    anchors.left: vocHpEdit.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 10
+    color: #cccccc
+    text-auto-resize: true
+
+  HelperNumericEdit
+    id: vocPrioEdit
+    anchors.left: prev.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    width: 28
+    text: 1
+
+Panel
+  id: healingTabPanel
+  anchors.fill: parent
+
+  Panel
+    id: subTabBar
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 20
+
+    HelperSmallButton
+      id: subTabSelfBtn
+      !text: tr('Self Healing')
+      anchors.top: parent.top
+      anchors.left: parent.left
+      width: 180
+      color: #f0d080
+      @onClick: modules.game_helper.switchHealingSubTab('self')
+
+    HelperSmallButton
+      id: subTabSioBtn
+      !text: tr('Sio / Friend')
+      anchors.top: parent.top
+      anchors.left: subTabSelfBtn.right
+      margin-left: 4
+      width: 180
+      @onClick: modules.game_helper.switchHealingSubTab('sio')
+
+    HelperSmallButton
+      id: subTabMasResBtn
+      !text: tr('Mas Res / Party')
+      anchors.top: parent.top
+      anchors.left: subTabSioBtn.right
+      margin-left: 4
+      width: 180
+      @onClick: modules.game_helper.switchHealingSubTab('masres')
+
+  Panel
+    id: selfHealingContainer
+    anchors.top: subTabBar.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 4
+
+    Panel
+      id: mainBox
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: extraHealingBox.top
+      margin-bottom: 6
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Panel
+        id: leftCol
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.right: centerVLine.left
+        margin-right: 6
+
+        Label
+          id: spellHeaderLabel
+          !text: tr('Spell Healing (Unlimited Rules)')
+          anchors.top: parent.top
+          anchors.left: parent.left
+          font: verdana-11px-rounded
+          color: #f0d080
+
+        HelperBlueButton
+          id: addHealSpellBtn
+          !text: tr('+ Add Spell')
+          width: 86
+          height: 18
+          anchors.top: parent.top
+          anchors.right: parent.right
+          @onClick: modules.game_helper.addHealingSpellRule()
+
+        TextList
+          id: spellHealList
+          anchors.top: addHealSpellBtn.bottom
+          anchors.left: parent.left
+          anchors.right: spellHealScrollBar.left
+          anchors.bottom: parent.bottom
+          margin-top: 5
+          padding: 2
+          background-color: #292929
+          border-width: 1
+          border-color: #191919
+          vertical-scrollbar: spellHealScrollBar
+
+        VerticalScrollBar
+          id: spellHealScrollBar
+          anchors.top: addHealSpellBtn.bottom
+          anchors.bottom: parent.bottom
+          anchors.right: parent.right
+          margin-top: 5
+          step: 40
+          pixels-scroll: true
+
+      VerticalSeparator
+        id: centerVLine
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+
+      Panel
+        id: rightCol
+        anchors.top: parent.top
+        anchors.left: centerVLine.right
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        margin-left: 6
+
+        Label
+          id: potionHeaderLabel
+          !text: tr('Potion Healing (Unlimited Rules / Drop Item)')
+          anchors.top: parent.top
+          anchors.left: parent.left
+          font: verdana-11px-rounded
+          color: #f0d080
+
+        HelperBlueButton
+          id: addHealPotionBtn
+          !text: tr('+ Add Potion')
+          width: 88
+          height: 18
+          anchors.top: parent.top
+          anchors.right: parent.right
+          @onClick: modules.game_helper.addHealingPotionRule()
+
+        TextList
+          id: potionHealList
+          anchors.top: addHealPotionBtn.bottom
+          anchors.left: parent.left
+          anchors.right: potionHealScrollBar.left
+          anchors.bottom: parent.bottom
+          margin-top: 5
+          padding: 2
+          background-color: #292929
+          border-width: 1
+          border-color: #191919
+          vertical-scrollbar: potionHealScrollBar
+
+        VerticalScrollBar
+          id: potionHealScrollBar
+          anchors.top: addHealPotionBtn.bottom
+          anchors.bottom: parent.bottom
+          anchors.right: parent.right
+          margin-top: 5
+          step: 40
+          pixels-scroll: true
+
+    Panel
+      id: extraHealingBox
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      height: 124
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      HelperSpellSlot
+        id: cureParaSlot
+        anchors.top: parent.top
+        anchors.left: parent.left
+
+      CheckBox
+        id: cureParaCheck
+        anchors.verticalCenter: cureParaSlot.verticalCenter
+        anchors.left: cureParaSlot.right
+        margin-left: 8
+        width: 140
+        !text: tr('Anti-Paralyze')
+
+      HelperSpellSlot
+        id: quickSioSlot
+        anchors.top: cureParaSlot.bottom
+        anchors.left: parent.left
+        margin-top: 8
+
+      CheckBox
+        id: quickSioCheck
+        anchors.verticalCenter: quickSioSlot.verticalCenter
+        anchors.left: quickSioSlot.right
+        margin-left: 8
+        width: 140
+        !text: tr('Quick Sio')
+
+      HelperSpellSlot
+        id: manaShieldSlot
+        anchors.top: parent.top
+        anchors.left: parent.horizontalCenter
+        margin-left: 8
+
+      CheckBox
+        id: manaShieldCheck
+        anchors.verticalCenter: manaShieldSlot.verticalCenter
+        anchors.left: manaShieldSlot.right
+        margin-left: 8
+        width: 130
+        !text: tr('Auto Utamo')
+
+      HelperSpellSlot
+        id: recoverySlot
+        anchors.top: manaShieldSlot.bottom
+        anchors.left: parent.horizontalCenter
+        margin-left: 8
+        margin-top: 8
+
+      CheckBox
+        id: recoverySpellCheck
+        anchors.verticalCenter: recoverySlot.verticalCenter
+        anchors.left: recoverySlot.right
+        margin-left: 8
+        width: 130
+        !text: tr('Auto Recovery')
+
+      Label
+        id: recoveryHpLbl
+        text: HP%<=
+        anchors.verticalCenter: recoverySlot.verticalCenter
+        anchors.left: recoverySpellCheck.right
+        margin-left: 4
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: recoveryPctEdit
+        anchors.verticalCenter: recoverySlot.verticalCenter
+        anchors.left: recoveryHpLbl.right
+        margin-left: 4
+        width: 36
+        text: 95
+
+      HorizontalSeparator
+        id: bottomLineSep
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: enableHealingCheck.top
+        margin-bottom: 6
+
+      CheckBox
+        id: enableHealingCheck
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        width: 160
+        !text: tr('Enable Healing')
+
+      HelperSmallButton
+        id: healingSetKeyBtn
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 160
+        height: 19
+        !text: tr('Set Key [F9]')
+        @onClick: modules.game_helper.openKeyCapture('healingKey', self)
+
+  Panel
+    id: sioHealingContainer
+    anchors.top: subTabBar.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 4
+    visible: false
+
+    Panel
+      id: sioBox
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 190
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      CheckBox
+        id: sioEnableCheck
+        anchors.top: parent.top
+        anchors.left: parent.left
+        width: 190
+        !text: tr('Enable Exura Sio (Friend)')
+
+      Label
+        text: Self HP>=%
+        anchors.top: parent.top
+        anchors.left: sioEnableCheck.right
+        margin-left: 12
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: sioSelfHpEdit
+        anchors.verticalCenter: prev.verticalCenter
+        anchors.left: prev.right
+        margin-left: 4
+        width: 38
+        text: 70
+
+      Label
+        text: Self MP>=%
+        anchors.top: parent.top
+        anchors.left: sioSelfHpEdit.right
+        margin-left: 12
+        color: #8ec5ff
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: sioSelfMpEdit
+        anchors.verticalCenter: prev.verticalCenter
+        anchors.left: prev.right
+        margin-left: 4
+        width: 38
+        text: 15
+
+      HelperSioVocRow
+        id: sioVocKnight
+        anchors.top: sioEnableCheck.bottom
+        anchors.left: parent.left
+        anchors.right: parent.horizontalCenter
+        margin-top: 8
+
+      HelperSioVocRow
+        id: sioVocPaladin
+        anchors.top: sioVocKnight.bottom
+        anchors.left: parent.left
+        anchors.right: parent.horizontalCenter
+        margin-top: 2
+
+      HelperSioVocRow
+        id: sioVocMonk
+        anchors.top: sioVocPaladin.bottom
+        anchors.left: parent.left
+        anchors.right: parent.horizontalCenter
+        margin-top: 2
+
+      HelperSioVocRow
+        id: sioVocSorcerer
+        anchors.top: sioEnableCheck.bottom
+        anchors.left: parent.horizontalCenter
+        anchors.right: parent.right
+        margin-top: 8
+        margin-left: 8
+
+      HelperSioVocRow
+        id: sioVocDruid
+        anchors.top: sioVocSorcerer.bottom
+        anchors.left: parent.horizontalCenter
+        anchors.right: parent.right
+        margin-top: 2
+        margin-left: 8
+
+      HorizontalSeparator
+        id: sioMidSep
+        anchors.top: sioVocMonk.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 8
+
+      CheckBox
+        id: granSioEnableCheck
+        anchors.top: sioMidSep.bottom
+        anchors.left: parent.left
+        margin-top: 8
+        width: 240
+        text: Enable Exura Gran Sio (Emergency -20% HP)
+
+    Panel
+      id: sioFiltersBox
+      anchors.top: sioBox.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 6
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 8
+
+      Label
+        text: Target Friends Filter:
+        anchors.top: parent.top
+        anchors.left: parent.left
+        color: #f0d080
+        font: verdana-11px-rounded
+
+      CheckBox
+        id: sioPartyCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 6
+        width: 126
+        !text: tr('Party Members')
+        checked: true
+
+      CheckBox
+        id: sioGuildCheck
+        anchors.top: sioPartyCheck.top
+        anchors.left: sioPartyCheck.right
+        margin-left: 12
+        width: 126
+        !text: tr('Guild Members')
+        checked: true
+
+      CheckBox
+        id: sioAllScreenCheck
+        anchors.top: sioPartyCheck.top
+        anchors.left: sioGuildCheck.right
+        margin-left: 12
+        width: 140
+        !text: tr('All Players on Screen')
+
+      Label
+        text: Extra Friend Names (comma separated):
+        anchors.top: sioPartyCheck.bottom
+        anchors.left: parent.left
+        margin-top: 10
+        color: #cccccc
+
+      TextEdit
+        id: sioFriendsEdit
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 4
+        height: 22
+        !placeholder: tr('Player One, Player Two')
+
+  Panel
+    id: masResHealingContainer
+    anchors.top: subTabBar.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 4
+    visible: false
+
+    Panel
+      id: masResBox
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 10
+
+      HelperSpellSlot
+        id: masResSlot
+        anchors.top: parent.top
+        anchors.left: parent.left
+
+      CheckBox
+        id: masResEnableCheck
+        anchors.top: parent.top
+        anchors.left: masResSlot.right
+        margin-left: 10
+        margin-top: 2
+        width: 240
+        !text: tr('Enable Exura Gran Mas Res')
+
+      Label
+        text: Heal Count >=
+        anchors.top: masResEnableCheck.bottom
+        anchors.left: masResSlot.right
+        margin-left: 10
+        margin-top: 8
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: masResCountEdit
+        anchors.verticalCenter: prev.verticalCenter
+        anchors.left: prev.right
+        margin-left: 6
+        width: 34
+        text: 2
+
+      Label
+        text: Target HP% <=
+        anchors.verticalCenter: masResCountEdit.verticalCenter
+        anchors.left: masResCountEdit.right
+        margin-left: 16
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: masResHpEdit
+        anchors.verticalCenter: prev.verticalCenter
+        anchors.left: prev.right
+        margin-left: 6
+        width: 38
+        text: 85
+
+      Label
+        text: Self MP% >=
+        anchors.verticalCenter: masResHpEdit.verticalCenter
+        anchors.left: masResHpEdit.right
+        margin-left: 16
+        color: #8ec5ff
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: masResMpEdit
+        anchors.verticalCenter: prev.verticalCenter
+        anchors.left: prev.right
+        margin-left: 6
+        width: 38
+        text: 20
+
+      CheckBox
+        id: masResCheckParty
+        anchors.top: masResSlot.bottom
+        anchors.left: parent.left
+        margin-top: 16
+        width: 240
+        !text: tr('Include Party Members in Area')
+        checked: true
+
+      CheckBox
+        id: masResCheckGuild
+        anchors.top: masResCheckParty.bottom
+        anchors.left: parent.left
+        margin-top: 8
+        width: 240
+        !text: tr('Include Guild Members in Area')
+        checked: true
+
+      CheckBox
+        id: masResIncludeSelf
+        anchors.top: masResCheckGuild.bottom
+        anchors.left: parent.left
+        margin-top: 8
+        width: 240
+        !text: tr('Include Self HP in Mas Res Count')
+        checked: true

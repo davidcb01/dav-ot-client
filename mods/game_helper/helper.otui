@@ -1,0 +1,207 @@
+HelperTabButton < UIButton
+  size: 112 34
+  background-color: #363636
+  border-width: 1
+  border-color-top: #5e5e5e
+  border-color-left: #5e5e5e
+  border-color-right: #202020
+  border-color-bottom: #202020
+  $hover:
+    background-color: #464646
+  $on:
+    background-color: #505050
+    border-color-top: #ffdd66
+    border-color-left: #ffdd66
+    border-color-right: #665522
+    border-color-bottom: #665522
+
+  UIWidget
+    id: tabIcon
+    size: 20 20
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 5
+    phantom: true
+
+  UILabel
+    id: tabLabel
+    anchors.left: tabIcon.right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    margin-right: 4
+    font: verdana-11px-rounded
+    color: #e8e8e8
+    text-align: center
+    visible: true
+    phantom: true
+
+MainWindow
+  id: helperWindow
+  !text: tr('DAVCaster Helper')
+  size: 760 600
+  visible: false
+  @onEscape: modules.game_helper.hide()
+
+  Panel
+    id: tabBar
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 36
+    background-color: #262626
+    border-width: 1
+    border-color: #181818
+    padding: 1
+
+    HelperTabButton
+      id: tabHealing
+      width: 108
+      anchors.left: parent.left
+      anchors.top: parent.top
+      on: true
+      @onClick: modules.game_helper.switchTab('healing')
+
+    HelperTabButton
+      id: tabTools
+      width: 120
+      anchors.left: prev.right
+      anchors.top: parent.top
+      margin-left: 1
+      @onClick: modules.game_helper.switchTab('tools')
+
+    HelperTabButton
+      id: tabTarget
+      width: 112
+      anchors.left: prev.right
+      anchors.top: parent.top
+      margin-left: 1
+      @onClick: modules.game_helper.switchTab('target')
+
+    HelperTabButton
+      id: tabShooter
+      width: 116
+      anchors.left: prev.right
+      anchors.top: parent.top
+      margin-left: 1
+      @onClick: modules.game_helper.switchTab('shooter')
+
+    HelperTabButton
+      id: tabCavebot
+      width: 118
+      anchors.left: prev.right
+      anchors.top: parent.top
+      margin-left: 1
+      @onClick: modules.game_helper.switchTab('cavebot')
+
+    HelperTabButton
+      id: tabSettings
+      width: 149
+      anchors.left: prev.right
+      anchors.top: parent.top
+      margin-left: 1
+      @onClick: modules.game_helper.switchTab('settings')
+
+  Panel
+    id: bottomBar
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    height: 34
+
+    Label
+      id: statusTitleLabel
+      !text: tr('Helper Status:')
+      anchors.left: parent.left
+      anchors.top: parent.top
+      font: verdana-11px-rounded
+      color: #efefef
+
+    Label
+      id: statusValueLabel
+      !text: tr('Enabled')
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      font: verdana-11px-rounded
+      color: #22ee22
+
+    UIWidget
+      id: statusIcon
+      size: 13 13
+      anchors.left: statusValueLabel.right
+      anchors.verticalCenter: statusValueLabel.verticalCenter
+      margin-left: 4
+      image-source: /images/ui/icon-yes
+
+    HelperToggleButton
+      id: masterToggleBtn
+      !text: tr('On')
+      width: 44
+      height: 18
+      anchors.left: statusIcon.right
+      anchors.verticalCenter: statusValueLabel.verticalCenter
+      margin-left: 8
+      @onClick: modules.game_helper.toggleMaster()
+
+    HelperSmallButton
+      id: setHelperKeyBtn
+      !text: tr('Set Key')
+      width: 165
+      height: 18
+      anchors.left: masterToggleBtn.right
+      anchors.verticalCenter: statusValueLabel.verticalCenter
+      margin-left: 6
+      @onClick: modules.game_helper.openKeyCapture('masterKey', self)
+
+    Button
+      id: closeBtn
+      !text: tr('Close')
+      width: 64
+      height: 20
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      @onClick: modules.game_helper.hide()
+
+    ComboBox
+      id: helperLangCombo
+      width: 86
+      height: 20
+      anchors.right: idsMenuBtn.left
+      anchors.bottom: parent.bottom
+      margin-right: 6
+
+    HelperSmallButton
+      id: idsMenuBtn
+      !text: tr('IDs Menu')
+      width: 78
+      height: 20
+      anchors.right: hStatsBtn.left
+      anchors.bottom: parent.bottom
+      margin-right: 6
+      @onClick: modules.game_helper.openIdsMenu()
+
+    HelperSmallButton
+      id: hStatsBtn
+      !text: tr('davhud shortcuts')
+      width: 118
+      height: 20
+      anchors.right: closeBtn.left
+      anchors.bottom: parent.bottom
+      margin-right: 6
+      @onClick: modules.game_helper.toggleStatsWindow()
+
+  HorizontalSeparator
+    id: bottomSep
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: bottomBar.top
+    margin-bottom: 4
+
+  Panel
+    id: contentContainer
+    anchors.top: tabBar.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: bottomSep.top
+    margin-top: 5
+    margin-bottom: 5

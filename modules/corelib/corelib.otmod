@@ -30,6 +30,7 @@ Module
     dofile 'outputmessage'
 
     dofile 'json'
+    dofile 'charconfig'
     dofile 'http'
     dofile 'objectpool'
 

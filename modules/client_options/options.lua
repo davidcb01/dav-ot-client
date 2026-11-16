@@ -550,10 +550,9 @@ local loadingCharOptions = false
 function controller:onGameStart()
     local charName = g_game.getCharacterName()
     if charName and #charName > 0 then
-        local charOpts = g_settings.getNode('CharOptions') or {}
-        if charOpts[charName] then
+        local savedOpts = CharConfig and CharConfig.load('char_options', charName, 'CharOptions', true) or (g_settings.getNode('CharOptions') or {})[charName]
+        if type(savedOpts) == 'table' then
             loadingCharOptions = true
-            local savedOpts = charOpts[charName]
             local hasMouseControlMode = (savedOpts['mouseControlMode'] ~= nil)
             for k, v in pairs(savedOpts) do
                 if options[k] ~= nil and k ~= 'mouseControlMode' and not (hasMouseControlMode and (k == 'classicControl' or k == 'smartLeftClick')) then
@@ -574,18 +573,30 @@ function controller:onGameStart()
             savedOpts['mouseControlMode'] = resolvedMode
             savedOpts['classicControl'] = (resolvedMode == 1)
             savedOpts['smartLeftClick'] = (resolvedMode == 2)
-            g_settings.setNode('CharOptions', charOpts)
-            g_settings.save()
+            if CharConfig then
+                CharConfig.set('char_options', charName, savedOpts, true)
+            else
+                local charOpts = g_settings.getNode('CharOptions') or {}
+                charOpts[charName] = savedOpts
+                g_settings.setNode('CharOptions', charOpts)
+                g_settings.save()
+            end
             loadingCharOptions = false
         else
-            charOpts[charName] = {}
+            local newOpts = {}
             for k, obj in pairs(options) do
                 if type(obj) == 'table' and obj.value ~= nil then
-                    charOpts[charName][k] = obj.value
+                    newOpts[k] = obj.value
                 end
             end
-            g_settings.setNode('CharOptions', charOpts)
-            g_settings.save()
+            if CharConfig then
+                CharConfig.set('char_options', charName, newOpts, true)
+            else
+                local charOpts = g_settings.getNode('CharOptions') or {}
+                charOpts[charName] = newOpts
+                g_settings.setNode('CharOptions', charOpts)
+                g_settings.save()
+            end
         end
     end
     if g_settings.getBoolean("autoSwitchPreset") then
@@ -676,13 +687,20 @@ function setOption(key, value, force)
         if g_game.isOnline() then
             local charName = g_game.getCharacterName()
             if charName and #charName > 0 then
-                local charOpts = g_settings.getNode('CharOptions') or {}
-                charOpts[charName] = charOpts[charName] or {}
-                charOpts[charName][key] = value
-                g_settings.setNode('CharOptions', charOpts)
+                if CharConfig then
+                    local charOpts = CharConfig.getOrCreate('char_options', charName, 'CharOptions')
+                    charOpts[key] = value
+                    CharConfig.scheduleSave('char_options', charName, 250)
+                else
+                    local charOpts = g_settings.getNode('CharOptions') or {}
+                    charOpts[charName] = charOpts[charName] or {}
+                    charOpts[charName][key] = value
+                    g_settings.setNode('CharOptions', charOpts)
+                end
             end
+        else
+            scheduleSettingsSave()
         end
-        scheduleSettingsSave()
     end
     syncProtocolSoundSettings(key)
 end

@@ -135,9 +135,9 @@ end
 function mapController:onGameStart()
     local char = g_game.getCharacterName()
     if char and #char > 0 then
-        local settings = g_settings.getNode('CharMiniWindows')
-        if settings and settings[char] and settings[char]['mainmappanel'] then
-            local mp = settings[char]['mainmappanel']
+        local charSettings = CharConfig and CharConfig.getOrCreate('char_miniwindows', char, 'CharMiniWindows') or (g_settings.getNode('CharMiniWindows') or {})[char]
+        if charSettings and charSettings['mainmappanel'] then
+            local mp = charSettings['mainmappanel']
             local changed = false
             if mp.parentId == 'gameMainRightPanel' then
                 mp.parentId = 'gameRightPanel'
@@ -148,7 +148,13 @@ function mapController:onGameStart()
                 changed = true
             end
             if changed then
-                g_settings.setNode('CharMiniWindows', settings)
+                if CharConfig then
+                    CharConfig.scheduleSave('char_miniwindows', char, 250)
+                else
+                    local settings = g_settings.getNode('CharMiniWindows') or {}
+                    settings[char] = charSettings
+                    g_settings.setNode('CharMiniWindows', settings)
+                end
             end
         end
     end

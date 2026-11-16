@@ -15,12 +15,20 @@ local function syncMouseControlState(options, panels, mode)
     if g_game.isOnline() then
         local charName = g_game.getCharacterName()
         if charName and #charName > 0 then
-            local charOpts = g_settings.getNode('CharOptions') or {}
-            charOpts[charName] = charOpts[charName] or {}
-            charOpts[charName]['classicControl'] = isClassic
-            charOpts[charName]['smartLeftClick'] = isSmartLeft
-            charOpts[charName]['mouseControlMode'] = mode
-            g_settings.setNode('CharOptions', charOpts)
+            if CharConfig then
+                local charOpts = CharConfig.getOrCreate('char_options', charName, 'CharOptions')
+                charOpts['classicControl'] = isClassic
+                charOpts['smartLeftClick'] = isSmartLeft
+                charOpts['mouseControlMode'] = mode
+                CharConfig.scheduleSave('char_options', charName, 250)
+            else
+                local charOpts = g_settings.getNode('CharOptions') or {}
+                charOpts[charName] = charOpts[charName] or {}
+                charOpts[charName]['classicControl'] = isClassic
+                charOpts[charName]['smartLeftClick'] = isSmartLeft
+                charOpts[charName]['mouseControlMode'] = mode
+                g_settings.setNode('CharOptions', charOpts)
+            end
         end
     end
 
@@ -695,7 +703,7 @@ return {
             end, 100)
         end
     },
-    autoSwitchPreset                  = false,
+    autoSwitchPreset                  = true,
     listKeybindsPanel                 = {
         action = function(value, options, controller, panels, extraWidgets)
             listKeybindsComboBox(value)

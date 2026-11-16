@@ -1,0 +1,472 @@
+EquipRuleRow < UIWidget
+  height: 34
+  background-color: #2b2b2b
+  border-width-bottom: 1
+  border-color-bottom: #1e1e1e
+
+  UIWidget
+    id: itemBg
+    size: 30 30
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 3
+    image-source: /mods/game_helper/images/ui/item
+
+    UIItem
+      id: itemIcon
+      size: 28 28
+      anchors.centerIn: parent
+      virtual: true
+      phantom: true
+
+  UILabel
+    id: descLabel
+    anchors.left: itemBg.right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    margin-right: 46
+    font: verdana-11px-rounded
+    color: #efefef
+    text-align: left
+
+  CheckBox
+    id: enableCheck
+    size: 15 15
+    anchors.right: delBtn.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 6
+    checked: true
+
+  HelperSmallButton
+    id: delBtn
+    size: 18 18
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 4
+    text: X
+    color: #ff5555
+
+Panel
+  id: equipmentPanel
+  anchors.fill: parent
+  image-source: /images/ui/2pixel_up_frame_borderimage
+  image-border: 4
+
+  Label
+    id: headerTitle
+    !text: tr('Equip Helper')
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 18
+    text-align: center
+    font: verdana-11px-rounded
+    color: #cccccc
+    border-width-bottom: 1
+    border-color-bottom: #262626
+
+  Panel
+    id: bodyPanel
+    anchors.top: headerTitle.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    padding: 6
+
+    Panel
+      id: presetsBox
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 50
+      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-border: 4
+      padding: 4
+
+      Label
+        id: presetsLbl
+        !text: tr('Presets:')
+        anchors.top: parent.top
+        anchors.left: parent.left
+        margin-top: 2
+        font: verdana-11px-rounded
+        color: #efefef
+
+      HelperSmallButton
+        id: equipPresetSetKeyBtn
+        !text: tr('Set Key')
+        width: 48
+        height: 16
+        anchors.left: presetsLbl.right
+        anchors.verticalCenter: presetsLbl.verticalCenter
+        margin-left: 4
+        @onClick: modules.game_helper.openKeyCapture('equipPresetKey', self)
+
+      HelperInfoIcon
+        anchors.left: equipPresetSetKeyBtn.right
+        anchors.verticalCenter: presetsLbl.verticalCenter
+        margin-left: 4
+        !tooltip: tr('Equipment auto-swap presets')
+
+      ComboBox
+        id: equipPresetCombo
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        width: 215
+        height: 20
+
+      HelperSmallButton
+        id: deleteEquipPresetBtn
+        text: X
+        width: 20
+        height: 20
+        anchors.left: equipPresetCombo.right
+        anchors.verticalCenter: equipPresetCombo.verticalCenter
+        margin-left: 3
+        color: #ff4444
+        @onClick: modules.game_helper.deleteEquipPreset()
+
+      HelperSmallButton
+        id: duplicateEquipPresetBtn
+        !text: tr('Duplicate')
+        width: 56
+        height: 19
+        anchors.top: parent.top
+        anchors.right: parent.right
+        @onClick: modules.game_helper.duplicateEquipPreset()
+
+      HelperSmallButton
+        id: renameEquipPresetBtn
+        !text: tr('Rename')
+        width: 50
+        height: 19
+        anchors.top: parent.top
+        anchors.right: duplicateEquipPresetBtn.left
+        margin-right: 3
+        @onClick: modules.game_helper.renameEquipPreset()
+
+      HelperBlueButton
+        id: newEquipPresetBtn
+        !text: tr('New Preset')
+        width: 109
+        height: 19
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        @onClick: modules.game_helper.newEquipPreset()
+
+    Label
+      id: itemRowLbl
+      !text: tr('Item:')
+      anchors.top: presetsBox.bottom
+      anchors.left: parent.left
+      margin-top: 16
+      font: verdana-11px-rounded
+      color: #cccccc
+
+    HelperItemSlot
+      id: equipItemSlot
+      size: 34 34
+      anchors.left: itemRowLbl.right
+      anchors.verticalCenter: itemRowLbl.verticalCenter
+      margin-left: 8
+
+    Label
+      id: equipSelectedLabel
+      !text: tr('(click to select)')
+      anchors.left: equipItemSlot.right
+      anchors.verticalCenter: equipItemSlot.verticalCenter
+      margin-left: 8
+      font: verdana-11px-rounded
+      color: #999999
+
+    Label
+      id: whenRowLbl
+      !text: tr('When:')
+      anchors.top: equipItemSlot.bottom
+      anchors.left: parent.left
+      margin-top: 10
+      font: verdana-11px-rounded
+      color: #cccccc
+
+    ComboBox
+      id: equipStat1Combo
+      anchors.left: equipItemSlot.left
+      anchors.verticalCenter: whenRowLbl.verticalCenter
+      width: 60
+      height: 19
+
+    ComboBox
+      id: equipOp1Combo
+      anchors.left: equipStat1Combo.right
+      anchors.verticalCenter: whenRowLbl.verticalCenter
+      margin-left: 4
+      width: 44
+      height: 19
+
+    TextEdit
+      id: equipVal1Edit
+      anchors.left: equipOp1Combo.right
+      anchors.verticalCenter: whenRowLbl.verticalCenter
+      margin-left: 4
+      width: 58
+      height: 19
+      text: 50
+
+    ComboBox
+      id: equipLogicCombo
+      anchors.top: equipStat1Combo.bottom
+      anchors.left: equipStat1Combo.left
+      margin-top: 4
+      width: 82
+      height: 19
+
+    CheckBox
+      id: equipCond2Check
+      anchors.left: equipLogicCombo.right
+      anchors.verticalCenter: equipLogicCombo.verticalCenter
+      margin-left: 6
+      width: 110
+      !text: tr('2nd condition')
+
+    ComboBox
+      id: equipStat2Combo
+      anchors.top: equipLogicCombo.bottom
+      anchors.left: equipStat1Combo.left
+      margin-top: 4
+      width: 60
+      height: 19
+
+    ComboBox
+      id: equipOp2Combo
+      anchors.left: equipStat2Combo.right
+      anchors.verticalCenter: equipStat2Combo.verticalCenter
+      margin-left: 4
+      width: 44
+      height: 19
+
+    TextEdit
+      id: equipVal2Edit
+      anchors.left: equipOp2Combo.right
+      anchors.verticalCenter: equipStat2Combo.verticalCenter
+      margin-left: 4
+      width: 58
+      height: 19
+      text: 50
+
+    Label
+      id: actionRowLbl
+      !text: tr('Action:')
+      anchors.top: equipStat2Combo.bottom
+      anchors.left: parent.left
+      margin-top: 8
+      font: verdana-11px-rounded
+      color: #cccccc
+
+    CheckBox
+      id: equipActionEquipCheck
+      anchors.left: equipStat1Combo.left
+      anchors.verticalCenter: actionRowLbl.verticalCenter
+      width: 65
+      !text: tr('Equip')
+      checked: true
+
+    CheckBox
+      id: equipActionUnequipCheck
+      anchors.left: equipActionEquipCheck.right
+      anchors.verticalCenter: actionRowLbl.verticalCenter
+      margin-left: 8
+      width: 80
+      !text: tr('Unequip')
+
+    CheckBox
+      id: equipSkipCheck
+      anchors.top: actionRowLbl.bottom
+      anchors.left: parent.left
+      margin-top: 10
+      width: 122
+      !text: tr('Skip if equipped:')
+
+    HelperItemSlot
+      id: skipSlot1
+      size: 28 28
+      anchors.left: equipSkipCheck.right
+      anchors.verticalCenter: equipSkipCheck.verticalCenter
+      margin-left: 2
+
+    HelperItemSlot
+      id: skipSlot2
+      size: 28 28
+      anchors.left: skipSlot1.right
+      anchors.verticalCenter: equipSkipCheck.verticalCenter
+      margin-left: 2
+
+    HelperItemSlot
+      id: skipSlot3
+      size: 28 28
+      anchors.left: skipSlot2.right
+      anchors.verticalCenter: equipSkipCheck.verticalCenter
+      margin-left: 2
+
+    HelperItemSlot
+      id: skipSlot4
+      size: 28 28
+      anchors.left: skipSlot3.right
+      anchors.verticalCenter: equipSkipCheck.verticalCenter
+      margin-left: 2
+
+    HelperInfoIcon
+      anchors.left: skipSlot4.right
+      anchors.verticalCenter: equipSkipCheck.verticalCenter
+      margin-left: 4
+      !tooltip: tr('Click any slot to select an item that prevents this rule from overriding it')
+
+    Label
+      id: condRowLbl
+      !text: tr('Conditions:')
+      anchors.top: skipSlot1.bottom
+      anchors.left: parent.left
+      margin-top: 8
+      font: verdana-11px-rounded
+      color: #cccccc
+
+    ComboBox
+      id: equipCondLogicCombo
+      anchors.left: condRowLbl.right
+      anchors.verticalCenter: condRowLbl.verticalCenter
+      margin-left: 6
+      width: 82
+      height: 19
+
+    HelperInfoIcon
+      anchors.left: equipCondLogicCombo.right
+      anchors.verticalCenter: condRowLbl.verticalCenter
+      margin-left: 4
+      !tooltip: tr('Optional status conditions required for this rule')
+
+    CheckBox
+      id: eqCondRooted
+      anchors.top: condRowLbl.bottom
+      anchors.left: parent.left
+      margin-top: 6
+      width: 108
+      !text: tr('Rooted')
+
+    CheckBox
+      id: eqCondFeared
+      anchors.top: eqCondRooted.top
+      anchors.left: eqCondRooted.right
+      width: 108
+      !text: tr('Feared')
+
+    CheckBox
+      id: eqCondPz
+      anchors.top: eqCondRooted.top
+      anchors.left: eqCondFeared.right
+      width: 90
+      !text: tr('PZ')
+
+    CheckBox
+      id: eqCondUtamo
+      anchors.top: eqCondRooted.bottom
+      anchors.left: parent.left
+      margin-top: 4
+      width: 108
+      !text: tr('Utamo Vita')
+
+    CheckBox
+      id: eqCondDrunk
+      anchors.top: eqCondUtamo.top
+      anchors.left: eqCondUtamo.right
+      width: 108
+      !text: tr('Drunk')
+
+    CheckBox
+      id: eqCondPara
+      anchors.top: eqCondUtamo.top
+      anchors.left: eqCondDrunk.right
+      width: 100
+      !text: tr('Paralyzed')
+
+    CheckBox
+      id: eqCondDrown
+      anchors.top: eqCondUtamo.bottom
+      anchors.left: parent.left
+      margin-top: 4
+      width: 108
+      !text: tr('Drowning')
+
+    CheckBox
+      id: eqCondFullBox
+      anchors.top: eqCondDrown.top
+      anchors.left: eqCondDrown.right
+      width: 108
+      !text: tr('Full Box')
+
+    CheckBox
+      id: eqCondHalfBox
+      anchors.top: eqCondDrown.top
+      anchors.left: eqCondFullBox.right
+      width: 100
+      !text: tr('Half Box')
+
+    Label
+      id: eqRulesLbl
+      !text: tr('Rules:')
+      anchors.top: eqCondDrown.bottom
+      anchors.left: parent.left
+      margin-top: 10
+      font: verdana-11px-rounded
+      color: #cccccc
+
+    HelperBlueButton
+      id: addEquipRuleBtn
+      !text: tr('Add')
+      width: 54
+      height: 19
+      anchors.right: parent.right
+      anchors.verticalCenter: eqRulesLbl.verticalCenter
+      @onClick: modules.game_helper.addEquipRule()
+
+    CheckBox
+      id: enableEquipCheck
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      width: 155
+      !text: tr('Enable Equipment')
+      checked: true
+
+    HelperSmallButton
+      id: equipSetKeyBtn
+      !text: tr('Set Key')
+      width: 54
+      height: 18
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      @onClick: modules.game_helper.openKeyCapture('equipKey', self)
+
+    ScrollablePanel
+      id: equipRulesList
+      anchors.top: eqRulesLbl.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: enableEquipCheck.top
+      margin-top: 4
+      margin-bottom: 6
+      margin-right: 14
+      background-color: #262626
+      border-width: 1
+      border-color: #181818
+      padding: 1
+      vertical-scrollbar: equipRulesScroll
+      layout:
+        type: verticalBox
+        spacing: 1
+
+    VerticalScrollBar
+      id: equipRulesScroll
+      anchors.top: equipRulesList.top
+      anchors.bottom: equipRulesList.bottom
+      anchors.right: parent.right
+      step: 34
+      pixels-scroll: true

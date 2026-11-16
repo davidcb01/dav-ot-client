@@ -1,0 +1,1352 @@
+HelperBlueButton < UIButton
+  image-source: /images/ui/buttons-blue
+  image-clip: 0 0 43 20
+  image-border: 3
+  font: verdana-11px-antialised
+  color: #efefef
+  text-offset: 0 0
+  $hover !disabled:
+    image-clip: 0 0 43 20
+  $pressed:
+    image-clip: 0 20 43 20
+    text-offset: 1 1
+  $disabled:
+    color: #7f7f7f
+
+HelperSmallButton < UIButton
+  height: 18
+  focusable: false
+  font: verdana-11px-antialised
+  color: #dfdfdf
+  background-color: #3a3a3a
+  border-width: 1
+  border-color-top: #686868
+  border-color-left: #686868
+  border-color-right: #222222
+  border-color-bottom: #222222
+  padding-left: 4
+  padding-right: 4
+  $hover !disabled:
+    background-color: #484848
+  $pressed:
+    background-color: #2b2b2b
+    text-offset: 1 1
+
+HelperToggleButton < HelperSmallButton
+  color: #ee4444
+  $on:
+    color: #22ee22
+
+HelperNumericEdit < TextEdit
+  height: 19
+  width: 42
+  font: verdana-11px-antialised
+  color: #efefef
+  text-align: center
+
+HelperPercentLeft < UIButton
+  size: 13 36
+  image-source: /images/ui/percent-buttons
+  image-clip: 0 0 13 36
+  $pressed:
+    image-clip: 26 0 13 36
+
+HelperPercentRight < UIButton
+  size: 13 36
+  image-source: /images/ui/percent-buttons
+  image-clip: 13 0 13 36
+  $pressed:
+    image-clip: 39 0 13 36
+
+HelperPercentDisplay < UILabel
+  size: 55 36
+  background-color: #1f2228
+  border-width: 1
+  border-color: #111111
+  font: verdana-11px-rounded
+  color: #efefef
+  text-align: center
+
+HelperInfoIcon < UIWidget
+  size: 12 12
+  image-source: /images/skin/show-gui-help-grey
+  image-clip: 0 0 12 12
+  $hover:
+    image-clip: 0 12 12 12
+
+HelperSpellSlot < UIWidget
+  size: 36 36
+  image-source: /images/game/actionbar/actionbarslot
+  border-width: 1
+  border-color: #1e1e1e
+  $hover:
+    border-color: #888888
+
+  UIWidget
+    id: icon
+    size: 32 32
+    anchors.centerIn: parent
+    phantom: true
+
+HelperItemSlot < UIWidget
+  size: 36 36
+  image-source: /images/game/actionbar/actionbarslot
+  border-width: 1
+  border-color: #1e1e1e
+  $hover:
+    border-color: #888888
+
+  UIItem
+    id: item
+    size: 32 32
+    anchors.centerIn: parent
+    virtual: true
+    phantom: true
+    show-count: false
+
+SpellSelectorRow < UIWidget
+  height: 36
+  background-color: #414141
+  border-width-bottom: 1
+  border-color-bottom: #262626
+  focusable: true
+  $focus:
+    background-color: #5b5b5b
+  $hover !focus:
+    background-color: #4c4c4c
+
+  UIWidget
+    id: iconFrame
+    size: 34 34
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    background-color: #2c2c2c
+    border-width: 1
+    border-color: #1a1a1a
+    phantom: true
+
+    UIWidget
+      id: spellIcon
+      size: 32 32
+      anchors.centerIn: parent
+      image-source: /images/game/spells/spell-icons-32x32
+      image-clip: 0 0 32 32
+      phantom: true
+
+  Label
+    id: spellNameLabel
+    anchors.top: parent.top
+    anchors.left: iconFrame.right
+    anchors.right: groupIcon.left
+    margin-left: 8
+    margin-top: 3
+    margin-right: 4
+    font: verdana-11px-rounded
+    color: #efefef
+    phantom: true
+
+  Label
+    id: spellWordsLabel
+    anchors.top: spellNameLabel.bottom
+    anchors.left: iconFrame.right
+    anchors.right: levelLabel.left
+    margin-left: 8
+    margin-top: 2
+    margin-right: 4
+    font: verdana-11px-monochrome
+    color: #b5b5b5
+    phantom: true
+
+  UIWidget
+    id: groupIcon
+    size: 20 20
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 2
+    margin-right: 4
+    image-source: /images/game/spells/spellgroup-icons-20x20
+    image-clip: 0 0 20 20
+    phantom: true
+
+  Label
+    id: levelLabel
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-bottom: 3
+    margin-right: 4
+    font: verdana-11px-monochrome
+    color: #b5b5b5
+    text-auto-resize: true
+    phantom: true
+
+ItemSelectorRow < UIWidget
+  height: 36
+  background-color: #414141
+  border-width-bottom: 1
+  border-color-bottom: #262626
+  focusable: true
+  $focus:
+    background-color: #5b5b5b
+  $hover !focus:
+    background-color: #4c4c4c
+
+  UIWidget
+    id: iconFrame
+    size: 34 34
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    background-color: #2c2c2c
+    border-width: 1
+    border-color: #1a1a1a
+    phantom: true
+
+    UIItem
+      id: itemIcon
+      size: 32 32
+      anchors.centerIn: parent
+      image-source: /images/ui/item
+      virtual: true
+      phantom: true
+      show-count: false
+
+  Label
+    id: itemNameLabel
+    anchors.top: parent.top
+    anchors.left: iconFrame.right
+    anchors.right: idLabel.left
+    margin-left: 8
+    margin-top: 3
+    margin-right: 4
+    font: verdana-11px-rounded
+    color: #efefef
+    phantom: true
+
+  Label
+    id: itemDescLabel
+    anchors.top: itemNameLabel.bottom
+    anchors.left: iconFrame.right
+    anchors.right: parent.right
+    margin-left: 8
+    margin-top: 2
+    margin-right: 6
+    font: verdana-11px-monochrome
+    color: #b5b5b5
+    phantom: true
+
+  Label
+    id: idLabel
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 3
+    margin-right: 6
+    font: verdana-11px-monochrome
+    color: #cccccc
+    text-auto-resize: true
+    phantom: true
+
+SpellSelectorModal < MainWindow
+  id: spellSelectorModal
+  !text: tr('Select Spell')
+  size: 380 480
+  visible: false
+  @onEscape: self:hide()
+
+  TextEdit
+    id: searchEdit
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    margin-right: 24
+    height: 22
+    !placeholder: tr('Type to search')
+
+  HelperSmallButton
+    id: clearSearchBtn
+    anchors.top: searchEdit.top
+    anchors.bottom: searchEdit.bottom
+    anchors.right: parent.right
+    width: 22
+    text: X
+
+  Button
+    id: cancelBtn
+    !text: tr('Cancel')
+    width: 56
+    height: 20
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+
+  Button
+    id: applyBtn
+    !text: tr('Apply')
+    width: 56
+    height: 20
+    anchors.right: cancelBtn.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+
+  Button
+    id: okBtn
+    !text: tr('Ok')
+    width: 56
+    height: 20
+    anchors.right: applyBtn.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+
+  HorizontalSeparator
+    id: bottomSep
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: okBtn.top
+    margin-bottom: 8
+
+  Label
+    id: paramLabel
+    !text: tr('Parameter')
+    anchors.left: parent.left
+    anchors.bottom: bottomSep.top
+    margin-bottom: 10
+    color: #aaaaaa
+
+  TextEdit
+    id: paramEdit
+    anchors.left: paramLabel.right
+    anchors.right: parent.right
+    anchors.verticalCenter: paramLabel.verticalCenter
+    margin-left: 8
+    height: 20
+
+  Panel
+    id: filterPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: paramLabel.top
+    margin-bottom: 8
+    height: 22
+    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-border: 3
+    padding-left: 6
+
+    CheckBox
+      id: onlyVocationCheck
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      !text: tr('Only show vocation spells')
+      checked: true
+      width: 240
+
+  TextList
+    id: spellList
+    anchors.top: searchEdit.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: filterPanel.top
+    margin-top: 6
+    margin-bottom: 6
+    margin-right: 14
+    padding: 1
+    background-color: #363636
+    border-width: 1
+    border-color: #1e1e1e
+    vertical-scrollbar: spellListScrollBar
+    auto-focus: first
+
+  VerticalScrollBar
+    id: spellListScrollBar
+    anchors.top: spellList.top
+    anchors.bottom: spellList.bottom
+    anchors.right: parent.right
+    step: 36
+    pixels-scroll: true
+
+ItemSelectorModal < MainWindow
+  id: itemSelectorModal
+  !text: tr('Select Item')
+  size: 380 440
+  visible: false
+  @onEscape: self:hide()
+
+  TextEdit
+    id: searchEdit
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    margin-right: 24
+    height: 22
+    !placeholder: tr('Type to search item')
+
+  HelperSmallButton
+    id: clearSearchBtn
+    anchors.top: searchEdit.top
+    anchors.bottom: searchEdit.bottom
+    anchors.right: parent.right
+    width: 22
+    text: X
+
+  Button
+    id: cancelBtn
+    !text: tr('Cancel')
+    width: 56
+    height: 20
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+
+  Button
+    id: clearBtn
+    !text: tr('Clear')
+    width: 56
+    height: 20
+    anchors.right: cancelBtn.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+
+  Button
+    id: okBtn
+    !text: tr('Ok')
+    width: 56
+    height: 20
+    anchors.right: clearBtn.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+
+  HorizontalSeparator
+    id: bottomSep
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: okBtn.top
+    margin-bottom: 8
+
+  Label
+    id: customIdLabel
+    !text: tr('Custom Item ID:')
+    anchors.left: parent.left
+    anchors.bottom: bottomSep.top
+    margin-bottom: 10
+    color: #cccccc
+
+  TextEdit
+    id: customIdEdit
+    anchors.left: customIdLabel.right
+    anchors.verticalCenter: customIdLabel.verticalCenter
+    margin-left: 6
+    width: 80
+    height: 20
+
+  TextList
+    id: itemList
+    anchors.top: searchEdit.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: customIdLabel.top
+    margin-top: 6
+    margin-bottom: 8
+    margin-right: 14
+    padding: 1
+    background-color: #363636
+    border-width: 1
+    border-color: #1e1e1e
+    vertical-scrollbar: itemListScrollBar
+    auto-focus: first
+
+  VerticalScrollBar
+    id: itemListScrollBar
+    anchors.top: itemList.top
+    anchors.bottom: itemList.bottom
+    anchors.right: parent.right
+    step: 36
+    pixels-scroll: true
+
+RenamePresetModal < MainWindow
+  id: renamePresetModal
+  !text: tr('Rename Preset')
+  size: 270 115
+  visible: false
+  @onEscape: self:hide()
+
+  Label
+    id: renamePromptLabel
+    !text: tr('New Preset Name:')
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 6
+    color: #efefef
+
+  TextEdit
+    id: renamePresetEdit
+    anchors.top: renamePromptLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    height: 21
+
+  Button
+    id: cancelRenameBtn
+    !text: tr('Cancel')
+    width: 64
+    height: 21
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+
+  Button
+    id: confirmRenameBtn
+    !text: tr('Ok')
+    width: 64
+    height: 21
+    anchors.right: cancelRenameBtn.left
+    anchors.bottom: parent.bottom
+    margin-right: 8
+
+ConditionSettingsModal < MainWindow
+  id: conditionSettingsModal
+  !text: tr('Condition Settings')
+  size: 295 215
+  visible: false
+  @onEscape: self:hide()
+
+  CheckBox
+    id: condTrapped
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 6
+    !text: tr('Cast If Trapped')
+    width: 235
+
+  HelperInfoIcon
+    anchors.right: parent.right
+    anchors.verticalCenter: condTrapped.verticalCenter
+    !tooltip: tr('Only cast this spell when surrounded/trapped')
+
+  CheckBox
+    id: condStopped
+    anchors.top: condTrapped.bottom
+    anchors.left: parent.left
+    margin-top: 8
+    !text: tr('Player stopped')
+    width: 112
+
+  Label
+    id: lblFor
+    !text: tr('for')
+    anchors.left: condStopped.right
+    anchors.verticalCenter: condStopped.verticalCenter
+    color: #aaaaaa
+
+  TextEdit
+    id: condStoppedMs
+    anchors.left: lblFor.right
+    anchors.verticalCenter: condStopped.verticalCenter
+    margin-left: 4
+    width: 44
+    height: 18
+    text: 1000
+
+  Label
+    id: lblMs
+    !text: tr('ms')
+    anchors.left: condStoppedMs.right
+    anchors.verticalCenter: condStopped.verticalCenter
+    margin-left: 4
+    color: #dddddd
+
+  HelperInfoIcon
+    anchors.right: parent.right
+    anchors.verticalCenter: condStopped.verticalCenter
+    !tooltip: tr('Only cast if your character has stood still for at least this many ms')
+
+  CheckBox
+    id: condAdjacent
+    anchors.top: condStopped.bottom
+    anchors.left: parent.left
+    margin-top: 8
+    !text: tr('Only If Target Adjacent (1 SQM)')
+    width: 235
+
+  HelperInfoIcon
+    anchors.right: parent.right
+    anchors.verticalCenter: condAdjacent.verticalCenter
+    !tooltip: tr('Require at least one monster/target within 1 SQM melee distance')
+
+  CheckBox
+    id: condFaceTarget
+    anchors.top: condAdjacent.bottom
+    anchors.left: parent.left
+    margin-top: 8
+    !text: tr('Force Spell On Most Targets')
+    width: 235
+
+  HelperInfoIcon
+    anchors.right: parent.right
+    anchors.verticalCenter: condFaceTarget.verticalCenter
+    !tooltip: tr('Auto turn toward the direction with the most targets for wave/beam spells')
+
+  CheckBox
+    id: condMomentum
+    anchors.top: condFaceTarget.bottom
+    anchors.left: parent.left
+    margin-top: 8
+    !text: tr('On Momentum, prioritize spell')
+    width: 235
+
+  HelperInfoIcon
+    anchors.right: parent.right
+    anchors.verticalCenter: condMomentum.verticalCenter
+    !tooltip: tr('Prioritize this spell when Momentum triggers')
+
+  Button
+    id: cancelCondBtn
+    !text: tr('Cancel')
+    width: 68
+    height: 22
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: conditionSettingsModal:hide()
+
+  Button
+    id: updateCondBtn
+    !text: tr('Ok')
+    width: 68
+    height: 22
+    anchors.right: cancelCondBtn.left
+    anchors.bottom: parent.bottom
+    margin-right: 8
+
+KeyCaptureModal < MainWindow
+  id: keyCaptureModal
+  !text: tr('Set Shortcut Key')
+  size: 250 120
+  visible: false
+
+  Label
+    id: keyPromptLabel
+    !text: tr('Press any key combination...')
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 12
+    text-align: center
+    color: #f0d080
+
+  Label
+    id: currentKeyLabel
+    !text: tr('Current: None')
+    anchors.top: keyPromptLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    text-align: center
+    color: #cccccc
+
+  Button
+    id: clearKeyBtn
+    !text: tr('Clear')
+    width: 64
+    height: 20
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    margin-left: 36
+
+  Button
+    id: cancelKeyBtn
+    !text: tr('Cancel')
+    width: 64
+    height: 20
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-right: 36
+
+CavebotSettingsModal < MainWindow
+  id: cavebotSettingsModal
+  !text: tr('Cavebot & Dynamic Lure Settings')
+  size: 380 292
+  visible: false
+  @onEscape: self:hide()
+
+  Label
+    text: Stop walking (hold & kill) when monsters >=
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 6
+    color: #efefef
+
+  HelperNumericEdit
+    id: cbStopMonstersEdit
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 4
+    width: 48
+    text: 3
+
+  Label
+    text: Resume walking when monsters <=
+    anchors.top: cbStopMonstersEdit.bottom
+    anchors.left: parent.left
+    margin-top: 10
+    color: #efefef
+
+  HelperNumericEdit
+    id: cbWalkMonstersEdit
+    anchors.top: cbStopMonstersEdit.bottom
+    anchors.right: parent.right
+    margin-top: 8
+    width: 48
+    text: 1
+
+  CheckBox
+    id: cbDynamicLureCheck
+    anchors.top: cbWalkMonstersEdit.bottom
+    anchors.left: parent.left
+    margin-top: 12
+    width: 340
+    !text: tr('Enable Dynamic Lure (speed adapts to monster count)')
+    checked: true
+
+  Label
+    id: cbLureHint
+    text: Walking speed (%) by nearby monster count. 100% = full native speed; 50% = half speed; 0% = stopped.
+    anchors.top: cbDynamicLureCheck.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    height: 30
+    text-wrap: true
+    color: #cccccc
+
+  Panel
+    id: cbLureGrid
+    anchors.top: cbLureHint.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    height: 46
+
+    Label
+      id: cbLureH0
+      text: 0 mon
+      anchors.top: parent.top
+      anchors.left: parent.left
+      width: 54
+      text-align: center
+      color: #8ec5ff
+    Label
+      id: cbLureH1
+      text: 1 mon
+      anchors.top: parent.top
+      anchors.left: cbLureH0.right
+      width: 54
+      text-align: center
+      color: #8ec5ff
+    Label
+      id: cbLureH2
+      text: 2 mon
+      anchors.top: parent.top
+      anchors.left: cbLureH1.right
+      width: 54
+      text-align: center
+      color: #8ec5ff
+    Label
+      id: cbLureH3
+      text: 3 mon
+      anchors.top: parent.top
+      anchors.left: cbLureH2.right
+      width: 54
+      text-align: center
+      color: #8ec5ff
+    Label
+      id: cbLureH4
+      text: 4 mon
+      anchors.top: parent.top
+      anchors.left: cbLureH3.right
+      width: 54
+      text-align: center
+      color: #8ec5ff
+    Label
+      id: cbLureH5
+      text: 5+ mon
+      anchors.top: parent.top
+      anchors.left: cbLureH4.right
+      width: 54
+      text-align: center
+      color: #8ec5ff
+
+    HelperNumericEdit
+      id: cbLure0
+      anchors.top: cbLureH0.bottom
+      anchors.horizontalCenter: cbLureH0.horizontalCenter
+      margin-top: 4
+      width: 44
+      text: 100
+    HelperNumericEdit
+      id: cbLure1
+      anchors.top: cbLureH1.bottom
+      anchors.horizontalCenter: cbLureH1.horizontalCenter
+      margin-top: 4
+      width: 44
+      text: 100
+    HelperNumericEdit
+      id: cbLure2
+      anchors.top: cbLureH2.bottom
+      anchors.horizontalCenter: cbLureH2.horizontalCenter
+      margin-top: 4
+      width: 44
+      text: 75
+    HelperNumericEdit
+      id: cbLure3
+      anchors.top: cbLureH3.bottom
+      anchors.horizontalCenter: cbLureH3.horizontalCenter
+      margin-top: 4
+      width: 44
+      text: 55
+    HelperNumericEdit
+      id: cbLure4
+      anchors.top: cbLureH4.bottom
+      anchors.horizontalCenter: cbLureH4.horizontalCenter
+      margin-top: 4
+      width: 44
+      text: 35
+    HelperNumericEdit
+      id: cbLure5
+      anchors.top: cbLureH5.bottom
+      anchors.horizontalCenter: cbLureH5.horizontalCenter
+      margin-top: 4
+      width: 44
+      text: 20
+
+  Button
+    id: closeCbSettingsBtn
+    !text: tr('Ok')
+    width: 76
+    height: 22
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_helper.saveCavebotSettingsModal()
+CbControlMiniHud < UIWindow
+  id: cbControlMiniHud
+  size: 162 192
+  background-color: #16161cE8
+  border-width: 1
+  border-color: #3c3c48
+  padding: 5
+  draggable: true
+  focusable: false
+  visible: false
+
+  Label
+    id: hudTitle
+    text: :: CAVEBOT CONTROL ::
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 16
+    text-align: center
+    font: verdana-11px-rounded
+    color: #ffcc33
+    phantom: true
+
+  HelperSmallButton
+    id: hudCloseBtn
+    text: X
+    size: 15 15
+    anchors.top: parent.top
+    anchors.right: parent.right
+    color: #ff6666
+    @onClick: modules.game_helper.toggleCbControlHud(false)
+
+  HelperSmallButton
+    id: hudAutoRecBtn
+    text: Auto Rec: OFF
+    height: 18
+    anchors.top: hudTitle.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    color: #ff6666
+    @onClick: modules.game_helper.onToggleCavebotAutoRec(not modules.game_helper.isCavebotAutoRecActive())
+
+  Panel
+    id: hudGridRow
+    anchors.top: hudAutoRecBtn.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    height: 60
+
+    HelperSmallButton
+      id: hNW
+      size: 28 18
+      anchors.top: parent.top
+      anchors.left: parent.left
+      text: NW
+      @onClick: modules.game_helper.setCavebotDirOffset('NW')
+
+    HelperSmallButton
+      id: hN
+      size: 28 18
+      anchors.top: parent.top
+      anchors.left: hNW.right
+      margin-left: 2
+      text: N
+      @onClick: modules.game_helper.setCavebotDirOffset('N')
+
+    HelperSmallButton
+      id: hNE
+      size: 28 18
+      anchors.top: parent.top
+      anchors.left: hN.right
+      margin-left: 2
+      text: NE
+      @onClick: modules.game_helper.setCavebotDirOffset('NE')
+
+    HelperSmallButton
+      id: hW
+      size: 28 18
+      anchors.top: hNW.bottom
+      anchors.left: parent.left
+      margin-top: 2
+      text: W
+      @onClick: modules.game_helper.setCavebotDirOffset('W')
+
+    HelperSmallButton
+      id: hC
+      size: 28 18
+      anchors.top: hW.top
+      anchors.left: hW.right
+      margin-left: 2
+      text: C
+      color: #5ce65c
+      @onClick: modules.game_helper.setCavebotDirOffset('C')
+
+    HelperSmallButton
+      id: hE
+      size: 28 18
+      anchors.top: hW.top
+      anchors.left: hC.right
+      margin-left: 2
+      text: E
+      @onClick: modules.game_helper.setCavebotDirOffset('E')
+
+    HelperSmallButton
+      id: hSW
+      size: 28 18
+      anchors.top: hW.bottom
+      anchors.left: parent.left
+      margin-top: 2
+      text: SW
+      @onClick: modules.game_helper.setCavebotDirOffset('SW')
+
+    HelperSmallButton
+      id: hS
+      size: 28 18
+      anchors.top: hSW.top
+      anchors.left: hSW.right
+      margin-left: 2
+      text: S
+      @onClick: modules.game_helper.setCavebotDirOffset('S')
+
+    HelperSmallButton
+      id: hSE
+      size: 28 18
+      anchors.top: hSW.top
+      anchors.left: hS.right
+      margin-left: 2
+      text: SE
+      @onClick: modules.game_helper.setCavebotDirOffset('SE')
+
+    HelperSmallButton
+      id: hStand
+      anchors.top: parent.top
+      anchors.left: hNE.right
+      anchors.right: parent.right
+      margin-left: 4
+      height: 18
+      text: Stand
+      @onClick: modules.game_helper.addCavebotWaypoint('Stand')
+
+    HelperSmallButton
+      id: hNode
+      anchors.top: hStand.bottom
+      anchors.left: hNE.right
+      anchors.right: parent.right
+      margin-left: 4
+      margin-top: 2
+      height: 18
+      text: Node
+      @onClick: modules.game_helper.addCavebotWaypoint('Node')
+
+    HelperSmallButton
+      id: hUndo
+      anchors.top: hNode.bottom
+      anchors.left: hNE.right
+      anchors.right: parent.right
+      margin-left: 4
+      margin-top: 2
+      height: 18
+      text: Undo
+      color: #ff7777
+      @onClick: modules.game_helper.undoCavebotWaypoint()
+
+  Panel
+    id: hudBottomBtns
+    anchors.top: hudGridRow.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 4
+
+    HelperSmallButton
+      id: hStartLure
+      anchors.top: parent.top
+      anchors.left: parent.left
+      width: 74
+      height: 18
+      text: Start Lure
+      color: #5ce65c
+      @onClick: modules.game_helper.addCavebotWaypoint('Start Lure')
+
+    HelperSmallButton
+      id: hEndLure
+      anchors.top: parent.top
+      anchors.right: parent.right
+      width: 74
+      height: 18
+      text: End Lure
+      color: #ff9944
+      @onClick: modules.game_helper.addCavebotWaypoint('End Lure')
+
+    HelperSmallButton
+      id: hRope
+      anchors.top: hStartLure.bottom
+      anchors.left: parent.left
+      margin-top: 2
+      width: 48
+      height: 18
+      text: Rope
+      @onClick: modules.game_helper.addCavebotWaypoint('Rope')
+
+    HelperSmallButton
+      id: hLadder
+      anchors.top: hStartLure.bottom
+      anchors.left: hRope.right
+      margin-top: 2
+      margin-left: 3
+      width: 50
+      height: 18
+      text: Ladder
+      @onClick: modules.game_helper.addCavebotWaypoint('Ladder')
+
+    HelperSmallButton
+      id: hHole
+      anchors.top: hStartLure.bottom
+      anchors.right: parent.right
+      margin-top: 2
+      width: 48
+      height: 18
+      text: Hole
+      @onClick: modules.game_helper.addCavebotWaypoint('Hole')
+
+    HelperSmallButton
+      id: hUse
+      anchors.bottom: parent.bottom
+      anchors.left: parent.left
+      width: 74
+      height: 18
+      text: Use Tile
+      color: #82b8ff
+      @onClick: modules.game_helper.addCavebotWaypoint('Use')
+
+    HelperSmallButton
+      id: hShovel
+      anchors.bottom: parent.bottom
+      anchors.right: parent.right
+      width: 74
+      height: 18
+      text: Shovel
+      color: #cccccc
+      @onClick: modules.game_helper.addCavebotWaypoint('Shovel')
+
+IdsMenuRow < UIWidget
+  height: 28
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #222222
+
+  UIItem
+    id: idItemIcon
+    size: 24 24
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    virtual: true
+    show-count: false
+    phantom: true
+
+  Label
+    id: idLabel
+    anchors.left: idItemIcon.right
+    anchors.right: idDelBtn.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 8
+    margin-right: 6
+    font: verdana-11px-rounded
+    color: #efefef
+    text: 28558
+    phantom: true
+
+  HelperSmallButton
+    id: idDelBtn
+    text: Remove
+    width: 60
+    height: 18
+    color: #ff6666
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 4
+
+IdsMenuModal < MainWindow
+  id: idsMenuModal
+  !text: tr('Custom IDs Manager')
+  size: 460 400
+  visible: false
+  @onEscape: self:hide()
+
+  Panel
+    id: idsTopTabs
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 22
+
+    HelperSmallButton
+      id: idsTabFollow
+      text: Follow IDs
+      width: 136
+      height: 20
+      anchors.top: parent.top
+      anchors.left: parent.left
+      color: #ffdd66
+      @onClick: modules.game_helper.switchIdsMenuTab('follow')
+
+    HelperSmallButton
+      id: idsTabDummys
+      text: Training Dummys
+      width: 138
+      height: 20
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-left: 4
+      @onClick: modules.game_helper.switchIdsMenuTab('dummys')
+
+    HelperSmallButton
+      id: idsTabWeapons
+      text: Training Weapons
+      height: 20
+      anchors.top: parent.top
+      anchors.left: prev.right
+      anchors.right: parent.right
+      margin-left: 4
+      @onClick: modules.game_helper.switchIdsMenuTab('weapons')
+
+  Panel
+    id: followSubRow
+    anchors.top: idsTopTabs.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    height: 20
+
+    HelperSmallButton
+      id: fCatStairs
+      text: Stairs
+      width: 78
+      height: 18
+      anchors.top: parent.top
+      anchors.left: parent.left
+      color: #5ce65c
+      @onClick: modules.game_helper.switchFollowIdCategory('stairs')
+
+    HelperSmallButton
+      id: fCatRope
+      text: Rope
+      width: 78
+      height: 18
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-left: 4
+      @onClick: modules.game_helper.switchFollowIdCategory('rope')
+
+    HelperSmallButton
+      id: fCatUse
+      text: Use/Doors
+      width: 82
+      height: 18
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-left: 4
+      @onClick: modules.game_helper.switchFollowIdCategory('use')
+
+    HelperSmallButton
+      id: fCatTeleport
+      text: Teleports
+      width: 82
+      height: 18
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-left: 4
+      @onClick: modules.game_helper.switchFollowIdCategory('teleport')
+
+    HelperSmallButton
+      id: fCatAvoid
+      text: Avoid
+      height: 18
+      anchors.top: parent.top
+      anchors.left: prev.right
+      anchors.right: parent.right
+      margin-left: 4
+      @onClick: modules.game_helper.switchFollowIdCategory('avoid')
+
+  TextList
+    id: idsList
+    anchors.top: followSubRow.bottom
+    anchors.left: parent.left
+    anchors.right: idsScrollBar.left
+    anchors.bottom: addIdRow.top
+    margin-top: 6
+    margin-bottom: 6
+    padding: 3
+    background-color: #2b2b2b
+    border-width: 1
+    border-color: #191919
+    vertical-scrollbar: idsScrollBar
+
+  VerticalScrollBar
+    id: idsScrollBar
+    anchors.top: followSubRow.bottom
+    anchors.bottom: addIdRow.top
+    anchors.right: parent.right
+    margin-top: 6
+    margin-bottom: 6
+    step: 28
+    pixels-scroll: true
+
+  Panel
+    id: addIdRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: idsCloseBtn.top
+    margin-bottom: 8
+    height: 24
+
+    Label
+      id: addIdLbl
+      text: Add ID:
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.left: parent.left
+      color: #efefef
+      text-auto-resize: true
+
+    HelperNumericEdit
+      id: addIdEdit
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.left: addIdLbl.right
+      margin-left: 6
+      width: 80
+
+    TextEdit
+      id: addIdNameEdit
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.left: addIdEdit.right
+      anchors.right: addIdBtn.left
+      margin-left: 6
+      margin-right: 6
+      height: 19
+      !placeholder: tr('label (optional)')
+
+    HelperBlueButton
+      id: addIdBtn
+      text: + Add ID
+      width: 78
+      height: 20
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.right: parent.right
+      @onClick: modules.game_helper.addCustomIdFromModal()
+
+  Button
+    id: idsCloseBtn
+    !text: tr('Ok')
+    width: 80
+    height: 22
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_helper.closeIdsMenu()
+
+HuntListRow < UIWidget
+  height: 22
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #222222
+  focusable: true
+  $focus:
+    background-color: #505050
+
+  Label
+    id: huntNameLabel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    margin-right: 6
+    font: verdana-11px-rounded
+    color: #efefef
+    phantom: true
+
+HuntListModal < MainWindow
+  id: huntListModal
+  !text: tr('Saved Hunts (mods/game_helper/cavebots)')
+  size: 360 320
+  visible: false
+  @onEscape: self:hide()
+
+  TextList
+    id: huntsList
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: huntsScrollBar.left
+    anchors.bottom: huntLoadConfirmBtn.top
+    margin-bottom: 8
+    padding: 3
+    background-color: #2b2b2b
+    border-width: 1
+    border-color: #191919
+    vertical-scrollbar: huntsScrollBar
+    auto-focus: first
+
+  VerticalScrollBar
+    id: huntsScrollBar
+    anchors.top: parent.top
+    anchors.bottom: huntLoadConfirmBtn.top
+    anchors.right: parent.right
+    margin-bottom: 8
+    step: 22
+    pixels-scroll: true
+
+  HelperBlueButton
+    id: huntLoadConfirmBtn
+    text: Load Selected
+    width: 110
+    height: 22
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_helper.confirmLoadHunt()
+
+  Button
+    id: huntListCancelBtn
+    !text: tr('Close')
+    width: 80
+    height: 22
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: self:getParent():hide()

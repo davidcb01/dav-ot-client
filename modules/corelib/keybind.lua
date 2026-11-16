@@ -105,9 +105,13 @@ end
 function Keybind.terminate()
   disconnect(g_game, { onGameStart = Keybind.online, onGameEnd = Keybind.offline })
 
-  for _, preset in ipairs(Keybind.presets) do
-    Keybind.configs.keybinds[preset]:save()
-    Keybind.configs.hotkeys[preset]:save()
+  -- Only persist presets modified by this instance so multiple open clients never overwrite each other
+  if Keybind.dirtyKeybinds then
+    for preset in pairs(Keybind.dirtyKeybinds) do
+      if Keybind.configs.keybinds[preset] then
+        Keybind.configs.keybinds[preset]:save()
+      end
+    end
   end
 
   g_settings.setList("controls-presets", Keybind.presets)
@@ -566,6 +570,9 @@ function Keybind.setPrimaryActionKey(category, action, preset, keyCombo, chatMod
   end
 
   Keybind.configs.keybinds[preset]:setNode(index, keys)
+  Keybind.configs.keybinds[preset]:save()
+  Keybind.dirtyKeybinds = Keybind.dirtyKeybinds or {}
+  Keybind.dirtyKeybinds[preset] = true
 
   if keybind.callbacks then
     Keybind.bind(category, action, keybind.callbacks, keybind.widget)
@@ -610,6 +617,9 @@ function Keybind.setSecondaryActionKey(category, action, preset, keyCombo, chatM
   end
 
   Keybind.configs.keybinds[preset]:setNode(index, keys)
+  Keybind.configs.keybinds[preset]:save()
+  Keybind.dirtyKeybinds = Keybind.dirtyKeybinds or {}
+  Keybind.dirtyKeybinds[preset] = true
 
   if keybind.callbacks then
     Keybind.bind(category, action, keybind.callbacks, keybind.widget)
@@ -633,6 +643,9 @@ function Keybind.resetKeybindsToDefault(presetName, chatMode)
     local index = keybind.category .. '_' .. keybind.action
     Keybind.configs.keybinds[presetName]:setNode(index, keybind.keys)
   end
+  Keybind.configs.keybinds[presetName]:save()
+  Keybind.dirtyKeybinds = Keybind.dirtyKeybinds or {}
+  Keybind.dirtyKeybinds[presetName] = true
 
   for _, keybind in pairs(Keybind.defaultKeybinds) do
     if keybind.callbacks then

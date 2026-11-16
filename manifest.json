@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261115.2045",
-  "updated_at": "2026-11-15T20:45:54",
-  "changelog": "Versao inicial Dav OT 15.25",
+  "version": "15.25.261115.2140",
+  "updated_at": "2026-11-15T21:40:09",
+  "changelog": "Configs por personagem isoladas para varios clients (DAVHelper, Janelas, Opcoes, Hotkeys e ActionBar)",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -6728,10 +6728,6 @@
     "data/particles/particles.otps": {
       "sha256": "d26b16befd539388890cf90bafc5674365dd71d87af5b738b0413decec53d9c1",
       "size": 716
-    },
-    "data/sounds/.gitignore": {
-      "sha256": "aae815b9313ef60fb99d51bec324f3de1cea5256d6bbf58a660578b3e2d5815c",
-      "size": 25
     },
     "data/sounds/README.md": {
       "sha256": "9023495a2c3d1df96de14707afc636597cf9e294c1832706ae6e9b84452aa93c",
@@ -33277,10 +33273,6 @@
       "sha256": "deff3e0f00efdaed321bd240264c3b19b8867e7b8e19769ea5257abcf1d1c3c1",
       "size": 210
     },
-    "mods/.gitignore": {
-      "sha256": "40b5198653aa1f2974fa7f764ae2bede8b062f070594cf26f2baf9266382fa6b",
-      "size": 27
-    },
     "mods/README.txt": {
       "sha256": "62d347b90760a22fa54dd81f4475f0cdd546cb788400064a90e264193cc34cb3",
       "size": 89
@@ -33338,8 +33330,8 @@
       "size": 20142
     },
     "mods/game_helper/helper.lua": {
-      "sha256": "f958c11fa6dc61144d693b60ac1b952837b5233e90108840446453377e98ae39",
-      "size": 250296
+      "sha256": "7c67d18924357a75430bfd4e43ee59f685cbe13fbae51cdbfb94b7a1624ca305",
+      "size": 251381
     },
     "mods/game_helper/helper.otmod": {
       "sha256": "1a024ad736fc2b2acaa7436e957c4b2c6c4ba3c84a68829e44fa24b829d00194",
@@ -33770,16 +33762,16 @@
       "size": 12773
     },
     "modules/client_options/data_options.lua": {
-      "sha256": "4ebadd0bc926f641541385c29f3321fe0db7bf3347d3c3e7f5797f03329b60c8",
-      "size": 52373
+      "sha256": "6c09e15e677ae4352785d87ff20ded34b56fb68c2003d78940998e241537555b",
+      "size": 52792
     },
     "modules/client_options/keybins.lua": {
       "sha256": "c924972d52d20dd204661f40cfb428a1421f46ea714c0b911c34a08d81c373bd",
       "size": 24365
     },
     "modules/client_options/options.lua": {
-      "sha256": "3ba0cd03c966320390e52d06287736620577475de3a6e41794a447f590543d46",
-      "size": 36812
+      "sha256": "a576d5527607630a887e495019f1851ffe66641d2bbc186c1ea178b749c8587f",
+      "size": 37704
     },
     "modules/client_options/options.otmod": {
       "sha256": "73c67013c61eff2c354ba9b00d9712018066220f69a1faaa9395ef760ee63e37",
@@ -33917,6 +33909,10 @@
       "sha256": "83eb53e80d9c78077b5194addb5ef516f3c3ea72a78aba5fe1522f11d4278baf",
       "size": 1015
     },
+    "modules/corelib/charconfig.lua": {
+      "sha256": "4dc92c765b2ff4f69231af21b3919f10fd2bf028458ccc677b6ce14f44d9e36a",
+      "size": 9361
+    },
     "modules/corelib/config.lua": {
       "sha256": "2c31b33f02e02cc5f99f61fc4d0a68d788feaf5117bf72f7ac79261c74a4053c",
       "size": 1651
@@ -33926,8 +33922,8 @@
       "size": 11346
     },
     "modules/corelib/corelib.otmod": {
-      "sha256": "542eca70291027fe3e814251854e721b3c882f0606209393078d5f1ef98085aa",
-      "size": 750
+      "sha256": "058fbdaf8758d8f6a58e9090b29a90518d4d6cc3c27db15405ae66a5797b5932",
+      "size": 774
     },
     "modules/corelib/globals.lua": {
       "sha256": "2ca06efa34314189dd7896aaf2f3f7ed98ce42b5fd909831ec860286383df704",
@@ -33946,8 +33942,8 @@
       "size": 10398
     },
     "modules/corelib/keybind.lua": {
-      "sha256": "8d0bc73d6bd48e7059f9d5f3e9f0b15cc1de1470867f8da7d8772fd507459765",
-      "size": 32591
+      "sha256": "fff448d1eb7d8861242c7377e7663ec0192d4a56a4fd2e462da99d275308ff6e",
+      "size": 33170
     },
     "modules/corelib/keyboard.lua": {
       "sha256": "1ae2467d66b96373d28276dc4ebfa687f6585584736aff7bb5ee18e97423d4fc",
@@ -34046,8 +34042,8 @@
       "size": 7413
     },
     "modules/corelib/ui/uiminiwindow.lua": {
-      "sha256": "294379338168598689992b98361977e2d872a90b982df7f528f06ada1a40d4df",
-      "size": 26064
+      "sha256": "2c650af8e243d567f2d5fa3d9acc1e94f712d90d196614e2e37db3ef528989aa",
+      "size": 25856
     },
     "modules/corelib/ui/uiminiwindowcontainer.lua": {
       "sha256": "7f987a0e9ece12d649d421d87eeba28183709242c1662f0a078399841f34d5cc",
@@ -34214,8 +34210,8 @@
       "size": 10347
     },
     "modules/game_actionbar/logics/ApiJson.lua": {
-      "sha256": "7b7b00d3267dcd0aeac47e61f7792d5c21b71b5af7f628bb9a5457c20fa36962",
-      "size": 31816
+      "sha256": "dc7266062fd7077e6901ea48e5a6d65984fa849b5986843920365c3665fa9aed",
+      "size": 34285
     },
     "modules/game_actionbar/logics/MultiActionLogic.lua": {
       "sha256": "1315456478b90302aec1c09d4aa362a795b4010f7f023496dbd7fe0dd4533e66",
@@ -34242,8 +34238,8 @@
       "size": 1575
     },
     "modules/game_analyser/analyser.lua": {
-      "sha256": "83cded85d3149ed1be513b90d4fcc44758d967448cbd1450e06313ddf2c8d1c3",
-      "size": 22819
+      "sha256": "b99d2d03c5dcfb6a49fb7dfad26820b430d0e55fcab498464629aba288187ed2",
+      "size": 22907
     },
     "modules/game_analyser/analyser.otmod": {
       "sha256": "6478ac0a365554b1e8bd40d412bccbcffcaef008b244e5cfc8e461185bac7120",
@@ -36134,8 +36130,8 @@
       "size": 14458
     },
     "modules/game_minimap/minimap.lua": {
-      "sha256": "9c9dc2c4edff579d6fd43330b54f7d8a1b209a3e1631f7db413d0d56cdf6a1f1",
-      "size": 10220
+      "sha256": "a9c10235a5716b84afdd4d5680494511d4b5c80cb8946e6fe614f3910f288705",
+      "size": 10591
     },
     "modules/game_minimap/minimap.otmod": {
       "sha256": "9a44ea8f4e2c3f9c2d58c61e9f19f5a606dbbd29ce278d8b4d23d2a04e228c89",
