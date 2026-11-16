@@ -132,10 +132,12 @@ local origGameLook = nil
 local lastPotionTime = 0
 local lastHasteTime = 0
 local lastManaTrainTime = 0
-local lastEatTime = 0
+local lastEatTime = -15000
 local lastGoldTime = 0
 local lastExerciseTime = 0
-local lastBlessTime = 0
+local lastBlessTime = -30000
+local lastBlessVisualState = nil
+local lastBlessDialogCoreOk = nil
 local lastAfkTime = 0
 local lastItemTimerTime = 0
 local lastFollowTime = 0
@@ -552,7 +554,7 @@ local function createDefaultVocProfile(voc)
       healing = {
         enabled = true,
         spells = {
-          { words = 'exura gran tio', name = 'Spirit Mend', clientId = 184, pct = 80, minMp = 0, mode = 'hp', enabled = true },
+          { words = 'exura gran tio', name = 'Spirit Mend', clientId = 161, pct = 80, minMp = 0, mode = 'hp', enabled = true },
           { words = 'exura gran', name = 'Intense Healing', clientId = 6, pct = 92, minMp = 0, mode = 'hp', enabled = true }
         },
         potions = {
@@ -560,9 +562,9 @@ local function createDefaultVocProfile(voc)
           { id = 23374, pct = 55, ptype = 'spirit', enabled = true }
         },
         curePara = { enabled = false, words = 'utani gran hur', name = 'Strong Haste', clientId = 39 },
-        manaShield = { enabled = false, words = 'utamo tempo nia', name = 'Focus Serenity', clientId = 167 },
-        partyHeal = { enabled = false, words = 'exura tio sio', name = 'Restore Balance', clientId = 184, pct = 80 },
-        recovery = { enabled = false, words = 'utura nia', name = 'Virtue of Sustain', clientId = 164, pct = 95 }
+        manaShield = { enabled = false, words = 'utamo tio', name = 'Focus Serenity', clientId = 169 },
+        partyHeal = { enabled = false, words = 'exura tio sio', name = 'Restore Balance', clientId = 185, pct = 80 },
+        recovery = { enabled = false, words = 'utura tio', name = 'Virtue of Sustain', clientId = 164, pct = 95 }
       },
       shooter = {
         enabled = false,
@@ -1692,11 +1694,12 @@ local COMBAT_SUPPORT_WORDS = {
   ['exeta res'] = true, ['exeta amp res'] = true, ['exana amp res'] = true,
   ['uteta res eq'] = true, ['uteta res sac'] = true, ['uteta res ven'] = true,
   ['uteta res dru'] = true, ['uteta res nia'] = true, ['utamo nia'] = true,
-  ['utito nia'] = true, ['utevo nia'] = true, ['exeta pug'] = true
+  ['utito nia'] = true, ['utevo nia'] = true, ['exeta pug'] = true,
+  ['utito virtu'] = true, ['utori virtu'] = true, ['exori mas res'] = true
 }
 local HASTE_WORDS = { ['utani hur'] = true, ['utani gran hur'] = true, ['utani tempo hur'] = true, ['utamo tempo san'] = true }
-local MANASHIELD_WORDS = { ['utamo vita'] = true, ['exana vita'] = true, ['utamo tempo'] = true, ['utamo tempo nia'] = true }
-local RECOVERY_WORDS = { ['utura'] = true, ['utura gran'] = true, ['utura nia'] = true }
+local MANASHIELD_WORDS = { ['utamo vita'] = true, ['exana vita'] = true, ['utamo tempo'] = true, ['utamo tempo nia'] = true, ['utamo tio'] = true }
+local RECOVERY_WORDS = { ['utura'] = true, ['utura gran'] = true, ['utura nia'] = true, ['utura tio'] = true }
 local PARTY_WORDS = { ['exura sio'] = true, ['exura gran sio'] = true, ['exura gran mas res'] = true, ['exura mas res'] = true, ['exura tio sio'] = true, ['exura mas nia'] = true }
 
 function openSpellSelector(title, groupFilter, currentSpell, onSelectCallback)
@@ -1809,13 +1812,17 @@ function populateSpellSelectorList()
   for _, sp in ipairs(allSpells) do
     local row = g_ui.createWidget('SpellSelectorRow', list)
     if not firstRow then firstRow = row end
-    local icon = row:getChildById('spellIcon')
+    local iconFrame = row:getChildById('iconFrame')
+    local icon = (iconFrame and iconFrame:getChildById('spellIcon')) or row:recursiveGetChildById('spellIcon')
     local nameLbl = row:getChildById('spellNameLabel')
     local wordsLbl = row:getChildById('spellWordsLabel')
     local grpIcon = row:getChildById('groupIcon')
     local lvlLbl = row:getChildById('levelLabel')
 
-    if icon then icon:setImageClip(getSpellClip(sp.clientId)) end
+    if icon then
+      icon:setImageSource('/images/game/spells/spell-icons-32x32')
+      icon:setImageClip(getSpellClip(sp.clientId))
+    end
     if nameLbl then nameLbl:setText(sp.name) end
     if wordsLbl then wordsLbl:setText(sp.words) end
     if grpIcon then
@@ -4678,6 +4685,14 @@ local function parseCommaSet(str)
   return set
 end
 
+local function isValidMonsterCreature(cr)
+  if not cr or (cr.isDead and cr:isDead()) then return false end
+  if not (cr.isMonster and cr:isMonster()) then return false end
+  if cr.isNpc and cr:isNpc() then return false end
+  if cr.isPlayer and cr:isPlayer() then return false end
+  return true
+end
+
 local function getNearbyMonsters(playerPos, range, ignoreListStr)
   local ignoreSet = parseCommaSet(ignoreListStr)
   local monsters, players = {}, {}
@@ -4687,11 +4702,11 @@ local function getNearbyMonsters(playerPos, range, ignoreListStr)
     if cPos and cPos.z == playerPos.z then
       local dist = getDistanceBetween(playerPos, cPos)
       if dist <= range then
-        if cr:isMonster() then
+        if isValidMonsterCreature(cr) then
           if not ignoreSet[cr:getName():lower()] then
             table.insert(monsters, { creature = cr, dist = dist, hp = cr:getHealthPercent(), name = cr:getName() })
           end
-        elseif cr:isPlayer() and cr ~= g_game.getLocalPlayer() then
+        elseif cr:isPlayer() and cr ~= g_game.getLocalPlayer() and not (cr.isNpc and cr:isNpc()) then
           table.insert(players, cr)
         end
       end
@@ -4741,9 +4756,16 @@ local function getCreatureVocName(cr)
 end
 
 local function hasCoreBlessings(player)
-  if not player or not player.getBlessings or not Blessings then return true end
+  if not player then return true end
+  if lastBlessDialogCoreOk ~= nil then
+    return lastBlessDialogCoreOk
+  end
+  if lastBlessVisualState ~= nil then
+    return lastBlessVisualState >= 2
+  end
+  if not player.getBlessings or not Blessings then return true end
   local b = tonumber(player:getBlessings()) or 0
-  if b == 0 then return false end
+  if b <= 1 then return false end
   if Bit and Bit.hasBit then
     for _, flag in ipairs({
       Blessings.WisdomOfSolitude,
@@ -5530,7 +5552,7 @@ function onHelperTick()
     local ignoreSet = parseCommaSet(tgtCfg.ignoreList)
 
     local keepValid = false
-    if tgtCfg.keepTarget ~= false and currentTarget and not currentTarget:isDead() then
+    if tgtCfg.keepTarget ~= false and isValidMonsterCreature(currentTarget) then
       local cPos = currentTarget:getPosition()
       if cPos and cPos.z == pPos.z and getDistanceBetween(pPos, cPos) <= maxRange and not ignoreSet[currentTarget:getName():lower()] then
         keepValid = true
@@ -5653,14 +5675,14 @@ function onHelperTick()
         end
       end
 
-      if chosen and chosen ~= currentTarget then
+      if chosen and isValidMonsterCreature(chosen) and chosen ~= currentTarget then
         currentTarget = chosen
         g_game.attack(currentTarget)
       end
     end
   end
 
-  if charConfig.masterEnabled == true and vp.shooter.enabled == true and (not vp.shooter.disablePz or not inPz) and (now - lastShooterCastTime) >= 1000 then
+  if charConfig.masterEnabled == true and vp.shooter.enabled == true and #nearbyMonsters > 0 and (not vp.shooter.disablePz or not inPz) and (now - lastShooterCastTime) >= 1000 then
     local rules = vp.shooter.presets[vp.shooter.currentPreset] or {}
     local hasMomentum = (PlayerStates.Momentum ~= nil) and player:hasState(PlayerStates.Momentum) or false
     local evalOrder = {}
@@ -5680,8 +5702,8 @@ function onHelperTick()
       if rule and rule.enabled ~= false then
         local c = rule.cond or {}
         local needTgt = (rule.requiresTarget ~= false)
-        local tgt = currentTarget
-        if (not needTgt) or (tgt and not tgt:isDead()) then
+        local tgt = isValidMonsterCreature(currentTarget) and currentTarget or nil
+        if (not needTgt) or tgt then
           local tgtHp = tgt and tgt:getHealthPercent() or 100
           local matchingCount = #nearbyMonsters
           local nameOk = true
@@ -5733,12 +5755,14 @@ function onHelperTick()
                 faceCreatureDirection(player, tgt)
               end
             end
-            local runeTarget = (tgt and not tgt:isDead()) and tgt or (nearbyMonsters[1] and nearbyMonsters[1].creature) or player
-            if rule.type == 'R' and rule.itemId and rule.itemId > 0 and runeTarget then
-              g_game.useInventoryItemWith(rule.itemId, runeTarget)
-              ruleCooldowns[rIdx] = now
-              lastShooterCastTime = now
-              break
+            local runeTarget = tgt or (nearbyMonsters[1] and nearbyMonsters[1].creature) or nil
+            if rule.type == 'R' then
+              if rule.itemId and rule.itemId > 0 and isValidMonsterCreature(runeTarget) then
+                g_game.useInventoryItemWith(rule.itemId, runeTarget)
+                ruleCooldowns[rIdx] = now
+                lastShooterCastTime = now
+                break
+              end
             elseif trimmedWords ~= '' then
               g_game.talk(trimmedWords)
               ruleCooldowns[rIdx] = now
@@ -5804,7 +5828,11 @@ function onHelperTick()
       for _, cont in pairs(g_game.getContainers()) do
         for _, item in ipairs(cont:getItems()) do
           if item:getId() == cid and item:getCount() == 100 then
-            g_game.use(item)
+            if item.isMultiUse and item:isMultiUse() then
+              g_game.useWith(item, item)
+            else
+              g_game.use(item)
+            end
             used = true
             break
           end
@@ -6005,17 +6033,41 @@ function init()
       loadProfileIntoUI()
     end
   end
+  local function onHelperBlessingsChange(localPlayer, blessings, oldBlessings, blessVisualState)
+    if not g_game.isOnline() then return end
+    if localPlayer == g_game.getLocalPlayer() and blessVisualState ~= nil then
+      lastBlessVisualState = tonumber(blessVisualState)
+      if lastBlessVisualState and lastBlessVisualState < 2 then
+        lastBlessDialogCoreOk = false
+      end
+    end
+  end
+  local function onHelperUpdateBlessDialog(data)
+    if not g_game.isOnline() or type(data) ~= 'table' or type(data.blesses) ~= 'table' then return end
+    local activeCount = 0
+    for _, entry in ipairs(data.blesses) do
+      if ((tonumber(entry.playerBlessCount) or 0) + (tonumber(entry.store) or 0)) >= 1 then
+        activeCount = activeCount + 1
+      end
+    end
+    local needed = math.min(5, math.max(1, #data.blesses - 1))
+    lastBlessDialogCoreOk = (activeCount >= needed)
+  end
   _G._davHelperOnVocChange = onHelperVocationChange
+  _G._davHelperOnBlessingsChange = onHelperBlessingsChange
+  _G._davHelperOnUpdateBlessDialog = onHelperUpdateBlessDialog
 
   connect(g_game, {
     onGameStart = onGameStart,
     onGameEnd = onGameEnd,
     onFollowingCreatureChange = onHelperFollowCreatureChange,
     onSpellCooldown = onHelperSpellCooldown,
-    onSpellGroupCooldown = onHelperSpellGroupCooldown
+    onSpellGroupCooldown = onHelperSpellGroupCooldown,
+    onUpdateBlessDialog = _G._davHelperOnUpdateBlessDialog
   })
   connect(LocalPlayer, {
-    onVocationChange = _G._davHelperOnVocChange
+    onVocationChange = _G._davHelperOnVocChange,
+    onBlessingsChange = _G._davHelperOnBlessingsChange
   })
   refreshGlobalKeyHooks()
 
@@ -6050,13 +6102,17 @@ function terminate()
     onGameEnd = onGameEnd,
     onFollowingCreatureChange = onHelperFollowCreatureChange,
     onSpellCooldown = onHelperSpellCooldown,
-    onSpellGroupCooldown = onHelperSpellGroupCooldown
+    onSpellGroupCooldown = onHelperSpellGroupCooldown,
+    onUpdateBlessDialog = _G._davHelperOnUpdateBlessDialog
   })
-  if _G._davHelperOnVocChange then
+  _G._davHelperOnUpdateBlessDialog = nil
+  if _G._davHelperOnVocChange or _G._davHelperOnBlessingsChange then
     disconnect(LocalPlayer, {
-      onVocationChange = _G._davHelperOnVocChange
+      onVocationChange = _G._davHelperOnVocChange,
+      onBlessingsChange = _G._davHelperOnBlessingsChange
     })
     _G._davHelperOnVocChange = nil
+    _G._davHelperOnBlessingsChange = nil
   end
   detachAllGlobalKeyHooks()
   clearTemporaryWaypointMarkers()
@@ -6082,6 +6138,9 @@ function onGameStart()
   lastAfkTime = g_clock.millis()
   antiAfkFirstDone = false
   lastItemTimerTime = g_clock.millis()
+  lastBlessTime = -30000
+  lastBlessVisualState = nil
+  lastBlessDialogCoreOk = nil
   spellCooldownUntil = {}
   groupCooldownUntil = {}
   ruleCooldowns = {}
@@ -6117,6 +6176,8 @@ function onGameEnd()
   groupCooldownUntil = {}
   ruleCooldowns = {}
   cavebotAutoRec = false
+  lastBlessVisualState = nil
+  lastBlessDialogCoreOk = nil
   if cbControlMiniHud then cbControlMiniHud:hide() end
   if tickEvent then
     removeEvent(tickEvent)

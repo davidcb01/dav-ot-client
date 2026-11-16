@@ -123,9 +123,15 @@ end
 
 -- collection of refresh functions from different modules
 function collectiveReload()
-  modules.game_topbar.refresh(true)
-  modules.game_actionbar.refresh(true)
-  modules.game_bot.refresh()
+  if modules.game_topbar and modules.game_topbar.refresh then
+    modules.game_topbar.refresh(true)
+  end
+  if modules.game_actionbar and modules.game_actionbar.refresh then
+    modules.game_actionbar.refresh(true)
+  end
+  if modules.game_bot and modules.game_bot.refresh then
+    modules.game_bot.refresh()
+  end
 end
 
 -- json handlers

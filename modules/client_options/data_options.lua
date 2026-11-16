@@ -559,21 +559,6 @@ return {
             modules.game_interface.setHorizontalPanelVisible('right', value)
         end
     },
-    showCustomisableStatusBars        = {
-        value = true,
-        action = function(value, options, controller, panels, extraWidgets)
-            if not modules.game_interface then
-                return
-            end
-            if modules.game_interface.StatsBar then
-                if value then
-                    modules.game_interface.StatsBar.loadSettings()
-                else
-                    modules.game_interface.StatsBar.hideAll()
-                end
-            end
-        end
-    },
     showStatusBars                    = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
@@ -623,7 +608,7 @@ return {
         end
     },
     opacityScrollbar                  = {
-        value = 0,
+        value = 35,
         action = function(value, options, controller, panels, extraWidgets)
             local bar = modules.game_healthcircle.optionPanel:recursiveGetChildById('opacityScrollbar')
             if bar then

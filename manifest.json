@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261115.2207",
-  "updated_at": "2026-11-15T22:07:13",
-  "changelog": "Fix 15.25 GameEffectSource, assets 15.25, Store Inbox label and blessing nil ui",
+  "version": "15.25.261115.2324",
+  "updated_at": "2026-11-15T23:24:14",
+  "changelog": "Fix helper 15.25 Auto Bless, changeGold useWith, monster-only target/shooter, spell icons, Monk spells, login buttons inside window, and unified Status Bar options",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -34174,8 +34174,8 @@
       "size": 259
     },
     "mods/client_profiles/profiles.lua": {
-      "sha256": "df361981419fd277018dbef537763f4d39345b324b0c760685a31a238b46938e",
-      "size": 4096
+      "sha256": "babb121069c99fcc282b5359c2281b208f0f1937cd8b2efcdd7de12ab4689b67",
+      "size": 4306
     },
     "mods/client_profiles/profiles.otmod": {
       "sha256": "d0a69d5da951a212d6dd01cd6badcd6a52489dffcd964d3389208dfc096f4183",
@@ -34222,8 +34222,8 @@
       "size": 20142
     },
     "mods/game_helper/helper.lua": {
-      "sha256": "7c67d18924357a75430bfd4e43ee59f685cbe13fbae51cdbfb94b7a1624ca305",
-      "size": 251381
+      "sha256": "12d19910558858bc577397853a70b4fd22ef5270b45624f82b0a58b2296a23a2",
+      "size": 254108
     },
     "mods/game_helper/helper.otmod": {
       "sha256": "1a024ad736fc2b2acaa7436e957c4b2c6c4ba3c84a68829e44fa24b829d00194",
@@ -34238,16 +34238,16 @@
       "size": 17202
     },
     "mods/game_helper/modals.otui": {
-      "sha256": "47757bc526c7660aacddeab75ee1aa3d9a26f7593c6722bbbd036a501b569c5f",
-      "size": 30591
+      "sha256": "9b8a970d3772637adc3ba7ded43b12bf95eb7c839231446280bde565137e792a",
+      "size": 30637
     },
     "mods/game_helper/settings.otui": {
       "sha256": "6cfef7917ecc4eb4207aafc349730f201070bd44990a2efbbaed1ac03542ae48",
       "size": 7560
     },
     "mods/game_helper/shooter.otui": {
-      "sha256": "4396628427f1e64059a5ef818d99fe30049b390a303259c1a1585d81da332c43",
-      "size": 11162
+      "sha256": "e57c36b25a5c7a7da42b66ca1910f373cca306c7952f57f11ae8fda7b83d47ba",
+      "size": 11186
     },
     "mods/game_helper/stats.otui": {
       "sha256": "91f4ab7352e63d2f94c510ad8f6d285aa04e9e8841a9bf57c4ae239413e626e7",
@@ -34622,16 +34622,16 @@
       "size": 18272
     },
     "modules/client_entergame/entergame.lua": {
-      "sha256": "50304f420ea4ae912702bf264c1a73091bdc5b98d689c1f90af57e5eda740ba8",
-      "size": 36865
+      "sha256": "0eccde055d0cdecb6d5bb9ff121e0b2da749edd3bbc56d0688d37883916ae004",
+      "size": 38023
     },
     "modules/client_entergame/entergame.otmod": {
       "sha256": "e43b4d25484a8fbdfd025d3630e58c06fdbff8c553379508d66191251633bc86",
       "size": 442
     },
     "modules/client_entergame/entergame.otui": {
-      "sha256": "0fa191bb40ce933c12d3b0ea641d9977917f0b86d8072f42bb3d29262d71f512",
-      "size": 6091
+      "sha256": "5fb4d07433645d977761108367b737c053dafa3c3f3dd9e45a4f887f92e7279a",
+      "size": 6097
     },
     "modules/client_entergame/waitinglist.otui": {
       "sha256": "3467ab88486e265d8c662425f9261c7ffbb06b0cd286900596b3166270049e59",
@@ -34654,8 +34654,8 @@
       "size": 12773
     },
     "modules/client_options/data_options.lua": {
-      "sha256": "6c09e15e677ae4352785d87ff20ded34b56fb68c2003d78940998e241537555b",
-      "size": 52792
+      "sha256": "d3384471bcd6b85727e4b80609dc9cc270dc1d9cca9728b23b10df6fb414ef65",
+      "size": 52280
     },
     "modules/client_options/keybins.lua": {
       "sha256": "c924972d52d20dd204661f40cfb428a1421f46ea714c0b911c34a08d81c373bd",
@@ -34698,8 +34698,8 @@
       "size": 2791
     },
     "modules/client_options/styles/interface/HUD.otui": {
-      "sha256": "1a7dff6847b30a1abc714090a966a3fdb0fb5a4048ba31a3bcfb2102c9a23a76",
-      "size": 7191
+      "sha256": "dc2a72bd0c8a3086d63ca3d4df7fe1d98ee34bf1a7d91dd731563a4917d2e8fe",
+      "size": 6185
     },
     "modules/client_options/styles/interface/actionbars.otui": {
       "sha256": "fafc58ec57b47758388e425f5e5eda3305b16ae7b1ffff061c49080ade21f715",
@@ -36498,8 +36498,8 @@
       "size": 6712
     },
     "modules/game_healthcircle/option_healthcircle.otui": {
-      "sha256": "66857485522e9b5434036358a1d589a958ed73b9244980b8e89945d2971a9b65",
-      "size": 4423
+      "sha256": "733d074af7caff71be07cb45767d46bd86a5eb4ef096abbdc92eae128a39c619",
+      "size": 4424
     },
     "modules/game_healthcircle/statusiconbar.lua": {
       "sha256": "99e1a9cb7dfcff59d7a365754c649b1cc0b869893e351dc8c5f85171cacb4e81",

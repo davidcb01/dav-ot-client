@@ -895,61 +895,90 @@ function EnterGame.setUniqueServer(host, port, protocol, windowWidth, windowHeig
     hostTextEdit:setText(host)
     hostTextEdit:setVisible(false)
     hostTextEdit:setHeight(0)
+    hostTextEdit:setMarginTop(0)
 
     local portTextEdit = enterGame:getChildById('serverPortTextEdit')
     portTextEdit:setText(port)
     portTextEdit:setVisible(false)
     portTextEdit:setHeight(0)
-
-    local stayLoggedBox = enterGame:getChildById('stayLoggedBox')
-    stayLoggedBox:setChecked(false)
-    stayLoggedBox:setOn(false)
+    portTextEdit:setMarginTop(0)
 
     local clientVersion = tonumber(protocol)
     clientBox:setCurrentOption(clientVersion)
     clientBox:setVisible(false)
     clientBox:setHeight(0)
+    clientBox:setMarginTop(0)
+
+    local stayLoggedBox = enterGame:getChildById('stayLoggedBox')
+    stayLoggedBox:setChecked(false)
+    stayLoggedBox:setOn(false)
+    stayLoggedBox:setVisible(false)
+    stayLoggedBox:setHeight(0)
+    stayLoggedBox:setMarginTop(0)
+    enterGame.stayLoggedBoxEnabled = false
 
     local serverLabel = enterGame:getChildById('serverLabel')
     serverLabel:setVisible(false)
     serverLabel:setHeight(0)
+    serverLabel:setMarginTop(0)
 
     local portLabel = enterGame:getChildById('portLabel')
     portLabel:setVisible(false)
     portLabel:setHeight(0)
+    portLabel:setMarginTop(0)
 
     local clientLabel = enterGame:getChildById('clientLabel')
     clientLabel:setVisible(false)
     clientLabel:setHeight(0)
+    clientLabel:setMarginTop(0)
 
     local httpLoginBox = enterGame:getChildById('httpLoginBox')
     httpLoginBox:setVisible(false)
     httpLoginBox:setHeight(0)
+    httpLoginBox:setMarginTop(0)
 
     local serverListButton = enterGame:getChildById('serverListButton')
     serverListButton:setVisible(false)
     serverListButton:setHeight(0)
     serverListButton:setWidth(0)
+    serverListButton:setMarginTop(0)
 
     local rememberEmailBox = enterGame:getChildById('rememberEmailBox')
-    rememberEmailBox:setMarginTop(5)
+    rememberEmailBox:setMarginTop(6)
 
     local autoLoginBox = enterGame:getChildById('autoLoginBox')
     if autoLoginBox then
         autoLoginBox:setVisible(false)
         autoLoginBox:setHeight(0)
+        autoLoginBox:setMarginTop(0)
     end
 
     local serverSeparator1 = enterGame:getChildById('serverSeparator1')
     if serverSeparator1 then
         serverSeparator1:setVisible(false)
         serverSeparator1:setHeight(0)
+        serverSeparator1:setMarginTop(0)
     end
 
     local serverSeparator2 = enterGame:getChildById('serverSeparator2')
     if serverSeparator2 then
         serverSeparator2:setVisible(false)
         serverSeparator2:setHeight(0)
+        serverSeparator2:setMarginTop(0)
+    end
+
+    local loginButton = enterGame:getChildById('loginButton')
+    local forgotBtn = enterGame:getChildById('Forgot_password_email')
+    local hasForgot = (Services and Services.websites and Services.websites ~= '')
+    if loginButton then
+        loginButton:breakAnchors()
+        loginButton:addAnchor(AnchorRight, 'parent', AnchorRight)
+        if hasForgot and forgotBtn then
+            loginButton:addAnchor(AnchorTop, 'Forgot_password_email', AnchorBottom)
+        else
+            loginButton:addAnchor(AnchorTop, 'rememberEmailBox', AnchorBottom)
+        end
+        loginButton:setMarginTop(10)
     end
 
     if not windowWidth then
@@ -957,7 +986,7 @@ function EnterGame.setUniqueServer(host, port, protocol, windowWidth, windowHeig
     end
     enterGame:setWidth(windowWidth)
     if not windowHeight then
-        windowHeight = 165
+        windowHeight = hasForgot and 180 or 162
     end
 
     enterGame:setHeight(windowHeight)

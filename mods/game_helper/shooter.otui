@@ -24,6 +24,7 @@ ShooterRuleRow < UIWidget
       anchors.centerIn: parent
       image-source: /images/game/spells/spell-icons-32x32
       image-clip: 0 0 32 32
+      image-size: 18 18
       phantom: true
 
     UIItem

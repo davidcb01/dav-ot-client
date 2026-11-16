@@ -85,6 +85,7 @@ HelperSpellSlot < UIWidget
   UIWidget
     id: icon
     size: 32 32
+    image-size: 32 32
     anchors.centerIn: parent
     phantom: true
 
@@ -129,6 +130,7 @@ SpellSelectorRow < UIWidget
     UIWidget
       id: spellIcon
       size: 32 32
+      image-size: 32 32
       anchors.centerIn: parent
       image-source: /images/game/spells/spell-icons-32x32
       image-clip: 0 0 32 32

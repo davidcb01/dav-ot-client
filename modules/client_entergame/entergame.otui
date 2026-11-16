@@ -228,9 +228,8 @@ EnterGameWindow
     id: btnCreateNewAccount
     !text: tr('Create New Account')
     anchors.left: parent.left
-    anchors.top: prev.bottom
-    margin-top: -17
-    size: 109 20
+    anchors.verticalCenter: loginButton.verticalCenter
+    size: 120 20
     @onClick: |
       self:disable()
       createWidgetAccount()
