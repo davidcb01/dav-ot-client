@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261115.2324",
-  "updated_at": "2026-11-15T23:24:14",
-  "changelog": "Fix helper 15.25 Auto Bless, changeGold useWith, monster-only target/shooter, spell icons, Monk spells, login buttons inside window, and unified Status Bar options",
+  "version": "15.25.261116.0013",
+  "updated_at": "2026-11-16T00:13:35",
+  "changelog": "Improve Druid and Monk Sio/Friend healing vocation detection, filters, labels, and i18n",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -34222,8 +34222,8 @@
       "size": 20142
     },
     "mods/game_helper/helper.lua": {
-      "sha256": "12d19910558858bc577397853a70b4fd22ef5270b45624f82b0a58b2296a23a2",
-      "size": 254108
+      "sha256": "b48e47ae63a29aa889b6509a410d532fd8549e44ffe341789c2efd930ae52eb2",
+      "size": 256771
     },
     "mods/game_helper/helper.otmod": {
       "sha256": "1a024ad736fc2b2acaa7436e957c4b2c6c4ba3c84a68829e44fa24b829d00194",
@@ -34234,8 +34234,8 @@
       "size": 4947
     },
     "mods/game_helper/i18n.lua": {
-      "sha256": "85e23897bf8890780cdde84c6f15a10cc8aa5a0c0304c39dc01e2711c69dd29e",
-      "size": 17202
+      "sha256": "2762cce49a3cad9d6d2ce1d8c590ffb978f7397921588eeb616382da9310c27f",
+      "size": 17278
     },
     "mods/game_helper/modals.otui": {
       "sha256": "9b8a970d3772637adc3ba7ded43b12bf95eb7c839231446280bde565137e792a",

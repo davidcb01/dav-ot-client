@@ -56,6 +56,7 @@ local EN_TO_PT = {
   ['Auto Recovery'] = 'Recup. Auto',
   ['Enable Healing'] = 'Ativar Cura',
   ['Enable Exura Sio (Friend)'] = 'Ativar Exura Sio (Aliado)',
+  ['Enable Restore Balance (Friend)'] = 'Ativar Restore Balance (Aliado)',
   ['Self HP>=%'] = 'Seu HP>=%',
   ['Self MP>=%'] = 'Sua MP>=%',
   ['Enable Exura Gran Sio (Emergency -20% HP)'] = 'Ativar Exura Gran Sio (Emergência -20% HP)',

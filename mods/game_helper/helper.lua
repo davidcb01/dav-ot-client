@@ -1967,6 +1967,18 @@ function applyVocationVisibility()
     switchHealingSubTab('self')
   end
 
+  local sioBox = h:getChildById('sioHealingContainer'):getChildById('sioBox')
+  if sioBox then
+    local sioChk = sioBox:getChildById('sioEnableCheck')
+    if sioChk then
+      sioChk:setText(ht(voc == 'Monk' and 'Enable Restore Balance (Friend)' or 'Enable Exura Sio (Friend)'))
+    end
+    local granChk = sioBox:getChildById('granSioEnableCheck')
+    if granChk then
+      granChk:setVisible(voc == 'Druid')
+    end
+  end
+
   local exBox = h:getChildById('selfHealingContainer'):getChildById('extraHealingBox')
   exBox:getChildById('quickSioSlot'):setVisible(isDruidOrMonk)
   exBox:getChildById('quickSioCheck'):setVisible(isDruidOrMonk)
@@ -3687,6 +3699,9 @@ function applyHelperLanguage(skipListRefresh)
     end
     refreshSettingsTabUI()
   end
+  if applyVocationVisibility then
+    applyVocationVisibility()
+  end
 end
 
 function setHelperLanguage(lang, skipSave)
@@ -4125,8 +4140,26 @@ function setupWidgetsAndCallbacks()
   local sioBox = panels.healing:getChildById('sioHealingContainer'):getChildById('sioBox')
   sioBox:getChildById('sioEnableCheck').onCheckChange = function(w, ch) getVocProfile().healing.sio.enabled = ch saveCurrentProfile() end
   sioBox:getChildById('granSioEnableCheck').onCheckChange = function(w, ch) getVocProfile().healing.granSio.enabled = ch saveCurrentProfile() end
-  sioBox:getChildById('sioSelfHpEdit').onTextChange = function(w, txt) local n = tonumber(txt) if n then getVocProfile().healing.sio.selfHp = math.max(0, math.min(100, math.floor(n))) saveCurrentProfile() end end
-  sioBox:getChildById('sioSelfMpEdit').onTextChange = function(w, txt) local n = tonumber(txt) if n then getVocProfile().healing.sio.selfMp = math.max(0, math.min(100, math.floor(n))) saveCurrentProfile() end end
+  sioBox:getChildById('sioSelfHpEdit').onTextChange = function(w, txt)
+    local n = tonumber(txt)
+    if n then
+      local v = math.max(0, math.min(100, math.floor(n)))
+      local vp = getVocProfile()
+      vp.healing.sio.selfHp = v
+      vp.healing.granSio.selfHp = v
+      saveCurrentProfile()
+    end
+  end
+  sioBox:getChildById('sioSelfMpEdit').onTextChange = function(w, txt)
+    local n = tonumber(txt)
+    if n then
+      local v = math.max(0, math.min(100, math.floor(n)))
+      local vp = getVocProfile()
+      vp.healing.sio.selfMp = v
+      vp.healing.granSio.selfMp = v
+      saveCurrentProfile()
+    end
+  end
   for _, vName in ipairs({'Knight', 'Paladin', 'Monk', 'Sorcerer', 'Druid'}) do
     local vr = sioBox:getChildById('sioVoc' .. vName)
     vr:getChildById('vocCheck').onCheckChange = function(w, ch)
@@ -4738,21 +4771,41 @@ local function faceCreatureDirection(player, target)
 end
 
 local function isFriendAllowed(creature, filters)
+  if not creature or not filters then return false end
   if filters.allScreen then return true end
-  if filters.party and creature:isPartyMember() then return true end
+  if filters.party then
+    local inParty = (creature.isPartyMember and creature:isPartyMember())
+      or (creature.getShield and creature:getShield() >= 3 and creature:getShield() <= 10)
+    if inParty then return true end
+  end
   if filters.guild and creature.getEmblem and creature:getEmblem() == 1 then return true end
   local extra = parseCommaSet(filters.extraFriends)
   return extra[creature:getName():lower()] == true
 end
 
 local function getCreatureVocName(cr)
-  local name = cr:getName():lower()
-  if name:find('knight') then return 'Knight'
-  elseif name:find('druid') then return 'Druid'
-  elseif name:find('sorcerer') then return 'Sorcerer'
-  elseif name:find('paladin') then return 'Paladin'
-  elseif name:find('monk') then return 'Monk' end
-  return 'Knight'
+  if cr then
+    if cr.isMonk and cr:isMonk() then return 'Monk' end
+    if cr.isDruid and cr:isDruid() then return 'Druid' end
+    if cr.isSorcerer and cr:isSorcerer() then return 'Sorcerer' end
+    if cr.isPaladin and cr:isPaladin() then return 'Paladin' end
+    if cr.isKnight and cr:isKnight() then return 'Knight' end
+    local voc = cr.getVocation and cr:getVocation() or 0
+    if voc == 5 or voc == 15 then return 'Monk'
+    elseif voc == 4 or voc == 14 then return 'Druid'
+    elseif voc == 3 or voc == 13 then return 'Sorcerer'
+    elseif voc == 2 or voc == 12 then return 'Paladin'
+    elseif voc == 1 or voc == 11 then return 'Knight'
+    end
+    local name = cr.getName and cr:getName():lower() or ''
+    if name:find('monk') then return 'Monk'
+    elseif name:find('druid') then return 'Druid'
+    elseif name:find('sorcerer') then return 'Sorcerer'
+    elseif name:find('paladin') then return 'Paladin'
+    elseif name:find('knight') then return 'Knight'
+    end
+  end
+  return nil
 end
 
 local function hasCoreBlessings(player)
@@ -5492,13 +5545,33 @@ function onHelperTick()
         end
       end
 
+      local function resolveFriendVocRule(cfg, p)
+        if not cfg or not cfg.vocs then return nil end
+        local vocName = getCreatureVocName(p)
+        if vocName then
+          return cfg.vocs[vocName]
+        end
+        if cfg.vocs.Knight and cfg.vocs.Knight.enabled then
+          return cfg.vocs.Knight
+        end
+        local bestRule = nil
+        for _, r in pairs(cfg.vocs) do
+          if type(r) == 'table' and r.enabled then
+            if not bestRule or (tonumber(r.hp) or 0) > (tonumber(bestRule.hp) or 0) then
+              bestRule = r
+            end
+          end
+        end
+        return bestRule
+      end
+
       local function tryFriendHealConfig(cfg)
         if not cfg or not cfg.enabled or not cfg.words or cfg.words == '' then return false end
         if hpPct < (cfg.selfHp or 60) or mpPct < (cfg.selfMp or 15) then return false end
         local bestCandidate, bestEff = nil, 999
         for _, p in ipairs(nearbyPlayers) do
           if isFriendAllowed(p, vp.healing.sioFilters) then
-            local vRule = cfg.vocs and cfg.vocs[getCreatureVocName(p)]
+            local vRule = resolveFriendVocRule(cfg, p)
             if vRule and vRule.enabled then
               local fHp = p:getHealthPercent()
               if fHp <= (vRule.hp or 80) then
@@ -5519,13 +5592,18 @@ function onHelperTick()
       end
 
       if (now - lastCastTime) >= 1000 then
-        if not tryFriendHealConfig(vp.healing.granSio) then
+        local granHandled = (currentVocName == 'Druid') and tryFriendHealConfig(vp.healing.granSio) or false
+        if not granHandled then
           if not tryFriendHealConfig(vp.healing.sio) and vp.healing.partyHeal.enabled and vp.healing.partyHeal.words ~= '' then
-            for _, p in ipairs(nearbyPlayers) do
-              if p:getHealthPercent() <= (vp.healing.partyHeal.pct or 75) then
-                g_game.talk(vp.healing.partyHeal.words .. ' "' .. p:getName())
-                lastCastTime = now
-                break
+            local minHp = vp.healing.sio and vp.healing.sio.selfHp or 60
+            local minMp = vp.healing.sio and vp.healing.sio.selfMp or 15
+            if hpPct >= minHp and mpPct >= minMp then
+              for _, p in ipairs(nearbyPlayers) do
+                if isFriendAllowed(p, vp.healing.sioFilters) and p:getHealthPercent() <= (vp.healing.partyHeal.pct or 75) then
+                  g_game.talk(vp.healing.partyHeal.words .. ' "' .. p:getName())
+                  lastCastTime = now
+                  break
+                end
               end
             end
           end
