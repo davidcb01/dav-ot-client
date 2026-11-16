@@ -108,6 +108,9 @@ end
 
 function onUpdateBlessDialog(data)
     local ui = BlessingController.ui
+    if not ui or not ui.blessingsRecordPanel then
+        return
+    end
     ui.blessingsRecordPanel:destroyChildren()
     for i, entry in ipairs(data.blesses) do
         local label = g_ui.createWidget("blessingTEST", ui.blessingsRecordPanel)

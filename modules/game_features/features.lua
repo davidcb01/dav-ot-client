@@ -280,10 +280,9 @@ controller:registerEvents(g_game, {
             g_game.enableFeature(GameNpcWindowRedesign)
         end
 
-        -- Disabled so client Effect/Missile Opacity sliders work (Canary 0x83 omits per-source metadata)
-        -- if version >= 1514 then
-        --     g_game.enableFeature(GameEffectSource)
-        -- end
+        if version >= 1514 then
+            g_game.enableFeature(GameEffectSource)
+        end
 
         if version >= 1520 then
             g_game.enableFeature(GameLevelPercentU16)

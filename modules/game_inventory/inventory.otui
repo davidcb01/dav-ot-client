@@ -75,7 +75,7 @@ PhantomMiniWindow
     UIButton
       id: purseButton
       image-source: /images/inventory/purse
-      !tooltip: tr('Open purse')
+      !tooltip: tr('Open Store Inbox')
       anchors.left: backpack.left
       anchors.bottom: backpack.top   
       size: 34 12
