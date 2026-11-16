@@ -25,6 +25,16 @@ function controllerNpcTrader:onOptionsClick()
             self:toggleIgnoreEquipped()
         end)
     end
+    local blCount = self:getQuickSellBlacklistCount()
+    if blCount > 0 then
+        menu:addSeparator()
+        menu:addOption(string.format("Clear Quick Sell Blacklist (%d)", blCount), function()
+            self:clearQuickSellBlacklist()
+            if modules.game_textmessage then
+                modules.game_textmessage.displayStatusMessage("Quick Sell Blacklist cleared.")
+            end
+        end)
+    end
     menu:display()
 end
 

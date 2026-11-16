@@ -47,6 +47,13 @@ controllerNpcTrader.MAX_AMOUNT_NORMAL = 100
 controllerNpcTrader.MAX_AMOUNT_STACKABLE = 10000
 
 -- ==============================================================================================
+-- SELL ALL & QUICK SELL BLACKLIST CONSTANTS
+-- ==============================================================================================
+controllerNpcTrader.SELL_ALL_BATCH_SIZE = 1
+controllerNpcTrader.SELL_ALL_BATCH_DELAY = 300
+controllerNpcTrader.QUICK_SELL_BLACKLIST_SETTING = 'QuickSellBlacklist'
+
+-- ==============================================================================================
 -- KEYWORD BUTTON ICONS
 -- ==============================================================================================
 

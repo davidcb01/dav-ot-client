@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261116.0013",
-  "updated_at": "2026-11-16T00:13:35",
-  "changelog": "Improve Druid and Monk Sio/Friend healing vocation detection, filters, labels, and i18n",
+  "version": "15.25.261116.0922",
+  "updated_at": "2026-11-16T09:22:58",
+  "changelog": "Adiciona botao Sell All direto no Trade, Quick Sell Blacklist (Trade/Backpack/Cyclopedia) e suporte ao NPC Feira do Troca",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -36906,8 +36906,8 @@
       "size": 10415
     },
     "modules/game_interface/gameinterface.lua": {
-      "sha256": "972034b8c5ff08886bfd6bcf7bd75d0d8a459c8eed301ac4cb30dc289c8b2a37",
-      "size": 86701
+      "sha256": "dd2c89d5bf120bc998133bb4ca4d7bd3141a6a31bdf801abc772b368498ffc8c",
+      "size": 87756
     },
     "modules/game_interface/gameinterface.otui": {
       "sha256": "86236736ffd17c728e0b80a04f23f090a6a55adb742578fdf60e38c897f3e14a",
@@ -37194,8 +37194,8 @@
       "size": 4926
     },
     "modules/game_npctrade/game_npctrader.lua": {
-      "sha256": "c05c8a78f406f3fee027dbebc9a152ba01b51eba9fea5c1645009a6f920618e1",
-      "size": 5746
+      "sha256": "0a82fd68a247dc8154c9c252baa8a64f397532a7f4c5b6859e0e1ac7997a21c9",
+      "size": 10323
     },
     "modules/game_npctrade/game_npctrader.otmod": {
       "sha256": "7d5558da9b51d7bdee27fd03579d999bd512a4a349306b177e04111057fb3538",
@@ -37218,28 +37218,28 @@
       "size": 6064
     },
     "modules/game_npctrade/constants/trader_const.lua": {
-      "sha256": "77279742746dc4f5db8f92f11bb4ad1e03c041460f2ccde24e1b00783181c3c8",
-      "size": 4136
+      "sha256": "ca94769098bd3855408dfea2da232feeb4d658f978acac86f73194ff3612d314",
+      "size": 4541
     },
     "modules/game_npctrade/controllers/npc_dialog.lua": {
       "sha256": "0e54e82b1e6d963ef79b324c80e62cc21fcc05d5900648427392f1608085ecca",
       "size": 8163
     },
     "modules/game_npctrade/controllers/npc_legacy_ui.lua": {
-      "sha256": "8c5864f87043e8c26cf330c5ed5956a7e39acf3b7eff07c430e93e4af6d1288f",
-      "size": 15801
+      "sha256": "cd5776511f8661993a326c70426df834b1f72d1840ea33bbaebd7f8b01a8c6aa",
+      "size": 15960
     },
     "modules/game_npctrade/controllers/npc_options.lua": {
-      "sha256": "69f67230283cf87dc191c528f32f423236c1edbdb4164ad59a2de56bdb5a86c0",
-      "size": 2002
+      "sha256": "6275353efda2c97607a18a46227601c675f5cd5297f26d99c9abd5bbcedbce45",
+      "size": 2421
     },
     "modules/game_npctrade/controllers/npc_trader.lua": {
-      "sha256": "1241c1c7a9f64861d05b23bca31a1465aba38f9b2894b655ef0568f73b88b2d2",
-      "size": 20858
+      "sha256": "c5546d626252312d05f83016a6f2cbfe43845aee4a9ab4d334161dae510f01e1",
+      "size": 26388
     },
     "modules/game_npctrade/templates/game_npctrader.html": {
-      "sha256": "1c312fd82ad1e4a1a312264e1f14bacd73124151d6df07a60f6e7bf945bc2f72",
-      "size": 12284
+      "sha256": "d40a3dc45a8a13d7aabff76a0a93e00965e2916f0546cdb84d522b05e1b46386",
+      "size": 12575
     },
     "modules/game_npctrade/templates/npctrade_legacy.otui": {
       "sha256": "6f1d9d2d9464ba11dc0d088d8bc9ad62031337b5d9f6a6bca43dc906272785c4",

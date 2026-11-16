@@ -940,6 +940,24 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         menu:addOption(tr('Trade with ...'), function()
             startTradeWith(lookThing)
         end)
+        if modules.game_npctrade and modules.game_npctrade.toggleBlacklist then
+            local itemId = lookThing:getId()
+            local isBlacklisted = modules.game_npctrade.isInBlacklist(itemId)
+            local optionText = isBlacklisted and tr('Remove from Quick Sell Blacklist') or tr('Add to Quick Sell Blacklist')
+            menu:addOption(optionText, function()
+                local added = modules.game_npctrade.toggleBlacklist(itemId)
+                if modules.game_textmessage then
+                    local itemName = lookThing:getName()
+                    if not itemName or itemName == '' then
+                        itemName = string.format('Item #%d', itemId)
+                    end
+                    local msg = added
+                        and string.format("Added '%s' to Quick Sell Blacklist.", itemName)
+                        or string.format("Removed '%s' from Quick Sell Blacklist.", itemName)
+                    modules.game_textmessage.displayStatusMessage(msg)
+                end
+            end)
+        end
     end
 
     if lookThing then

@@ -12,7 +12,109 @@ function controllerNpcTrader:isLegacyMode()
 end
 
 function controllerNpcTrader:onInit()
+    self:loadQuickSellBlacklist()
+end
 
+function controllerNpcTrader:normalizeBlacklistId(itemId)
+    local num = tonumber(itemId)
+    if not num or num <= 0 then
+        return nil
+    end
+    return tostring(math.floor(num))
+end
+
+function controllerNpcTrader:loadQuickSellBlacklist()
+    local saved = g_settings.getNode(controllerNpcTrader.QUICK_SELL_BLACKLIST_SETTING) or {}
+    local normalized = {}
+    for k, v in pairs(saved) do
+        if v then
+            local key = self:normalizeBlacklistId(k)
+            if key then
+                normalized[key] = true
+            end
+        end
+    end
+    self.quickSellBlacklist = normalized
+end
+
+function controllerNpcTrader:saveQuickSellBlacklist()
+    g_settings.setNode(controllerNpcTrader.QUICK_SELL_BLACKLIST_SETTING, self.quickSellBlacklist or {})
+    g_settings.save()
+end
+
+function controllerNpcTrader:isQuickSellBlacklisted(itemId)
+    if not self.quickSellBlacklist then
+        self:loadQuickSellBlacklist()
+    end
+    local key = self:normalizeBlacklistId(itemId)
+    return key ~= nil and self.quickSellBlacklist[key] == true
+end
+
+function controllerNpcTrader:addToQuickSellBlacklist(itemId)
+    local key = self:normalizeBlacklistId(itemId)
+    if not key then
+        return false
+    end
+    if not self.quickSellBlacklist then
+        self:loadQuickSellBlacklist()
+    end
+    if self.quickSellBlacklist[key] then
+        return false
+    end
+    self.quickSellBlacklist[key] = true
+    self:saveQuickSellBlacklist()
+    self:onQuickSellBlacklistChanged()
+    return true
+end
+
+function controllerNpcTrader:removeFromQuickSellBlacklist(itemId)
+    local key = self:normalizeBlacklistId(itemId)
+    if not key or not self.quickSellBlacklist or not self.quickSellBlacklist[key] then
+        return false
+    end
+    self.quickSellBlacklist[key] = nil
+    self:saveQuickSellBlacklist()
+    self:onQuickSellBlacklistChanged()
+    return true
+end
+
+function controllerNpcTrader:toggleQuickSellBlacklist(itemId)
+    if self:isQuickSellBlacklisted(itemId) then
+        self:removeFromQuickSellBlacklist(itemId)
+        return false
+    end
+    self:addToQuickSellBlacklist(itemId)
+    return true
+end
+
+function controllerNpcTrader:clearQuickSellBlacklist()
+    self.quickSellBlacklist = {}
+    self:saveQuickSellBlacklist()
+    self:onQuickSellBlacklistChanged()
+end
+
+function controllerNpcTrader:getQuickSellBlacklistCount()
+    local count = 0
+    for _, v in pairs(self.quickSellBlacklist or {}) do
+        if v then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+function controllerNpcTrader:onQuickSellBlacklistChanged()
+    if self:isLegacyMode() then
+        if refreshTradeItems then
+            refreshTradeItems()
+        end
+        if refreshPlayerGoods then
+            refreshPlayerGoods()
+        end
+    elseif self.isTradeOpen then
+        self:onTradeListRendered()
+        self:updateSellAllButton()
+    end
 end
 
 function controllerNpcTrader:onGameStart()
@@ -109,6 +211,7 @@ function controllerNpcTrader:onCloseNpcTrade()
             controllerNpcTrader:unloadHtml()
         end
         controllerNpcTrader.isTradeOpen = false
+        controllerNpcTrader.isSellingAll = false
         if controllerNpcTrader.sellAllWithDelayEvent then
             removeEvent(controllerNpcTrader.sellAllWithDelayEvent)
             controllerNpcTrader.sellAllWithDelayEvent = nil
@@ -210,4 +313,63 @@ function closeNpcTrade(...) -- Vbot Call
     end
 
     return g_game.closeNpcTrade()
+end
+
+function addToBlacklist(itemId)
+    return controllerNpcTrader:addToQuickSellBlacklist(itemId)
+end
+
+function addToWhitelist(itemId) -- game_cyclopedia Quick Sell Skip alias
+    return controllerNpcTrader:addToQuickSellBlacklist(itemId)
+end
+
+function addToList(itemId)
+    return controllerNpcTrader:addToQuickSellBlacklist(itemId)
+end
+
+function removeFromBlacklist(itemId)
+    return controllerNpcTrader:removeFromQuickSellBlacklist(itemId)
+end
+
+function removeItemInList(itemId) -- game_cyclopedia Quick Sell Skip alias
+    return controllerNpcTrader:removeFromQuickSellBlacklist(itemId)
+end
+
+function removeFromList(itemId)
+    return controllerNpcTrader:removeFromQuickSellBlacklist(itemId)
+end
+
+function removeItem(itemId)
+    return controllerNpcTrader:removeFromQuickSellBlacklist(itemId)
+end
+
+function isInBlacklist(itemId)
+    return controllerNpcTrader:isQuickSellBlacklisted(itemId)
+end
+
+function inWhiteList(itemId) -- game_cyclopedia Quick Sell Skip alias
+    return controllerNpcTrader:isQuickSellBlacklisted(itemId)
+end
+
+function isInList(itemId)
+    return controllerNpcTrader:isQuickSellBlacklisted(itemId)
+end
+
+function contains(itemId)
+    return controllerNpcTrader:isQuickSellBlacklisted(itemId)
+end
+
+function toggleBlacklist(itemId)
+    return controllerNpcTrader:toggleQuickSellBlacklist(itemId)
+end
+
+function clearBlacklist()
+    return controllerNpcTrader:clearQuickSellBlacklist()
+end
+
+function getBlacklist()
+    if not controllerNpcTrader.quickSellBlacklist then
+        controllerNpcTrader:loadQuickSellBlacklist()
+    end
+    return controllerNpcTrader.quickSellBlacklist or {}
 end

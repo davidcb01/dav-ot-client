@@ -501,7 +501,7 @@ function checkSellAllTooltip()
 
     for key, amount in pairs(playerItems) do
         local data = getTradeItemData(key, SELL)
-        if data then
+        if data and not controllerNpcTrader:isQuickSellBlacklisted(key) then
             amount = getSellQuantityLegacy(data.ptr)
             if amount > 0 then
                 if data and amount > 0 then
@@ -553,10 +553,12 @@ end
 
 function sellAllLegacy()
     for itemid, item in pairs(playerItems) do
-        local item = Item.create(itemid)
-        local amount = getSellQuantityLegacy(item)
-        if amount > 0 then
-            g_game.sellItem(item, amount, ignoreEquipped:isChecked())
+        if not controllerNpcTrader:isQuickSellBlacklisted(itemid) then
+            local item = Item.create(itemid)
+            local amount = getSellQuantityLegacy(item)
+            if amount > 0 then
+                g_game.sellItem(item, amount, ignoreEquipped:isChecked())
+            end
         end
     end
 end
