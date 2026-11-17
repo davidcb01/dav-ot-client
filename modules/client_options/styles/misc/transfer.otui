@@ -1,0 +1,226 @@
+TransferFileRow < Label
+  height: 18
+  font: verdana-11px-monochrome
+  color: #dfdfdf
+  background-color: alpha
+  text-offset: 4 1
+  focusable: true
+
+  $hover !focus:
+    background-color: #3a3a3a
+
+  $focus:
+    background-color: #2f5b8f
+    color: #ffffff
+
+TransferExportModal < MainWindow
+  id: transferExportModal
+  text: Export Settings
+  size: 420 215
+  anchors.centerIn: parent
+
+  Label
+    id: infoLabel
+    text: Export settings bundle to the exports/ folder.
+    font: verdana-11px-monochrome
+    color: #dfdfdf
+    text-wrap: true
+    height: 34
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  Label
+    id: fileLbl
+    text: File name (.json):
+    font: verdana-11px-monochrome
+    color: #c0c0c0
+    margin-top: 6
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  TextEdit
+    id: fileNameEdit
+    height: 20
+    margin-top: 4
+    padding: 2 5
+    font: verdana-11px-monochrome
+    color: #ffffff
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  QtCheckBox
+    id: extraCheck
+    text: Include minimap (minimap.otmm)
+    color: #c0c0c0
+    margin-top: 8
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  Label
+    id: statusLabel
+    text: ""
+    font: verdana-11px-monochrome
+    color: #ff9966
+    margin-top: 6
+    height: 16
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  HorizontalSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: buttonsRow.top
+    margin-bottom: 8
+
+  Panel
+    id: buttonsRow
+    height: 24
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+
+    QtButton
+      id: cancelBtn
+      text: Cancel
+      width: 90
+      height: 22
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+
+    QtButton
+      id: confirmBtn
+      text: Export
+      width: 100
+      height: 22
+      margin-right: 6
+      anchors.right: cancelBtn.left
+      anchors.bottom: parent.bottom
+
+TransferImportModal < MainWindow
+  id: transferImportModal
+  text: Import Settings
+  size: 460 350
+  anchors.centerIn: parent
+
+  Label
+    id: infoLabel
+    text: Select a backup from the list or paste the full path to a .json file:
+    font: verdana-11px-monochrome
+    color: #dfdfdf
+    text-wrap: true
+    height: 28
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  VerticalScrollBar
+    id: filesScroll
+    height: 118
+    margin-top: 6
+    anchors.top: infoLabel.bottom
+    anchors.right: parent.right
+    step: 18
+    pixels-scroll: true
+
+  TextList
+    id: filesList
+    height: 118
+    margin-top: 6
+    margin-right: 2
+    anchors.top: infoLabel.bottom
+    anchors.left: parent.left
+    anchors.right: filesScroll.left
+    vertical-scrollbar: filesScroll
+
+  Label
+    id: pathLbl
+    text: File path (.json) or filename in exports/:
+    font: verdana-11px-monochrome
+    color: #c0c0c0
+    margin-top: 8
+    anchors.top: filesList.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  TextEdit
+    id: pathEdit
+    height: 20
+    margin-top: 4
+    padding: 2 5
+    font: verdana-11px-monochrome
+    color: #ffffff
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  QtCheckBox
+    id: extraCheck
+    text: Apply to current character if profile name differs
+    color: #c0c0c0
+    margin-top: 8
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  Label
+    id: statusLabel
+    text: ""
+    font: verdana-11px-monochrome
+    color: #ff9966
+    margin-top: 6
+    height: 16
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  HorizontalSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: buttonsRow.top
+    margin-bottom: 8
+
+  Panel
+    id: buttonsRow
+    height: 24
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+
+    QtButton
+      id: openDirBtn
+      text: Open Folder
+      width: 92
+      height: 22
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+
+    QtButton
+      id: refreshBtn
+      text: Refresh
+      width: 82
+      height: 22
+      margin-left: 6
+      anchors.left: openDirBtn.right
+      anchors.bottom: parent.bottom
+
+    QtButton
+      id: cancelBtn
+      text: Cancel
+      width: 84
+      height: 22
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+
+    QtButton
+      id: confirmBtn
+      text: Import
+      width: 92
+      height: 22
+      margin-right: 6
+      anchors.right: cancelBtn.left
+      anchors.bottom: parent.bottom

@@ -144,6 +144,9 @@ local function restoreFromJson(val)
   return val
 end
 
+CharConfig.sanitize = sanitizeForJson
+CharConfig.restore = restoreFromJson
+
 local function readJsonFile(path)
   if not g_resources.fileExists(path) then
     return nil
@@ -336,6 +339,30 @@ function CharConfig.flushAll()
   end
   for _, ns in ipairs(namespaces) do
     CharConfig.flushNamespace(ns)
+  end
+end
+
+function CharConfig.clearCache(ns)
+  if ns then
+    cache[ns] = nil
+    dirty[ns] = nil
+    local toCancel = {}
+    for timerId in pairs(pendingSaveEvents) do
+      if timerId:sub(1, #ns + 1) == (ns .. '\0') then
+        table.insert(toCancel, timerId)
+      end
+    end
+    for _, timerId in ipairs(toCancel) do
+      removeEvent(pendingSaveEvents[timerId])
+      pendingSaveEvents[timerId] = nil
+    end
+  else
+    cache = {}
+    dirty = {}
+    for timerId, ev in pairs(pendingSaveEvents) do
+      removeEvent(ev)
+      pendingSaveEvents[timerId] = nil
+    end
   end
 end
 

@@ -4018,6 +4018,101 @@ function onSettingsDeleteSelectedProfile()
   setSettingsStatus(htf('Deleted profile "%s".', deletedName), '#ffdd66')
 end
 
+function exportAllConfigs()
+  if g_game and g_game.isOnline() and charConfig then
+    saveCurrentProfile()
+  end
+  local all = getAllHelperProfiles()
+  local outProfiles = {}
+  local count = 0
+  for key, cfg in pairs(all) do
+    if type(key) == 'string' and type(cfg) == 'table' then
+      local copy = deepCopy(cfg)
+      if CharConfig and CharConfig.sanitize then
+        copy = CharConfig.sanitize(copy)
+      end
+      outProfiles[key] = copy
+      count = count + 1
+    end
+  end
+  return {
+    format = 'davot_helper_bundle',
+    version = 1,
+    exportedAt = os.date('%Y-%m-%d %H:%M:%S'),
+    activeProfileKey = (g_game and g_game.isOnline() and getProfileStorageKey() or nil),
+    activeVoc = currentVocName,
+    count = count,
+    profiles = outProfiles
+  }
+end
+
+function importAllConfigs(bundle, applyToCurrentIfMissing)
+  if type(bundle) ~= 'table' or bundle.format ~= 'davot_helper_bundle' or type(bundle.profiles) ~= 'table' then
+    return false, 'This file is not a valid DAVCaster Helper backup.'
+  end
+
+  local importedCount = 0
+  local firstKey, firstNonDefaultKey = nil, nil
+  for key, cfg in pairs(bundle.profiles) do
+    if type(key) == 'string' and #key > 0 and type(cfg) == 'table' then
+      local copy = deepCopy(cfg)
+      if CharConfig and CharConfig.restore then
+        copy = CharConfig.restore(copy)
+      end
+      local norm = normalizeCharConfig(copy)
+      saveHelperStoredProfile(key, norm)
+      importedCount = importedCount + 1
+      if not firstKey then firstKey = key end
+      if key ~= 'Default' and not firstNonDefaultKey then firstNonDefaultKey = key end
+    end
+  end
+
+  if importedCount == 0 then
+    return false, 'No profiles found in this Helper backup file.'
+  end
+
+  if CharConfig then
+    CharConfig.flushNamespace(DAVHELPER_NS)
+  end
+
+  local appliedActive = false
+  if g_game and g_game.isOnline() and charConfig then
+    local activeKey = getProfileStorageKey()
+    local matched = bundle.profiles[activeKey]
+    if type(matched) ~= 'table' and applyToCurrentIfMissing then
+      if type(bundle.activeProfileKey) == 'string' and type(bundle.profiles[bundle.activeProfileKey]) == 'table' then
+        matched = bundle.profiles[bundle.activeProfileKey]
+      elseif firstNonDefaultKey then
+        matched = bundle.profiles[firstNonDefaultKey]
+      elseif firstKey then
+        matched = bundle.profiles[firstKey]
+      end
+    end
+    if type(matched) == 'table' then
+      local prevPos = charConfig.windowPos and deepCopy(charConfig.windowPos) or nil
+      local mCopy = deepCopy(matched)
+      if CharConfig and CharConfig.restore then
+        mCopy = CharConfig.restore(mCopy)
+      end
+      charConfig = normalizeCharConfig(mCopy)
+      if prevPos then
+        charConfig.windowPos = prevPos
+      end
+      getVocProfile(currentVocName)
+      saveCurrentProfile()
+      loadProfileIntoUI()
+      rebuildShortcutBindings()
+      appliedActive = true
+    end
+  end
+
+  if panels and panels.settings then
+    refreshSettingsTabUI()
+  end
+
+  return true, importedCount, appliedActive
+end
+
 function loadProfileIntoUI()
   isLoadingUI = true
   refreshingShooterUI = true

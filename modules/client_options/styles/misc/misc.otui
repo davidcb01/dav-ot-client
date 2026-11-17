@@ -1,30 +1,100 @@
 UIWidget
   anchors.fill: parent
   visible: false
+
   SmallReversedQtPanel
+    id: backupTransferPanel
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: parent.top
-    height: 22
+    height: 132
 
-    OptionCheckBox
-      id: autoChaseOverride
-      !text: tr('Allow auto chase override')
-
-  SmallReversedQtPanel
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: prev.bottom
-    height: 55
-    margin-top: 10
     Label
-      text: Client user features profile
+      id: transferTitle
+      text: Backup & Transfer (Export / Import)
+      font: verdana-11px-monochrome
+      color: #e6c67c
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.top: parent.top
-    ComboBox
-      id: profile
-      margin-top: 3
+
+    Panel
+      id: clientTransferRow
+      height: 24
+      margin-top: 6
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.top: prev.bottom
+
+      QtButton
+        id: exportClientBtn
+        text: Export Client
+        width: 145
+        height: 22
+        anchors.left: parent.left
+        anchors.top: parent.top
+        @onClick: modules.client_options.openExportClientModal()
+
+      QtButton
+        id: importClientBtn
+        text: Import Client
+        width: 145
+        height: 22
+        margin-left: 8
+        anchors.left: prev.right
+        anchors.top: parent.top
+        @onClick: modules.client_options.openImportClientModal()
+
+    Panel
+      id: helperTransferRow
+      height: 24
+      margin-top: 5
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+
+      QtButton
+        id: exportHelperBtn
+        text: Export Helper
+        width: 145
+        height: 22
+        anchors.left: parent.left
+        anchors.top: parent.top
+        @onClick: modules.client_options.openExportHelperModal()
+
+      QtButton
+        id: importHelperBtn
+        text: Import Helper
+        width: 145
+        height: 22
+        margin-left: 8
+        anchors.left: prev.right
+        anchors.top: parent.top
+        @onClick: modules.client_options.openImportHelperModal()
+
+    Panel
+      id: folderTransferRow
+      height: 24
+      margin-top: 6
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+
+      QtButton
+        id: openExportsDirBtn
+        text: Open Exports Folder
+        width: 145
+        height: 22
+        anchors.left: parent.left
+        anchors.top: parent.top
+        @onClick: modules.client_options.openExportsDirectory()
+
+      Label
+        id: exportsHintLabel
+        text: Saves .json files to exports/ (without passwords)
+        font: verdana-11px-monochrome
+        color: #9e9e9e
+        text-auto-resize: true
+        margin-left: 8
+        anchors.left: prev.right
+        anchors.verticalCenter: openExportsDirBtn.verticalCenter

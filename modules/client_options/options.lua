@@ -271,13 +271,14 @@ local function setupComboBox()
     end
 
     local profileCombobox = panels.misc:recursiveGetChildById('profile')
+    if profileCombobox then
+        for i = 1, 10 do
+            profileCombobox:addOption(tostring(i), i)
+        end
 
-    for i = 1, 10 do
-        profileCombobox:addOption(tostring(i), i)
-    end
-
-    profileCombobox.onOptionChange = function(comboBox, option)
-        setOption('profile', comboBox:getCurrentOption().data)
+        profileCombobox.onOptionChange = function(comboBox, option)
+            setOption('profile', comboBox:getCurrentOption().data)
+        end
     end
 
     local soundDeviceCombobox = panels.soundPanel:recursiveGetChildById('soundDevice')
@@ -540,9 +541,26 @@ function controller:onInit()
             callback = toggleMute,
         }
     })
+
+    if initTransfer then
+        initTransfer({
+            options = options,
+            getPanels = function() return panels end,
+            setOption = setOption,
+            flushSave = flushSettingsSave,
+            onImportCharOptions = function()
+                if g_game.isOnline() then
+                    controller:onGameStart()
+                end
+            end
+        })
+    end
 end
 
 function controller:onTerminate()
+    if terminateTransfer then
+        terminateTransfer()
+    end
     -- Make sure all settings are saved before terminating
     flushSettingsSave()
     optionWidgetCache = {}

@@ -1236,17 +1236,29 @@ function onContainerOpen(container, previousContainer)
 
     local layout = containerPanel:getLayout()
     local cellSize = layout:getCellSize()
-    local step = cellSize.height + layout:getCellSpacing()
-    local numLines = math.max(layout:getNumLines(), 1)
+    local cellSpacing = layout:getCellSpacing() or 3
+    local step = cellSize.height + cellSpacing
     local contentsPadV = (containerPanel:getPaddingTop() or 6) + (containerPanel:getPaddingBottom() or 6)
-    local chromeHeight = (container:hasPages() and 54 or 22) + contentsPadV
-    containerWindow:setContentMinimumHeight(cellSize.height + contentsPadV)
-    containerWindow:setContentMaximumHeight(numLines * step + contentsPadV + (container:hasPages() and 28 or 4))
+    local function computeExactMaxHeight(nl)
+        local hasPages = container:hasPages()
+        local gridH = math.max(nl, 1) * step - cellSpacing
+        -- 15px header->contents top + 32px footer (separator + pagePanel) or 3px bottom margin + 4px safe slack
+        local frameH = 15 + (hasPages and 32 or 3) + 4
+        return gridH + contentsPadV + frameH
+    end
+    local function computeMinHeight()
+        local hasPages = container:hasPages()
+        return cellSize.height + contentsPadV + 15 + (hasPages and 32 or 3) + 4
+    end
+
+    local numLines = math.max(layout:getNumLines(), 1)
+    local initialMinH = computeMinHeight()
+    local initialMaxH = math.max(initialMinH, computeExactMaxHeight(numLines))
 
     local resizeBorder = containerWindow:getChildById('bottomResizeBorder')
     if resizeBorder then
-        resizeBorder:setMinimum(step + chromeHeight)
-        resizeBorder:setMaximum(numLines * step + chromeHeight)
+        resizeBorder:setMinimum(initialMinH)
+        resizeBorder:setMaximum(initialMaxH)
     end
 
     local pendingLayoutSync = nil
@@ -1255,13 +1267,41 @@ function onContainerOpen(container, previousContainer)
         if not containerWindow or containerWindow:isDestroyed() or not containerPanel or containerPanel:isDestroyed() then
             return
         end
+        local hasPages = container:hasPages()
+        if not containerWindow:isOn() then
+            local sep = containerWindow:getChildById('separator')
+            local pp = containerWindow:getChildById('pagePanel')
+            if sep then sep:setVisible(hasPages) end
+            if pp then
+                pp:setVisible(hasPages)
+                if hasPages then
+                    pp:setHeight(20)
+                    pp:setMarginTop(2)
+                    pp:setMarginBottom(4)
+                end
+            end
+        end
         if layout then
             layout:update()
             local nl = math.max(layout:getNumLines(), 1)
-            containerWindow:setContentMaximumHeight(nl * step + contentsPadV + (container:hasPages() and 28 or 4))
+            local minH = computeMinHeight()
+            local maxH = math.max(minH, computeExactMaxHeight(nl))
             if resizeBorder then
-                resizeBorder:setMinimum(step + chromeHeight)
-                resizeBorder:setMaximum(nl * step + chromeHeight)
+                resizeBorder:setMinimum(minH)
+                resizeBorder:setMaximum(maxH)
+            end
+            if not containerWindow:isOn() then
+                local curH = containerWindow:getHeight()
+                local clampedH = math.max(minH, math.min(curH, maxH))
+                if curH ~= clampedH then
+                    containerWindow:setHeight(clampedH)
+                    local parent = containerWindow:getParent()
+                    if parent and (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel') then
+                        if modules.game_interface and modules.game_interface.syncHorizontalPanels then
+                            modules.game_interface.syncHorizontalPanels()
+                        end
+                    end
+                end
             end
         end
         if containerPanel.updateScrollBars then
@@ -1351,11 +1391,11 @@ function onContainerOpen(container, previousContainer)
         local minRows = 1
         if modules.client_options.getOption('openMaximized') then
             local numLines = math.max(layout:getNumLines(), minRows)
-            containerWindow:setContentHeight(numLines * step + chromeHeight)
+            containerWindow:setHeight(computeExactMaxHeight(numLines))
         else
             local numColumns = math.max(layout:getNumColumns(), 1)
             local filledLines = math.max(math.ceil(container:getItemsCount() / numColumns), minRows)
-            containerWindow:setContentHeight(filledLines * step + chromeHeight)
+            containerWindow:setHeight(computeExactMaxHeight(filledLines))
         end
     end
 
@@ -1365,6 +1405,18 @@ function onContainerOpen(container, previousContainer)
     else
         containerWindow:updateResizeBorders()
     end
+    addEvent(function()
+        if not containerWindow or containerWindow:isDestroyed() then
+            return
+        end
+        local parent = containerWindow:getParent()
+        if parent and (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel') then
+            if modules.game_interface and modules.game_interface.syncHorizontalPanels then
+                modules.game_interface.syncHorizontalPanels()
+            end
+        end
+        syncContainerLayoutAndScroll()
+    end)
     
     -- Apply current sorting mode if one is active and manual sort mode is disabled
     local currentSortMode = containerSettings and containerSettings['currentSortMode']

@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261116.1856",
-  "updated_at": "2026-11-16T18:56:14",
-  "changelog": "teste",
+  "version": "15.25.261116.2154",
+  "updated_at": "2026-11-16T21:54:22",
+  "changelog": "corre\u00e7\u00e3o painel horizontal",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -34222,8 +34222,8 @@
       "size": 20142
     },
     "mods/game_helper/helper.lua": {
-      "sha256": "f16b499d38ffe6c191628292125c1be8f9f4b5e6e099b9c185e788d839a8a98f",
-      "size": 269035
+      "sha256": "0c3940a57dd64f657d1f7cf5bd3f56fb76092d02438111625ea01804b5a5290a",
+      "size": 265526
     },
     "mods/game_helper/helper.otmod": {
       "sha256": "1a024ad736fc2b2acaa7436e957c4b2c6c4ba3c84a68829e44fa24b829d00194",
@@ -34694,16 +34694,20 @@
       "size": 24365
     },
     "modules/client_options/options.lua": {
-      "sha256": "34244dc8cd3e8a5c1c42083a3b0f0781a5719f51031b22b7b94b556859680619",
-      "size": 38493
+      "sha256": "135b17b788d0738061779a30822e51d66dede200ac061101f84dc4adc881b466",
+      "size": 39017
     },
     "modules/client_options/options.otmod": {
-      "sha256": "73c67013c61eff2c354ba9b00d9712018066220f69a1faaa9395ef760ee63e37",
-      "size": 258
+      "sha256": "520a61b76dc7961cff5e0489797efa00a832b8bb4cf731dd3d23d8a10d4ec68d",
+      "size": 268
     },
     "modules/client_options/options.otui": {
       "sha256": "b85e5cf048b5eac1b898ead75f6e8cb079499000625dcd2f216e7cf2d6425519",
       "size": 5922
+    },
+    "modules/client_options/transfer.lua": {
+      "sha256": "d7a615ec32b34d069ccf76bf6bbca542abc6d023bdc71e37319631f461b003da",
+      "size": 27274
     },
     "modules/client_options/styles/controls/general.otui": {
       "sha256": "22c9c83f4d63ce4ced0cc9c626716b1cedd3f1e6d629496c8025ff5bb6ecedef",
@@ -34750,8 +34754,12 @@
       "size": 1099
     },
     "modules/client_options/styles/misc/misc.otui": {
-      "sha256": "aefed8dc62ff53ae3077b7d7e94f710eb8aca5e36f8a404c2b76438b333da3ef",
-      "size": 714
+      "sha256": "7dc7805272c920b44d48b664efd326e7c3cf06db91fe2e9d5f82b07356e7b9b1",
+      "size": 2537
+    },
+    "modules/client_options/styles/misc/transfer.otui": {
+      "sha256": "3ddd558cc2d17e67cb691346e7b7a749a7ae164152f2144079c16f879612993f",
+      "size": 4806
     },
     "modules/client_options/styles/sound/battleSounds.otui": {
       "sha256": "41109c4eea7b782af7513b54be8174777855604e84d3ed19f94d72a08230b6d9",
@@ -34834,8 +34842,8 @@
       "size": 1015
     },
     "modules/corelib/charconfig.lua": {
-      "sha256": "4dc92c765b2ff4f69231af21b3919f10fd2bf028458ccc677b6ce14f44d9e36a",
-      "size": 9361
+      "sha256": "78e5ceb2c8836a62f950223aa180973e5df27dd4256dd50037daed5c063845e5",
+      "size": 10011
     },
     "modules/corelib/config.lua": {
       "sha256": "2c31b33f02e02cc5f99f61fc4d0a68d788feaf5117bf72f7ac79261c74a4053c",
@@ -34866,8 +34874,8 @@
       "size": 10398
     },
     "modules/corelib/keybind.lua": {
-      "sha256": "fff448d1eb7d8861242c7377e7663ec0192d4a56a4fd2e462da99d275308ff6e",
-      "size": 33170
+      "sha256": "b7810255ffbedd1d14e6dd89588c305e8ced0a29fb6a7043ef1fa225bc23faf0",
+      "size": 36223
     },
     "modules/corelib/keyboard.lua": {
       "sha256": "1ae2467d66b96373d28276dc4ebfa687f6585584736aff7bb5ee18e97423d4fc",
@@ -34966,8 +34974,8 @@
       "size": 7413
     },
     "modules/corelib/ui/uiminiwindow.lua": {
-      "sha256": "2c650af8e243d567f2d5fa3d9acc1e94f712d90d196614e2e37db3ef528989aa",
-      "size": 25856
+      "sha256": "058e2e8f67e427d3712d7286184b4413b4bc8d63b3046b73188e51df78c0b07e",
+      "size": 26788
     },
     "modules/corelib/ui/uiminiwindowcontainer.lua": {
       "sha256": "77ae71cad0649891ad56e2338afbc9b3ea66b4c53317cbcdac65e7434b67fd92",
@@ -35510,8 +35518,8 @@
       "size": 4755
     },
     "modules/game_containers/containers.lua": {
-      "sha256": "6f5f00e606f9d331d8d4c2e0cda2f33ba061ddf1bd27dc6fca76bf18f2b90293",
-      "size": 59128
+      "sha256": "0738355c885fb91f0cbeb56749ab1a1d4b8c31f02cafc87b1e04d002956bb9c7",
+      "size": 61284
     },
     "modules/game_containers/containers.otmod": {
       "sha256": "2e1dd70248167aa76411e091d30d984a8b9e7a2fdca4d73c2d2f14f2e9bfb0e0",

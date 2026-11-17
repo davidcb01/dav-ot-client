@@ -252,9 +252,18 @@ function UIMiniWindow:setupOnStart(opts)
             end
 
             if parent and parent:getClassName() == 'UIMiniWindowContainer' then
+                local isHorizontal = (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel')
+                local willBeOpen = (not selfSettings.closed) or (opts and opts.ignoreClosed)
+                if isHorizontal and willBeOpen and not parent:isOn() then
+                    parent:setOn(true)
+                    parent:setVisible(true)
+                end
                 if parent:isVisible() and selfSettings.index and parent:isOn() then
                     self.miniIndex = selfSettings.index
                     parent:scheduleInsert(self, selfSettings.index)
+                    newParentSet = true
+                elseif isHorizontal and willBeOpen then
+                    parent:addChild(self)
                     newParentSet = true
                 end
             elseif parent and not self.moveOnlyToMain then
@@ -349,11 +358,19 @@ function UIMiniWindow:setupOnStart(opts)
     end
 
     if newParent and newParent:getClassName() == 'UIMiniWindowContainer' then
+        local isHorizontal = (newParent:getId() == 'gameHorizontalRightPanel' or newParent:getId() == 'gameHorizontalLeftPanel')
         local targetW = newParent:getWidth() - newParent:getPaddingLeft() - newParent:getPaddingRight()
-        if targetW > 0 and newParent:getId() ~= 'gameHorizontalRightPanel' and newParent:getId() ~= 'gameHorizontalLeftPanel' then
+        if targetW > 0 and not isHorizontal then
             self:setWidth(targetW)
         end
         self:fitOnParent()
+        if isHorizontal and modules.game_interface and modules.game_interface.syncHorizontalPanels then
+            addEvent(function()
+                if modules.game_interface and modules.game_interface.syncHorizontalPanels then
+                    modules.game_interface.syncHorizontalPanels()
+                end
+            end)
+        end
     elseif newParent then
         addEvent(function()
             if self and not self:isDestroyed() then

@@ -119,6 +119,93 @@ function Keybind.terminate()
   g_settings.save()
 end
 
+function Keybind.unloadAllConfigs()
+  if Keybind.currentPreset and Keybind.configs.keybinds[Keybind.currentPreset] then
+    for _, keybind in pairs(Keybind.defaultKeybinds) do
+      if keybind.callbacks then
+        Keybind.unbind(keybind.category, keybind.action)
+      end
+    end
+  end
+
+  if Keybind.currentPreset and Keybind.hotkeys[Keybind.chatMode] and Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset] then
+    for _, hotkey in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset]) do
+      Keybind.unbindHotkey(hotkey.hotkeyId, Keybind.chatMode)
+    end
+  end
+
+  for preset in pairs(Keybind.configs.keybinds) do
+    pcall(function() g_configs.unload("/controls/keybinds/" .. preset .. ".otml") end)
+  end
+  for preset in pairs(Keybind.configs.hotkeys) do
+    pcall(function() g_configs.unload("/controls/hotkeys/" .. preset .. ".otml") end)
+  end
+  Keybind.configs.keybinds = {}
+  Keybind.configs.hotkeys = {}
+  Keybind.dirtyKeybinds = {}
+end
+
+function Keybind.reloadFromDisk()
+  Keybind.unloadAllConfigs()
+
+  Keybind.presets = g_settings.getList("controls-presets")
+  if #Keybind.presets == 0 then
+    Keybind.presets = { "Druid", "Knight", "Paladin", "Sorcerer", "Monk" }
+    Keybind.currentPreset = "Druid"
+  else
+    Keybind.currentPreset = g_settings.getValue("controls-preset-current")
+  end
+
+  Keybind.presetToIndex = {}
+  for index, preset in ipairs(Keybind.presets) do
+    Keybind.presetToIndex[preset] = index
+  end
+  if not Keybind.currentPreset or not Keybind.presetToIndex[Keybind.currentPreset] then
+    Keybind.currentPreset = Keybind.presets[1]
+  end
+
+  for _, preset in ipairs(Keybind.presets) do
+    Keybind.configs.keybinds[preset] = g_configs.create("/controls/keybinds/" .. preset .. ".otml")
+    Keybind.configs.hotkeys[preset] = g_configs.create("/controls/hotkeys/" .. preset .. ".otml")
+  end
+
+  Keybind.hotkeys = {
+    [CHAT_MODE.ON] = {},
+    [CHAT_MODE.OFF] = {}
+  }
+
+  for preset, config in pairs(Keybind.configs.hotkeys) do
+    for chatMode = CHAT_MODE.ON, CHAT_MODE.OFF do
+      Keybind.hotkeys[chatMode][preset] = {}
+      local hotkeyId = 1
+      local hotkeys = config:getNode(chatMode)
+      if hotkeys then
+        local hotkey = hotkeys[tostring(hotkeyId)]
+        while hotkey do
+          if hotkey.data and hotkey.data.parameter then
+            hotkey.data.parameter = "\"" .. hotkey.data.parameter .. "\""
+          end
+          table.insert(Keybind.hotkeys[chatMode][preset], hotkey)
+          hotkeyId = hotkeyId + 1
+          hotkey = hotkeys[tostring(hotkeyId)]
+        end
+      end
+    end
+  end
+
+  for _, keybind in pairs(Keybind.defaultKeybinds) do
+    if keybind.callbacks then
+      Keybind.bind(keybind.category, keybind.action, keybind.callbacks, keybind.widget)
+    end
+  end
+
+  if Keybind.currentPreset and Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset] then
+    for _, hotkey in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset]) do
+      Keybind.bindHotkey(hotkey.hotkeyId, Keybind.chatMode)
+    end
+  end
+end
+
 function Keybind.online()
   for _, hotkey in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset]) do
     Keybind.bindHotkey(hotkey.hotkeyId, Keybind.chatMode)
@@ -661,7 +748,8 @@ function Keybind.getKeybindKeys(category, action, chatMode, preset, forceDefault
 
   local index = category .. '_' .. action
   local keybind = Keybind.defaultKeybinds[index]
-  local keys = Keybind.configs.keybinds[preset or Keybind.currentPreset]:getNode(index)
+  local cfg = Keybind.configs.keybinds[preset or Keybind.currentPreset]
+  local keys = cfg and cfg:getNode(index) or nil
 
   if not keys or forceDefault then
     keys = {
