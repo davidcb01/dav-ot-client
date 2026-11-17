@@ -170,12 +170,16 @@ function syncHorizontalPanels()
                 ((gameRightExtraPanel2 and gameRightExtraPanel2:isOn()) and 1 or 0) +
                 ((gameRightExtraPanel3 and gameRightExtraPanel3:isOn()) and 1 or 0)
             local w = cols * SIDE_PANEL_WIDTH + (cols - 1) * 1
-            local h = computeHorizontalPanelHeight(gameHorizontalRightPanel)
             gameHorizontalRightPanel:setWidth(w)
-            gameHorizontalRightPanel:setHeight(h)
             for _, child in ipairs(gameHorizontalRightPanel:getChildren()) do
                 child:setWidth(math.max(172, w - 4))
+                local cp = child:getChildById('contentsPanel')
+                if cp and cp:getLayout() then
+                    cp:getLayout():update()
+                end
             end
+            local h = computeHorizontalPanelHeight(gameHorizontalRightPanel)
+            gameHorizontalRightPanel:setHeight(h)
             local layout = gameHorizontalRightPanel:getLayout()
             if layout then layout:update() end
             if gameMainRightPanel then gameMainRightPanel:setMarginTop(h) end
@@ -208,12 +212,16 @@ function syncHorizontalPanels()
                 if gameLeftExtraPanel3 then gameLeftExtraPanel3:setMarginTop(0); gameLeftExtraPanel3:setMarginBottom(0) end
             else
                 local w = cols * SIDE_PANEL_WIDTH + (cols - 1) * 1
-                local h = computeHorizontalPanelHeight(gameHorizontalLeftPanel)
                 gameHorizontalLeftPanel:setWidth(w)
-                gameHorizontalLeftPanel:setHeight(h)
                 for _, child in ipairs(gameHorizontalLeftPanel:getChildren()) do
                     child:setWidth(math.max(172, w - 4))
+                    local cp = child:getChildById('contentsPanel')
+                    if cp and cp:getLayout() then
+                        cp:getLayout():update()
+                    end
                 end
+                local h = computeHorizontalPanelHeight(gameHorizontalLeftPanel)
+                gameHorizontalLeftPanel:setHeight(h)
                 local layout = gameHorizontalLeftPanel:getLayout()
                 if layout then layout:update() end
                 if gameLeftPanel then gameLeftPanel:setMarginTop(h); gameLeftPanel:setMarginBottom(0) end

@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261117.1515",
-  "updated_at": "2026-11-17T15:15:16",
-  "changelog": "teste",
+  "version": "15.25.261117.1527",
+  "updated_at": "2026-11-17T15:27:05",
+  "changelog": "tentativa de corrigir painel horizontal n 9999999",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -36946,8 +36946,8 @@
       "size": 10415
     },
     "modules/game_interface/gameinterface.lua": {
-      "sha256": "cec1c2f51454173195262d0dbc4c0759e0c19bc1f8bedf4c75d7c24686e349ae",
-      "size": 88768
+      "sha256": "7c95ee12c0c8e0d1bf34ba8068774aea2baa443b083ba9655babc3a190c6c069",
+      "size": 89130
     },
     "modules/game_interface/gameinterface.otui": {
       "sha256": "86236736ffd17c728e0b80a04f23f090a6a55adb742578fdf60e38c897f3e14a",
