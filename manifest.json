@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261117.1416",
-  "updated_at": "2026-11-17T14:16:27",
-  "changelog": "teste",
+  "version": "15.25.261117.1428",
+  "updated_at": "2026-11-17T14:28:43",
+  "changelog": "a",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -35518,8 +35518,8 @@
       "size": 4809
     },
     "modules/game_containers/containers.lua": {
-      "sha256": "73fdff16b9afe6ad32d7393d915560137651479be03664aff9655cd70d1d5f2a",
-      "size": 62039
+      "sha256": "b2a33bbe5bb6c9a47c09c7cea0df421528fe70f9b224b8c61f3dbcf20623684f",
+      "size": 62121
     },
     "modules/game_containers/containers.otmod": {
       "sha256": "2e1dd70248167aa76411e091d30d984a8b9e7a2fdca4d73c2d2f14f2e9bfb0e0",

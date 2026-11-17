@@ -950,6 +950,7 @@ function toggleContainerPages(containerWindow, pages)
         
         -- Content panel anchors to separator when pages are visible
         contentsPanel:breakAnchors()
+        contentsPanel:setMaxHeight(9999)
         contentsPanel:addAnchor(AnchorTop, 'miniwindowTopBar', AnchorBottom)
         contentsPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
         contentsPanel:addAnchor(AnchorRight, 'miniwindowScrollBar', AnchorLeft)
@@ -1007,6 +1008,7 @@ function toggleContainerPages(containerWindow, pages)
         
         -- Content panel extends to bottom when pages are hidden
         contentsPanel:breakAnchors()
+        contentsPanel:setMaxHeight(9999)
         contentsPanel:addAnchor(AnchorTop, 'miniwindowTopBar', AnchorBottom)
         contentsPanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
         contentsPanel:addAnchor(AnchorRight, 'miniwindowScrollBar', AnchorLeft)
