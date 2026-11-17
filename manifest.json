@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261116.2154",
-  "updated_at": "2026-11-16T21:54:22",
-  "changelog": "corre\u00e7\u00e3o painel horizontal",
+  "version": "15.25.261117.0811",
+  "updated_at": "2026-11-17T08:11:48",
+  "changelog": "teste",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
