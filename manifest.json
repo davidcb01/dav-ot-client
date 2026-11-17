@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261117.1320",
-  "updated_at": "2026-11-17T13:20:04",
-  "changelog": "Fix containers horizontal panel cutoff and Windows file dialogs",
+  "version": "15.25.261117.1358",
+  "updated_at": "2026-11-17T13:58:36",
+  "changelog": "teste",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -35514,12 +35514,12 @@
       "size": 1179
     },
     "modules/game_containers/container.otui": {
-      "sha256": "93b6e583c1dbda7d4970441310534b8eed094edc94aa723dd06367e7f92065e2",
-      "size": 4755
+      "sha256": "df9fb01f825399a00b61412bcf7f17f14c9b249bd0b137391050f517752c8695",
+      "size": 4809
     },
     "modules/game_containers/containers.lua": {
-      "sha256": "5b071cc929af6cc7298d0148d7fdf68c2ed9dccaa3a12d68079a0e1423574779",
-      "size": 61507
+      "sha256": "73fdff16b9afe6ad32d7393d915560137651479be03664aff9655cd70d1d5f2a",
+      "size": 62039
     },
     "modules/game_containers/containers.otmod": {
       "sha256": "2e1dd70248167aa76411e091d30d984a8b9e7a2fdca4d73c2d2f14f2e9bfb0e0",
