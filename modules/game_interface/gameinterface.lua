@@ -152,7 +152,7 @@ local function computeHorizontalPanelHeight(panel)
     end
     local parent = panel:getParent()
     local maxH = (parent and parent:getHeight() > 160) and (parent:getHeight() - 80) or 600
-    return math.min(sum + 4, math.max(138, maxH))
+    return math.max(138, sum + 4)
 end
 
 local syncingHorizontalPanels = false
@@ -494,10 +494,16 @@ function onGameStart()
     show()
     updateSidePanelButtons()
     applyMobileMargins()
+    
+    local player = g_game.getLocalPlayer()
+    if player then
+        g_window.setTitle(player:getName() .. " - Dav OT")
+    end
 end
 
 function onGameEnd()
     hide()
+    g_window.setTitle("Dav OT")
 end
 
 function show()

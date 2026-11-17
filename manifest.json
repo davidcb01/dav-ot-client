@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261117.1428",
-  "updated_at": "2026-11-17T14:28:43",
-  "changelog": "a",
+  "version": "15.25.261117.1515",
+  "updated_at": "2026-11-17T15:15:16",
+  "changelog": "teste",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -34974,8 +34974,8 @@
       "size": 7413
     },
     "modules/corelib/ui/uiminiwindow.lua": {
-      "sha256": "058e2e8f67e427d3712d7286184b4413b4bc8d63b3046b73188e51df78c0b07e",
-      "size": 26788
+      "sha256": "799bbe28596d15ca80c64675e9a0353af342fb798ab78113eb26f63f4dbe478c",
+      "size": 26960
     },
     "modules/corelib/ui/uiminiwindowcontainer.lua": {
       "sha256": "c2958ab81a5218ecda66d2115628e3554abdf9ab7331c6ca4b9b22ca3fba5ab0",
@@ -36946,8 +36946,8 @@
       "size": 10415
     },
     "modules/game_interface/gameinterface.lua": {
-      "sha256": "fd8a6dfa86433d0a69d13765c4d2c75325e26486fe65464f91bfd3bbbb384d18",
-      "size": 88618
+      "sha256": "cec1c2f51454173195262d0dbc4c0759e0c19bc1f8bedf4c75d7c24686e349ae",
+      "size": 88768
     },
     "modules/game_interface/gameinterface.otui": {
       "sha256": "86236736ffd17c728e0b80a04f23f090a6a55adb742578fdf60e38c897f3e14a",

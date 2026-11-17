@@ -740,7 +740,10 @@ end
 function UIMiniWindow:fitOnParent()
     local parent = self:getParent()
     if self:isVisible() and parent and parent:getClassName() == 'UIMiniWindowContainer' then
-        parent:fitAll(self)
+        local isHorizontal = (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel')
+        if not isHorizontal then
+            parent:fitAll(self)
+        end
     end
 end
 
