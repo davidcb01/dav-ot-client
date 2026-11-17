@@ -54,7 +54,8 @@ ContainerWindow < MiniWindow
     id: contentsPanel
     anchors.top: miniwindowTopBar.bottom
     anchors.left: parent.left
-    anchors.bottom: next.top
+    anchors.right: miniwindowScrollBar.left
+    anchors.bottom: separator.top
     margin-left: 3
     margin-bottom: 1
     margin-top: -2
@@ -73,7 +74,7 @@ ContainerWindow < MiniWindow
     id: separator
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.bottom: next.top
+    anchors.bottom: pagePanel.top
     margin-left: 3
     margin-right: 3
     margin-bottom: 3

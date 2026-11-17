@@ -918,11 +918,26 @@ function toggleContainerPages(containerWindow, pages)
     local minimizeButton = containerWindow:recursiveGetChildById('minimizeButton')
     
     if pages then
-        separator:setHeight(2)
-        separator:setMarginBottom(3)
+        pagePanel:setVisible(true)
         pagePanel:setHeight(20)
+        pagePanel:breakAnchors()
+        pagePanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
+        pagePanel:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+        pagePanel:addAnchor(AnchorRight, 'parent', AnchorRight)
         pagePanel:setMarginTop(2)
         pagePanel:setMarginBottom(4)
+        pagePanel:setMarginLeft(3)
+        pagePanel:setMarginRight(2)
+
+        separator:setVisible(true)
+        separator:setHeight(2)
+        separator:breakAnchors()
+        separator:addAnchor(AnchorBottom, 'pagePanel', AnchorTop)
+        separator:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+        separator:addAnchor(AnchorRight, 'parent', AnchorRight)
+        separator:setMarginBottom(3)
+        separator:setMarginLeft(3)
+        separator:setMarginRight(3)
 
         -- When pages are visible, anchor scrollbar to close button bottom and separator top
         scrollbar:breakAnchors()
@@ -970,11 +985,16 @@ function toggleContainerPages(containerWindow, pages)
             end
         end
     else
-        separator:setHeight(0)
-        separator:setMarginBottom(0)
+        pagePanel:setVisible(false)
         pagePanel:setHeight(0)
+        pagePanel:breakAnchors()
         pagePanel:setMarginTop(0)
         pagePanel:setMarginBottom(0)
+
+        separator:setVisible(false)
+        separator:setHeight(0)
+        separator:breakAnchors()
+        separator:setMarginBottom(0)
 
         -- When pages are hidden, use normal bottom anchor
         scrollbar:breakAnchors()
@@ -1269,17 +1289,9 @@ function onContainerOpen(container, previousContainer)
         end
         local hasPages = container:hasPages()
         if not containerWindow:isOn() then
-            local sep = containerWindow:getChildById('separator')
-            local pp = containerWindow:getChildById('pagePanel')
-            if sep then sep:setVisible(hasPages) end
-            if pp then
-                pp:setVisible(hasPages)
-                if hasPages then
-                    pp:setHeight(20)
-                    pp:setMarginTop(2)
-                    pp:setMarginBottom(4)
-                end
-            end
+            toggleContainerPages(containerWindow, hasPages)
+            local mb = containerWindow:getChildById('miniborder')
+            if mb then mb:raise() end
         end
         if layout then
             layout:update()
