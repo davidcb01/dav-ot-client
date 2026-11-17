@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261117.0811",
-  "updated_at": "2026-11-17T08:11:48",
-  "changelog": "teste",
+  "version": "15.25.261117.1320",
+  "updated_at": "2026-11-17T13:20:04",
+  "changelog": "Fix containers horizontal panel cutoff and Windows file dialogs",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -34706,8 +34706,8 @@
       "size": 5922
     },
     "modules/client_options/transfer.lua": {
-      "sha256": "d7a615ec32b34d069ccf76bf6bbca542abc6d023bdc71e37319631f461b003da",
-      "size": 27274
+      "sha256": "1b4ce45124c48e88a86ae5743de2a1bd0557ee6283cc126b8cf701a6cc823026",
+      "size": 36139
     },
     "modules/client_options/styles/controls/general.otui": {
       "sha256": "22c9c83f4d63ce4ced0cc9c626716b1cedd3f1e6d629496c8025ff5bb6ecedef",
@@ -34754,8 +34754,8 @@
       "size": 1099
     },
     "modules/client_options/styles/misc/misc.otui": {
-      "sha256": "7dc7805272c920b44d48b664efd326e7c3cf06db91fe2e9d5f82b07356e7b9b1",
-      "size": 2537
+      "sha256": "8ffebaf19e430bae86f44cd2d84620f7b2eda129ea9b0737c260a606df2038be",
+      "size": 2549
     },
     "modules/client_options/styles/misc/transfer.otui": {
       "sha256": "3ddd558cc2d17e67cb691346e7b7a749a7ae164152f2144079c16f879612993f",
@@ -34978,8 +34978,8 @@
       "size": 26788
     },
     "modules/corelib/ui/uiminiwindowcontainer.lua": {
-      "sha256": "77ae71cad0649891ad56e2338afbc9b3ea66b4c53317cbcdac65e7434b67fd92",
-      "size": 9877
+      "sha256": "c2958ab81a5218ecda66d2115628e3554abdf9ab7331c6ca4b9b22ca3fba5ab0",
+      "size": 10299
     },
     "modules/corelib/ui/uimovabletabbar.lua": {
       "sha256": "db5cc349be51a4a8ffd7a8c5678742fe006ec9b29c7361fee69e3dd1cb1c4530",
@@ -35518,8 +35518,8 @@
       "size": 4755
     },
     "modules/game_containers/containers.lua": {
-      "sha256": "0738355c885fb91f0cbeb56749ab1a1d4b8c31f02cafc87b1e04d002956bb9c7",
-      "size": 61284
+      "sha256": "5b071cc929af6cc7298d0148d7fdf68c2ed9dccaa3a12d68079a0e1423574779",
+      "size": 61507
     },
     "modules/game_containers/containers.otmod": {
       "sha256": "2e1dd70248167aa76411e091d30d984a8b9e7a2fdca4d73c2d2f14f2e9bfb0e0",
