@@ -1,7 +1,7 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261117.1358",
-  "updated_at": "2026-11-17T13:58:36",
+  "version": "15.25.261117.1416",
+  "updated_at": "2026-11-17T14:16:27",
   "changelog": "teste",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
