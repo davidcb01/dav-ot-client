@@ -82,7 +82,7 @@ UIWidget
 
       QtButton
         id: openExportsDirBtn
-        text: Open Exports Folder
+        text: Open Configs Folder
         width: 145
         height: 22
         anchors.left: parent.left
@@ -91,7 +91,7 @@ UIWidget
 
       Label
         id: exportsHintLabel
-        text: Saves .json files to exports/ (without passwords)
+        text: Opens Windows Explorer to choose folder & file (no passwords)
         font: verdana-11px-monochrome
         color: #9e9e9e
         text-auto-resize: true

@@ -177,7 +177,7 @@ local function sanitizeSettingsTable(val, seen)
     return val
 end
 
-local function collectClientBundle(includeMinimap, fileName)
+local function collectClientBundle(includeMinimap, fileName, targetDirectory)
     if ctx.flushSave then pcall(ctx.flushSave) end
     if CharConfig and CharConfig.flushAll then pcall(CharConfig.flushAll) end
     if Keybind and Keybind.configs then
@@ -256,7 +256,8 @@ local function collectClientBundle(includeMinimap, fileName)
             f:close()
             local base = fileName:gsub('%.json$', '')
             local mapName = base .. '_minimap.otmm'
-            local dstMap = getRealExportsDir() .. '/' .. mapName
+            local outDir = (targetDirectory and #targetDirectory > 0) and targetDirectory or getRealExportsDir()
+            local dstMap = outDir .. '/' .. mapName
             local okCopy = pcall(function() return g_platform.copyFile(srcMap, dstMap) end)
             if okCopy then
                 local chk = io.open(dstMap, 'rb')
@@ -735,24 +736,217 @@ function terminateTransfer()
     destroyImportModal()
 end
 
+local function browseWindowsFile(options, callback)
+    local tempDir = g_platform.getTempPath()
+    local uid = tostring(os.time()) .. '_' .. tostring(math.random(1000, 9999))
+    local ps1Path = tempDir .. '/davot_dlg_' .. uid .. '.ps1'
+    local outPath = tempDir .. '/davot_dlg_' .. uid .. '.txt'
+
+    local mode = options.mode or 'open'
+    local title = options.title or 'Select File'
+    local filter = options.filter or 'Backup JSON (*.json)|*.json|All Files (*.*)|*.*'
+    local defName = options.defaultName or ''
+
+    local ps1Code = string.format([[
+Add-Type -AssemblyName System.Windows.Forms
+$d = New-Object System.Windows.Forms.%s
+$d.Title = "%s"
+$d.Filter = "%s"
+$d.FileName = "%s"
+%s
+$res = $d.ShowDialog()
+if ($res -eq [System.Windows.Forms.DialogResult]::OK) {
+    [System.IO.File]::WriteAllText("%s", $d.FileName, [System.Text.Encoding]::UTF8)
+} else {
+    [System.IO.File]::WriteAllText("%s", "", [System.Text.Encoding]::UTF8)
+}
+]], (mode == 'save') and 'SaveFileDialog' or 'OpenFileDialog',
+    title, filter, defName,
+    (mode == 'save') and '$d.OverwritePrompt = $true' or '$d.CheckFileExists = $true',
+    outPath:gsub('\\', '/'),
+    outPath:gsub('\\', '/')
+    )
+
+    local f = io.open(ps1Path, 'w')
+    if not f then
+        if callback then callback(nil) end
+        return
+    end
+    f:write(ps1Code)
+    f:close()
+
+    if g_platform.fileExists(outPath) then os.remove(outPath) end
+
+    g_platform.spawnProcess('powershell.exe', {
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-STA', '-File', ps1Path
+    })
+
+    local pollEvent = nil
+    local tries = 0
+    pollEvent = cycleEvent(function()
+        tries = tries + 1
+        if g_platform.fileExists(outPath) then
+            removeEvent(pollEvent)
+            local rf = io.open(outPath, 'r')
+            local chosen = rf and rf:read('*all') or ''
+            if rf then rf:close() end
+            pcall(function() os.remove(ps1Path) end)
+            pcall(function() os.remove(outPath) end)
+            chosen = chosen:gsub('^%s+', ''):gsub('%s+$', '')
+            if callback then callback(#chosen > 0 and chosen or nil) end
+        elseif tries > 600 then
+            removeEvent(pollEvent)
+            pcall(function() os.remove(ps1Path) end)
+            pcall(function() os.remove(outPath) end)
+            if callback then callback(nil) end
+        end
+    end, 100)
+end
+
+local function countTableKeys(t)
+    if type(t) ~= 'table' then return 0 end
+    local c = 0
+    for _ in pairs(t) do c = c + 1 end
+    return c
+end
+
+local function doExportClient(includeMinimap)
+    local stamp = os.date('%Y-%m-%d_%H-%M-%S')
+    local defName = 'davot_client_' .. stamp .. '.json'
+    browseWindowsFile({
+        mode = 'save',
+        title = 'Export Client Configuration',
+        defaultName = defName,
+        filter = 'Client Backup (*.json)|*.json|All Files (*.*)|*.*'
+    }, function(chosenPath)
+        if not chosenPath then return end
+        local normPath = chosenPath:gsub('\\', '/')
+        local targetDir = normPath:match('^(.+)/[^/]+$') or ''
+        local fileName = normPath:match('^.+/([^/]+)$') or defName
+        local okCol, bundle = pcall(collectClientBundle, includeMinimap, fileName, targetDir)
+        if not okCol or type(bundle) ~= 'table' then
+            displayErrorBox('Export Client', 'Failed to collect settings: ' .. tostring(bundle))
+            return
+        end
+        local okEnc, jsonText = pcall(json.encode, bundle, 2)
+        if not okEnc or type(jsonText) ~= 'string' then
+            displayErrorBox('Export Client', 'Failed to encode JSON: ' .. tostring(jsonText))
+            return
+        end
+        local f, err = io.open(normPath, 'wb')
+        if not f then
+            displayErrorBox('Export Client', 'Failed to save file: ' .. tostring(err))
+            return
+        end
+        f:write(jsonText)
+        f:close()
+        local mapMsg = (includeMinimap and bundle.minimapFile) and ('\nMinimap saved alongside: ' .. bundle.minimapFile) or ''
+        displayInfoBox('Export Client', string.format('Client settings successfully exported to:\n%s\n\nOptions: %d | Files: %d%s', normPath, countTableKeys(bundle.options), bundle.files and #bundle.files or 0, mapMsg))
+    end)
+end
+
 function openExportClientModal()
-    openExportModal('client')
+    local box
+    box = displayGeneralBox('Export Client', 'Do you want to include your Minimap (minimap.otmm) in the export?', {
+        { text = 'Yes (with Minimap)', callback = function() box:destroy() doExportClient(true) end },
+        { text = 'No (Settings Only)', callback = function() box:destroy() doExportClient(false) end },
+        { text = 'Cancel', callback = function() box:destroy() end }
+    })
 end
 
 function openImportClientModal()
-    openImportModal('client')
+    browseWindowsFile({
+        mode = 'open',
+        title = 'Import Client Configuration',
+        filter = 'Client Backup (*.json)|*.json|All Files (*.*)|*.*'
+    }, function(chosenPath)
+        if not chosenPath then return end
+        local bundle, sourceDirReal, err = readBundleFromInput(chosenPath)
+        if not bundle then
+            displayErrorBox('Import Client', err or 'Failed to read file.')
+            return
+        end
+        if bundle.format ~= 'davot_client_bundle' then
+            displayErrorBox('Import Client', 'Invalid format. Expected a Client backup file.')
+            return
+        end
+        local okCall, okImp, resOrErr = pcall(applyClientBundle, bundle, sourceDirReal, true)
+        if not okCall or not okImp then
+            displayErrorBox('Import Client', 'Failed to import client settings: ' .. tostring(okCall and resOrErr or okImp))
+            return
+        end
+        local mapTxt = resOrErr.minimap and '\nMinimap restored successfully! Restart client to reload map and action bars.' or '\nRestart client if you want to reload all action bars and windows cleanly.'
+        displayInfoBox('Import Client', string.format('Client settings imported successfully!\nOptions applied: %d | Files restored: %d%s', resOrErr.options or 0, resOrErr.files or 0, mapTxt))
+    end)
 end
 
 function openExportHelperModal()
-    openExportModal('helper')
+    if not modules.game_helper or not modules.game_helper.exportAllConfigs then
+        displayErrorBox('Export Helper', 'DAVCaster Helper module is not loaded.')
+        return
+    end
+    local stamp = os.date('%Y-%m-%d_%H-%M-%S')
+    local defName = 'davot_helper_' .. stamp .. '.json'
+    browseWindowsFile({
+        mode = 'save',
+        title = 'Export DAVCaster Helper Configuration',
+        defaultName = defName,
+        filter = 'Helper Backup (*.json)|*.json|All Files (*.*)|*.*'
+    }, function(chosenPath)
+        if not chosenPath then return end
+        local okExp, bundleOrErr = pcall(modules.game_helper.exportAllConfigs)
+        if not okExp or type(bundleOrErr) ~= 'table' then
+            displayErrorBox('Export Helper', 'Failed to collect Helper settings: ' .. tostring(bundleOrErr))
+            return
+        end
+        local okEnc, jsonText = pcall(json.encode, bundleOrErr, 2)
+        if not okEnc or type(jsonText) ~= 'string' then
+            displayErrorBox('Export Helper', 'Failed to encode JSON: ' .. tostring(jsonText))
+            return
+        end
+        local f, err = io.open(chosenPath:gsub('\\', '/'), 'wb')
+        if not f then
+            displayErrorBox('Export Helper', 'Failed to save file: ' .. tostring(err))
+            return
+        end
+        f:write(jsonText)
+        f:close()
+        displayInfoBox('Export Helper', string.format('Helper settings successfully exported to:\n%s\n\nProfiles exported: %d', chosenPath, bundleOrErr.profiles and #bundleOrErr.profiles or 0))
+    end)
 end
 
 function openImportHelperModal()
-    openImportModal('helper')
+    if not modules.game_helper or not modules.game_helper.importAllConfigs then
+        displayErrorBox('Import Helper', 'DAVCaster Helper module is not loaded.')
+        return
+    end
+    browseWindowsFile({
+        mode = 'open',
+        title = 'Import DAVCaster Helper Configuration',
+        filter = 'Helper Backup (*.json)|*.json|All Files (*.*)|*.*'
+    }, function(chosenPath)
+        if not chosenPath then return end
+        local bundle, srcDir, err = readBundleFromInput(chosenPath)
+        if not bundle then
+            displayErrorBox('Import Helper', err or 'Failed to read file.')
+            return
+        end
+        if bundle.format ~= 'davot_helper_bundle' then
+            displayErrorBox('Import Helper', 'Invalid format. Expected a DAVCaster Helper backup file.')
+            return
+        end
+        local okImp, resOrErr = pcall(modules.game_helper.importAllConfigs, bundle, true)
+        if not okImp or not resOrErr then
+            displayErrorBox('Import Helper', 'Failed to import settings: ' .. tostring(resOrErr))
+            return
+        end
+        displayInfoBox('Import Helper', string.format('Helper settings successfully imported!\n\nProfiles loaded: %d | Waypoints: %d\nPreset rename: %s',
+            resOrErr.profiles or 0, resOrErr.waypoints or 0, resOrErr.presets and 'Yes' or 'No'))
+    end)
 end
 
 function openExportsDirectory()
-    local realDir = getRealExportsDir()
+    local realDir = getRealWriteDir()
     if g_platform and g_platform.openDir then
         pcall(function() g_platform.openDir(realDir) end)
     end

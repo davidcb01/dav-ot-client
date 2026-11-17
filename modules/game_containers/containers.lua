@@ -1292,11 +1292,16 @@ function onContainerOpen(container, previousContainer)
             end
             if not containerWindow:isOn() then
                 local curH = containerWindow:getHeight()
+                local parent = containerWindow:getParent()
+                local inHoriz = parent and (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel')
                 local clampedH = math.max(minH, math.min(curH, maxH))
+                -- In horizontal panels always match exact maxH to display all rows without cutoff
+                if inHoriz then
+                    clampedH = maxH
+                end
                 if curH ~= clampedH then
                     containerWindow:setHeight(clampedH)
-                    local parent = containerWindow:getParent()
-                    if parent and (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel') then
+                    if inHoriz then
                         if modules.game_interface and modules.game_interface.syncHorizontalPanels then
                             modules.game_interface.syncHorizontalPanels()
                         end
