@@ -345,23 +345,13 @@ Panel
         margin-left: 4
 
       HelperSmallButton
-        id: ruleUpdateBtn
-        text: Update
-        width: 56
-        height: 19
-        color: #ffdd66
-        anchors.bottom: parent.bottom
-        anchors.left: ruleNewBtn.right
-        margin-left: 4
-
-      HelperSmallButton
         id: ruleDelBtn
         text: Delete
         width: 52
         height: 19
         color: #ff6666
         anchors.bottom: parent.bottom
-        anchors.left: ruleUpdateBtn.right
+        anchors.left: ruleNewBtn.right
         margin-left: 4
 
       HelperBlueButton
