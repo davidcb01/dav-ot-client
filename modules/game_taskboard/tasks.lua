@@ -186,6 +186,16 @@ function TaskBoardController:onGameStart()
 
     self:initTracker()
     self:syncResourceBalances()
+
+    -- pede os dados imediatamente (e de novo logo depois, por seguranca) para evitar atraso visual no tracker
+    local function requestTrackerData()
+        if not g_game.isOnline() then return end
+        if g_game.bountyTaskAction then g_game.bountyTaskAction(BOUNTY_ACTION_REQUEST, 0) end
+        if g_game.weeklyTaskAction then g_game.weeklyTaskAction(WEEKLY_ACTION_REFRESH_DATA, 0) end
+        if g_game.preyRequest and g_game.getFeature(GamePrey) then g_game.preyRequest() end
+    end
+    requestTrackerData()
+    self:scheduleEvent(requestTrackerData, 150, "trackerInitialSync")
 end
 
 function TaskBoardController:onGameEnd()
@@ -194,6 +204,7 @@ function TaskBoardController:onGameEnd()
         self:hideSoulseal()
     end
     self:resetSessionState()
+    -- o tracker mantem o ultimo estado em cache (por personagem) para reaparecer instantaneamente no proximo login
 end
 
 function TaskBoardController:onTerminate()

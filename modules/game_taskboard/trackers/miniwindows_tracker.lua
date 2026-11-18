@@ -27,6 +27,8 @@ function TaskBoardController:initTracker()
         local hasTaskBoardSlots = preyTracker:recursiveGetChildById('bslot1') and
                                       preyTracker:recursiveGetChildById('weeklyTasksLabel')
         if hasTaskBoardSlots then
+            -- tracker ja existe (relogin): reaplica o cache na hora, sem piscar "Inactive"
+            Tracker.restoreAll()
             return
         end
 
@@ -66,8 +68,7 @@ function TaskBoardController:initTracker()
     preyTracker:setContentMinimumHeight(47)
     preyTracker:close(true)
 
-    Tracker.Bounty.setInactive()
-    Tracker.Weekly.clearAll()
+    Tracker.restoreAll()
 
     for idx = 1, 3 do
         local slotWidget = preyTracker.contentsPanel["slot" .. idx]
@@ -101,6 +102,14 @@ function TaskBoardController:initTracker()
     }})
 
     self:checkTracker()
+
+    if g_game.isOnline() and g_game.getFeature(GamePrey) and g_game.preyRequest then
+        scheduleEvent(function()
+            if g_game.isOnline() then
+                g_game.preyRequest()
+            end
+        end, 100)
+    end
 end
 
 function TaskBoardController:terminateTracker()
@@ -135,9 +144,19 @@ function TaskBoardController:checkTracker()
     end
     restoreEvent = scheduleEvent(function()
         restoreEvent = nil
-        if preyTracker and preyTracker.restorePosition then
+        if not preyTracker then return end
+        if preyTracker.restorePosition then
             preyTracker:restorePosition()
         end
+        -- reabre se da última vez ele estava aberto
+        if preyTracker:getSettings('closed') == false and not preyTracker:isVisible() then
+            if not preyTracker:getParent() then
+                local panel = modules.game_interface.findContentPanelAvailable(preyTracker, preyTracker:getMinimumHeight())
+                if panel then preyTracker:setParent(panel) end
+            end
+            preyTracker:open()
+        end
+        Tracker.fitHeight()
     end, 150)
 end
 
@@ -183,9 +202,9 @@ function Tracker.Prey.getExtendIcon(lockType)
     end
     local balance = player:getResourceBalance(ResourceTypes.PREY_WILDCARDS)
     if lockType == 1 then
-        return balance < 1 and (path .. "prey-auto-reroll-enabled-failing") or (path .. "prey-auto-reroll-enabled")
+        return balance < 1 and (path .. "prey-auto-extend-disabled") or (path .. "prey_wildcard")
     elseif lockType == 2 then
-        return balance < 5 and (path .. "prey-lock-prey-enabled-failing") or (path .. "prey-lock-prey-enabled")
+        return balance < 5 and (path .. "prey-auto-extend-disabled") or (path .. "prey_wildcard")
     end
     return path .. "prey-auto-extend-disabled"
 end
@@ -199,7 +218,7 @@ function Tracker.Prey.timeleftTranslation(timeleft)
     return hours .. ':' .. mins
 end
 
-function Tracker.Prey.updateWidget(slot, state, currentHolderOutfit, preySlot, showCallback)
+local function updatePreyWidgetImpl(slot, state, currentHolderOutfit, preySlot, showCallback)
     if not preyTracker then
         return
     end
@@ -250,6 +269,22 @@ function Tracker.Prey.updateWidget(slot, state, currentHolderOutfit, preySlot, s
     end
 end
 
+Tracker.Prey.last = Tracker.Prey.last or {}
+
+-- Guarda o ultimo estado de cada slot: se o pacote de prey chegar ANTES do tracker
+-- existir (logo apos o login), o estado e reaplicado em Tracker.restoreAll().
+function Tracker.Prey.updateWidget(slot, state, currentHolderOutfit, preySlot, showCallback)
+    Tracker.Prey.last[slot] = {
+        slot = slot,
+        state = state,
+        outfit = currentHolderOutfit,
+        preySlot = preySlot,
+        show = showCallback
+    }
+    updatePreyWidgetImpl(slot, state, currentHolderOutfit, preySlot, showCallback)
+    Tracker.fitHeight()
+end
+
 function Tracker.Prey.updateTimeLeft(slot, timeLeft)
     if not preyTracker then
         return
@@ -280,6 +315,7 @@ local function getBountySlot()
 end
 
 function Tracker.Bounty.setInactive()
+    Tracker.bountyState = { char = g_game.getCharacterName() or '', kind = 'inactive' }
     local slot = getBountySlot()
     if not slot then
         return
@@ -296,6 +332,8 @@ function Tracker.Bounty.setInactive()
 end
 
 function Tracker.Bounty.setActive(name, outfit, killCount, killTarget)
+    Tracker.bountyState = { char = g_game.getCharacterName() or '', kind = 'active', name = name, outfit = outfit,
+        kill = killCount, target = killTarget }
     local slot = getBountySlot()
     if not slot then
         return
@@ -315,6 +353,8 @@ function Tracker.Bounty.setActive(name, outfit, killCount, killTarget)
 end
 
 function Tracker.Bounty.setCompleted(name, outfit, killCount, killTarget)
+    Tracker.bountyState = { char = g_game.getCharacterName() or '', kind = 'completed', name = name, outfit = outfit,
+        kill = killCount, target = killTarget }
     local slot = getBountySlot()
     if not slot then
         return
@@ -434,14 +474,17 @@ function Tracker.Weekly.setSlotCompleted(index, raceId, name, outfit, currentKil
 end
 
 function Tracker.Weekly.clearAll()
+    Tracker.weeklyCache = { char = g_game.getCharacterName() or '', monsters = {} }
     Tracker.Weekly.slots = {}
     for i = 1, MAX_WEEKLY_TRACKER_SLOTS do
         Tracker.Weekly.setSlotInactive(i)
     end
     Tracker.Weekly.setSectionVisible(false)
+    Tracker.fitHeight()
 end
 
 function Tracker.Weekly.loadFromServerData(monsters)
+    Tracker.weeklyCache = { char = g_game.getCharacterName() or '', monsters = monsters or {} }
     Tracker.Weekly.slots = {}
     if not monsters or #monsters == 0 then
         Tracker.Weekly.clearAll()
@@ -481,6 +524,76 @@ function Tracker.Weekly.loadFromServerData(monsters)
             slot:setVisible(false)
         end
     end
+    Tracker.fitHeight()
+end
+
+-- Reaplica tudo que ja chegou (prey/bounty/weekly) assim que o tracker existe.
+-- So usa cache do mesmo personagem.
+function Tracker.restoreAll()
+    local char = g_game.getCharacterName() or ''
+    local b = Tracker.bountyState
+    if b and b.char == char and b.kind == 'active' then
+        Tracker.Bounty.setActive(b.name, b.outfit, b.kill, b.target)
+    elseif b and b.char == char and b.kind == 'completed' then
+        Tracker.Bounty.setCompleted(b.name, b.outfit, b.kill, b.target)
+    else
+        Tracker.Bounty.setInactive()
+    end
+
+    local w = Tracker.weeklyCache
+    if w and w.char == char and w.monsters and #w.monsters > 0 then
+        Tracker.Weekly.loadFromServerData(w.monsters)
+    else
+        Tracker.Weekly.clearAll()
+    end
+
+    for _, a in pairs(Tracker.Prey.last) do
+        updatePreyWidgetImpl(a.slot, a.state, a.outfit, a.preySlot, a.show)
+    end
+    Tracker.fitHeight()
+end
+
+-- Ajusta a altura da janela ao conteudo (remove a barra cinza vazia no fim).
+local fitEvent = nil
+function Tracker.fitHeight()
+    if fitEvent then
+        removeEvent(fitEvent)
+        fitEvent = nil
+    end
+    if not preyTracker then
+        return
+    end
+    fitEvent = addEvent(function()
+        fitEvent = nil
+        if not preyTracker or not preyTracker.contentsPanel then
+            return
+        end
+        local cp = preyTracker.contentsPanel
+        local layout = cp:getLayout()
+        if layout then
+            layout:update()
+        end
+        local total = 0
+        for _, c in ipairs(cp:getChildren()) do
+            if c:isVisible() then
+                total = total + c:getHeight() + c:getMarginTop() + c:getMarginBottom()
+            end
+        end
+        -- margens do contentsPanel: top 16 + bottom 15
+        local h = total + 16 + 15
+        local rb = preyTracker:getChildById('bottomResizeBorder')
+        if rb then
+            rb:setMinimum(h)
+            rb:setMaximum(h)
+        end
+        if preyTracker:getHeight() ~= h then
+            preyTracker:setHeight(h)
+            local parent = preyTracker:getParent()
+            if parent and modules.game_interface and modules.game_interface.syncHorizontalPanels then
+                modules.game_interface.syncHorizontalPanels()
+            end
+        end
+    end)
 end
 
 function Tracker.Weekly.onKillUpdate(raceId, currentKills, totalKills, isCompleted)
