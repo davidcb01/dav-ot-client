@@ -149,8 +149,10 @@ local lastAfkTime = 0
 local lastItemTimerTime = 0
 local lastFollowTime = 0
 local lastCavebotTime = 0
+local lastCavebotStepTime = 0
 local ruleCooldowns = {}
 local spellCooldownUntil = {}
+local confirmedSpellCastAt = {}
 local groupCooldownUntil = {}
 local shortcutActions = {}
 local lastShortcutDesc = nil
@@ -164,7 +166,11 @@ function onHelperSpellCooldown(iconId, duration)
   local id = tonumber(iconId)
   if not id then return end
   local dur = tonumber(duration) or 0
-  spellCooldownUntil[id] = (dur > 0) and (g_clock.millis() + dur) or 0
+  local now = g_clock.millis()
+  spellCooldownUntil[id] = (dur > 0) and (now + dur) or 0
+  if dur > 0 then
+    confirmedSpellCastAt[id] = now
+  end
 end
 
 function onHelperSpellGroupCooldown(groupId, duration)
@@ -178,10 +184,11 @@ local function isSpellOnClientCooldown(words, now)
   if not words or words == '' then return false end
   local sp = findSpellByWords(words)
   if not sp then return false end
-  if sp.id and (spellCooldownUntil[sp.id] or 0) > now then
-    return true
-  end
-  if sp.clientId and (spellCooldownUntil[sp.clientId] or 0) > now then
+  if sp.id then
+    if (spellCooldownUntil[sp.id] or 0) > now then
+      return true
+    end
+  elseif sp.clientId and (spellCooldownUntil[sp.clientId] or 0) > now then
     return true
   end
   if type(sp.group) == 'table' then
@@ -328,15 +335,15 @@ local SPELL_CLIENTID_OVERRIDES = {
 }
 
 local EXTRA_SPELLS = {
-  { name = 'Fair Wound Cleansing', words = 'exura med ico', clientId = 4, level = 300, mana = 90, group = { [2] = 1000 }, vocations = { 4, 8 } },
+  { id = 239, name = 'Fair Wound Cleansing', words = 'exura med ico', clientId = 4, level = 300, mana = 90, group = { [2] = 1000 }, vocations = { 4, 8 } },
   { name = 'Executioner Throw', words = 'exori amp kor', clientId = 152, level = 300, mana = 225, group = { [1] = 2000 }, vocations = { 4, 8 } },
-  { name = 'Chivalrous Challenge', words = 'exeta amp res', clientId = 111, level = 150, mana = 80, group = { [3] = 2000 }, vocations = { 4, 8 } },
-  { name = 'Challenge', words = 'exeta res', clientId = 96, level = 20, mana = 30, group = { [3] = 2000 }, vocations = { 4, 8 } },
+  { id = 237, name = 'Chivalrous Challenge', words = 'exeta amp res', clientId = 111, level = 150, mana = 80, group = { [3] = 2000 }, vocations = { 4, 8 } },
+  { id = 93, name = 'Challenge', words = 'exeta res', clientId = 96, level = 20, mana = 30, group = { [3] = 2000 }, vocations = { 4, 8 } },
   { name = 'Shield Bash', words = 'exori ico scu', clientId = 20, level = 18, mana = 30, group = { [1] = 2000 }, vocations = { 4, 8 } },
-  { name = 'Great Fire Wave', words = 'exevo gran flam hur', clientId = 102, level = 38, mana = 120, group = { [1] = 2000 }, vocations = { 1, 5 } },
-  { name = 'Restoration', words = 'exura max vita', clientId = 107, level = 300, mana = 260, group = { [2] = 1000 }, vocations = { 1, 2, 5, 6 } },
-  { name = 'Nature\'s Embrace', words = 'exura gran sio', clientId = 106, level = 300, mana = 400, group = { [2] = 1000 }, vocations = { 2, 6 } },
-  { name = 'Divine Dazzle', words = 'exana amp res', clientId = 108, level = 250, mana = 80, group = { [3] = 2000 }, vocations = { 3, 7 } },
+  { id = 240, name = 'Great Fire Wave', words = 'exevo gran flam hur', clientId = 102, level = 38, mana = 120, group = { [1] = 2000 }, vocations = { 1, 5 } },
+  { id = 241, name = 'Restoration', words = 'exura max vita', clientId = 107, level = 300, mana = 260, group = { [2] = 1000 }, vocations = { 1, 2, 5, 6 } },
+  { id = 242, name = 'Nature\'s Embrace', words = 'exura gran sio', clientId = 106, level = 300, mana = 400, group = { [2] = 1000 }, vocations = { 2, 6 } },
+  { id = 238, name = 'Divine Dazzle', words = 'exana amp res', clientId = 108, level = 250, mana = 80, group = { [3] = 2000 }, vocations = { 3, 7 } },
   { name = 'Divine Grenade', words = 'exevo tempo mas san', clientId = 155, level = 300, mana = 220, group = { [1] = 2000 }, vocations = { 3, 7 } },
   { name = 'Avatar of Steel', words = 'uteta res eq', clientId = 148, level = 300, mana = 800, group = { [3] = 2000 }, vocations = { 4, 8 } },
   { name = 'Avatar of Light', words = 'uteta res sac', clientId = 149, level = 300, mana = 800, group = { [3] = 2000 }, vocations = { 3, 7 } },
@@ -968,6 +975,8 @@ local function normalizeCharConfig(cfg)
   cb.shovelId = tonumber(cb.shovelId) or 5710
   if cb.startNearest == nil then cb.startNearest = true end
   if cb.showWaypoints == nil then cb.showWaypoints = true end
+  if cb.showWaypointsFloor == nil then cb.showWaypointsFloor = true end
+  if cb.wpMode ~= 'Add' and cb.wpMode ~= 'Insert' and cb.wpMode ~= 'Replace' then cb.wpMode = 'Add' end
   cb.autoRecDist = math.max(1, math.min(15, tonumber(cb.autoRecDist) or 3))
   cb.huntName = cb.huntName or ''
   cb.settings = type(cb.settings) == 'table' and cb.settings or {}
@@ -2534,7 +2543,7 @@ local function formatRuleConditionSummary(rule)
   if (rule.delay or 0) > 0 then
     table.insert(parts, rule.delay .. 'ms')
   end
-  if rule.targetName and rule.targetName ~= '' then
+  if rule.priority == 'Target Name' and rule.targetName and rule.targetName ~= '' then
     table.insert(parts, '[' .. rule.targetName .. ']')
   elseif rule.priority and rule.priority ~= 'All Monsters' then
     table.insert(parts, '[' .. rule.priority .. ']')
@@ -2839,6 +2848,86 @@ end
 -- CAVEBOT: MINIMAP WAYPOINTS, GAME OVERLAY, START NEAREST, LURE
 -- ============================================================================
 
+-- ---------------------------------------------------------------------------
+-- Marcadores de waypoint NO CHAO (quadrado preto translucido + "N Tipo")
+-- ---------------------------------------------------------------------------
+local floorFillUnsupported = false
+local lastFloorMarkAt = 0
+
+local function clearFloorMarkers()
+  for _, pos in ipairs(markedWorldTiles) do
+    pcall(function()
+      local tile = g_map.getTile(pos)
+      if tile then
+        if tile.setText then tile:setText('') end
+        if tile.setFill and not floorFillUnsupported then tile:setFill('#00000000') end
+      end
+    end)
+  end
+  markedWorldTiles = {}
+end
+
+local function floorMarkerColor(typeLower)
+  if typeLower:find('^stand') then return '#ffcc33' end
+  if typeLower:find('^start lure') then return '#5ce65c' end
+  if typeLower:find('^end lure') then return '#ff9944' end
+  if typeLower:find('^rope') or typeLower:find('^shovel') or typeLower:find('^hole')
+     or typeLower:find('^ladder') or typeLower:find('^use') then return '#66ccff' end
+  return '#ffffff'
+end
+
+function refreshFloorMarkers()
+  clearFloorMarkers()
+  local cbc = charConfig and charConfig.cavebot
+  if not cbc or cbc.showWaypointsFloor == false then return end
+  local player = g_game.getLocalPlayer()
+  local pPos = player and player:getPosition()
+  if not pPos then return end
+  local groups, order = {}, {}
+  for idx, wpStr in ipairs(cbc.waypoints or {}) do
+    local x, y, z = wpStr:match('(%d+),%s*(%d+),%s*(%d+)')
+    x, y, z = tonumber(x), tonumber(y), tonumber(z)
+    if x and z == pPos.z and math.abs(x - pPos.x) <= 9 and math.abs(y - pPos.y) <= 7 then
+      local key = x .. ',' .. y
+      local wpType = wpStr:match('^([^:]+):') or 'WP'
+      local g = groups[key]
+      if not g then
+        g = { pos = { x = x, y = y, z = z }, labels = {}, color = floorMarkerColor(wpType:lower()) }
+        groups[key] = g
+        order[#order + 1] = key
+      end
+      g.labels[#g.labels + 1] = idx .. ' ' .. wpType
+    end
+  end
+  for _, key in ipairs(order) do
+    local g = groups[key]
+    local tile = g_map.getTile(g.pos)
+    if tile then
+      if tile.setFill and not floorFillUnsupported then
+        local okF = pcall(function() tile:setFill('#00000099') end)
+        if not okF then floorFillUnsupported = true end
+      end
+      if tile.setText then
+        local text = table.concat(g.labels, ' / ')
+        local okT = pcall(function() tile:setText(text, g.color) end)
+        if not okT then pcall(function() tile:setText(text) end) end
+      end
+      markedWorldTiles[#markedWorldTiles + 1] = g.pos
+    end
+  end
+end
+
+function tickFloorMarkers(now)
+  if (now - lastFloorMarkAt) < 600 then return end
+  lastFloorMarkAt = now
+  local cbc = charConfig and charConfig.cavebot
+  if cbc and cbc.showWaypointsFloor ~= false and #(cbc.waypoints or {}) > 0 then
+    refreshFloorMarkers()
+  elseif #markedWorldTiles > 0 then
+    clearFloorMarkers()
+  end
+end
+
 local function clearTemporaryWaypointMarkers()
   for _, entry in ipairs(minimapTempFlags) do
     if entry.map and entry.pos then
@@ -2846,17 +2935,12 @@ local function clearTemporaryWaypointMarkers()
     end
   end
   minimapTempFlags = {}
-  for _, pos in ipairs(markedWorldTiles) do
-    pcall(function()
-      local tile = g_map.getTile(pos)
-      if tile and tile.setText then tile:setText('') end
-    end)
-  end
-  markedWorldTiles = {}
+  clearFloorMarkers()
 end
 
 function renderCavebotWaypointsOnMaps()
   clearTemporaryWaypointMarkers()
+  refreshFloorMarkers()
   local show = charConfig and charConfig.cavebot and (charConfig.cavebot.showWaypoints ~= false)
   if not show then return end
 
@@ -2884,6 +2968,39 @@ function renderCavebotWaypointsOnMaps()
       end
     end
   end
+end
+
+function onToggleShowWaypointsFloor(checked)
+  if not charConfig or not charConfig.cavebot then return end
+  charConfig.cavebot.showWaypointsFloor = checked and true or false
+  refreshFloorMarkers()
+  saveCurrentProfile()
+end
+
+local syncingWpMode = false
+function syncCavebotWpModeUI()
+  local box = panels.cavebot and panels.cavebot:getChildById('bodyPanel'):getChildById('cbMiddleRow'):getChildById('cbActionToolsBox')
+  if not box then return end
+  local mode = (charConfig and charConfig.cavebot and charConfig.cavebot.wpMode) or 'Add'
+  syncingWpMode = true
+  for _, name in ipairs({ 'Add', 'Insert', 'Replace' }) do
+    local w = box:getChildById('wpMode' .. name)
+    if w then w:setChecked(name == mode) end
+  end
+  syncingWpMode = false
+end
+
+function setCavebotWpMode(mode, checked)
+  if syncingWpMode then return end
+  if not charConfig or not charConfig.cavebot then return end
+  if not checked then
+    -- funciona como radio: nao deixa desmarcar o modo atual
+    if (charConfig.cavebot.wpMode or 'Add') == mode then syncCavebotWpModeUI() end
+    return
+  end
+  charConfig.cavebot.wpMode = mode
+  syncCavebotWpModeUI()
+  saveCurrentProfile()
 end
 
 function onToggleShowWaypoints(checked)
@@ -2999,6 +3116,7 @@ local DIR_OFFSETS = {
 }
 
 function refreshCavebotUI(scrollToBottom)
+  syncCavebotWpModeUI()
   local cBody = panels.cavebot:getChildById('bodyPanel')
   local cbRow = cBody:getChildById('cbListRow')
   local list = cbRow:getChildById('cavebotWpList')
@@ -3130,10 +3248,27 @@ function addCavebotWaypoint(wpType)
   local pPos = player:getPosition()
   local off = DIR_OFFSETS[cavebotDirOffset] or { 0, 0 }
   local x, y, z = pPos.x + off[1], pPos.y + off[2], pPos.z
-  table.insert(charConfig.cavebot.waypoints, string.format('%s: %d, %d, %d', wpType, x, y, z))
-  selectedCavebotWpIdx = #charConfig.cavebot.waypoints
+  local entry = string.format('%s: %d, %d, %d', wpType, x, y, z)
+  local wps = charConfig.cavebot.waypoints
+  local mode = charConfig.cavebot.wpMode or 'Add'
+  local sel = selectedCavebotWpIdx
+  local scroll = true
+  if mode == 'Insert' and sel and wps[sel] then
+    -- entra ANTES do selecionado; a selecao continua no waypoint original (inserts seguidos ficam em ordem)
+    table.insert(wps, sel, entry)
+    local cur = charConfig.cavebot.currentWpIndex or 1
+    if cur >= sel then charConfig.cavebot.currentWpIndex = cur + 1 end
+    selectedCavebotWpIdx = sel + 1
+    scroll = false
+  elseif mode == 'Replace' and sel and wps[sel] then
+    wps[sel] = entry
+    scroll = false
+  else
+    table.insert(wps, entry)
+    selectedCavebotWpIdx = #wps
+  end
   setCavebotDirOffset('C')
-  refreshCavebotUI(true)
+  refreshCavebotUI(scroll)
   saveCurrentProfile()
 end
 
@@ -3309,26 +3444,61 @@ function openCavebotSettingsModal()
   local boxChk = cavebotSettingsModal:getChildById('cbLureBoxModeCheck')
   local glbChk = cavebotSettingsModal:getChildById('cbLureGlobalModeCheck')
   if boxChk and glbChk then
+    boxChk.onCheckChange = nil
+    glbChk.onCheckChange = nil
+    boxChk:setChecked(not isGlobal)
+    glbChk:setChecked(isGlobal)
     boxChk.onCheckChange = function(w, ch)
       if ch and glbChk:isChecked() then glbChk:setChecked(false)
       elseif not ch and not glbChk:isChecked() then boxChk:setChecked(true) end
+      s.lureMode = glbChk:isChecked() and 'global' or 'box'
+      saveCurrentProfile()
     end
     glbChk.onCheckChange = function(w, ch)
       if ch and boxChk:isChecked() then boxChk:setChecked(false)
       elseif not ch and not boxChk:isChecked() then glbChk:setChecked(true) end
+      s.lureMode = glbChk:isChecked() and 'global' or 'box'
+      saveCurrentProfile()
     end
-    boxChk:setChecked(not isGlobal)
-    glbChk:setChecked(isGlobal)
   end
-  cavebotSettingsModal:getChildById('cbStopMonstersEdit'):setText(tostring(s.stopMonsters or 3))
-  cavebotSettingsModal:getChildById('cbWalkMonstersEdit'):setText(tostring(s.walkMonsters or 1))
-  cavebotSettingsModal:getChildById('cbDynamicLureCheck'):setChecked(s.dynamicLure ~= false)
+  local stopEd = cavebotSettingsModal:getChildById('cbStopMonstersEdit')
+  local walkEd = cavebotSettingsModal:getChildById('cbWalkMonstersEdit')
+  local dynChk = cavebotSettingsModal:getChildById('cbDynamicLureCheck')
+  stopEd.onTextChange = nil
+  walkEd.onTextChange = nil
+  dynChk.onCheckChange = nil
+  stopEd:setText(tostring(s.stopMonsters or 3))
+  walkEd:setText(tostring(s.walkMonsters or 1))
+  dynChk:setChecked(s.dynamicLure ~= false)
+  dynChk.onCheckChange = function(w, ch)
+    s.dynamicLure = ch and true or false
+    saveCurrentProfile()
+  end
   local grid = cavebotSettingsModal:getChildById('cbLureGrid')
   if grid then
     for i = 0, 5 do
       local e = grid:getChildById('cbLure' .. i)
-      if e then e:setText(tostring(ls[i] ~= nil and ls[i] or 100)) end
+      if e then
+        e.onTextChange = nil
+        e:setText(tostring(ls[i] ~= nil and ls[i] or 100))
+        e.onTextChange = function(w, txt)
+          local n = tonumber(txt)
+          if n then
+            s.lureSpeeds = s.lureSpeeds or {}
+            s.lureSpeeds[i] = math.max(0, math.min(100, math.floor(n)))
+            saveCurrentProfile()
+          end
+        end
+      end
     end
+  end
+  stopEd.onTextChange = function(w, txt)
+    local n = tonumber(txt)
+    if n then s.stopMonsters = math.max(1, math.min(20, math.floor(n))) saveCurrentProfile() end
+  end
+  walkEd.onTextChange = function(w, txt)
+    local n = tonumber(txt)
+    if n then s.walkMonsters = math.max(0, math.min(20, math.floor(n))) saveCurrentProfile() end
   end
   cavebotSettingsModal:show()
   cavebotSettingsModal:raise()
@@ -3342,6 +3512,14 @@ function saveCavebotSettingsModal()
   local glbChk = cavebotSettingsModal:getChildById('cbLureGlobalModeCheck')
   s.lureMode = (glbChk and glbChk:isChecked()) and 'global' or 'box'
   s.dynamicLure = cavebotSettingsModal:getChildById('cbDynamicLureCheck'):isChecked()
+  local lureGrid = cavebotSettingsModal:getChildById('cbLureGrid')
+  if lureGrid then
+    s.lureSpeeds = s.lureSpeeds or {}
+    for i = 0, 5 do
+      local e = lureGrid:getChildById('cbLure' .. i)
+      if e then s.lureSpeeds[i] = parseNum(e, s.lureSpeeds[i] or 100, 0, 100) end
+    end
+  end
   if not s.dynamicLure and panels.cavebot then
     local ed = panels.cavebot:getChildById('bodyPanel'):getChildById('cbTopControlsBox'):getChildById('cbWalkSpeedEdit')
     if ed then
@@ -4284,6 +4462,8 @@ function loadProfileIntoUI()
   cbTop:getChildById('cbWalkSpeedEdit'):setText(tostring((charConfig.cavebot.settings and charConfig.cavebot.settings.walkSpeedPct) ~= nil and charConfig.cavebot.settings.walkSpeedPct or 100))
   cbTop:getChildById('startNearestCheck'):setChecked(charConfig.cavebot.startNearest ~= false)
   cbTop:getChildById('showWaypointsCheck'):setChecked(charConfig.cavebot.showWaypoints ~= false)
+  local floorChk = cbTop:getChildById('showFloorWpCheck')
+  if floorChk then floorChk:setChecked(charConfig.cavebot.showWaypointsFloor ~= false) end
   local huntEdit = cBody:getChildById('cbListRow'):getChildById('wpManageRow'):getChildById('huntNameEdit')
   if huntEdit then huntEdit:setText(charConfig.cavebot.huntName or '') end
   local cbAct = cBody:getChildById('cbMiddleRow'):getChildById('cbActionToolsBox')
@@ -4996,10 +5176,29 @@ function setupWidgetsAndCallbacks()
     refreshCavebotUI()
     saveCurrentProfile()
   end
-  cbTop:getChildById('autoRecDistEdit').onTextChange = function(w, txt)
+  local distEdit = cbTop:getChildById('autoRecDistEdit')
+  distEdit.onTextChange = function(w, txt)
     local n = tonumber(txt)
     if n then charConfig.cavebot.autoRecDist = math.max(1, math.min(15, math.floor(n))) saveCurrentProfile() end
   end
+  local function releaseDistFocus()
+    local rootPanel = modules.game_interface and modules.game_interface.getRootPanel and modules.game_interface.getRootPanel()
+    if rootPanel then rootPanel:focus() end
+  end
+  local moveKeys = {}
+  for _, kn in ipairs({ 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyUp', 'KeyDown', 'KeyLeft', 'KeyRight', 'KeyQ', 'KeyE', 'KeyZ', 'KeyC' }) do
+    local kc = rawget(_G, kn)
+    if kc then moveKeys[kc] = true end
+  end
+  distEdit.onKeyDown = function(w, keyCode, mods)
+    if moveKeys[keyCode] then releaseDistFocus() end
+    return false
+  end
+  panels.cavebot.onMousePress = function(w, mousePos, button)
+    if distEdit:isFocused() and not distEdit:containsPoint(mousePos) then releaseDistFocus() end
+    return false
+  end
+  distEdit.onFocusChange = nil
   cbTop:getChildById('cbWalkSpeedEdit').onTextChange = function(w, txt)
     if helperSpeedUiLock then return end
     local n = tonumber(txt)
@@ -5079,6 +5278,52 @@ local function getDistanceBetween(p1, p2)
   if not p1 or not p2 then return 999 end
   if p1.z ~= p2.z then return 999 end
   return math.max(math.abs(p1.x - p2.x), math.abs(p1.y - p2.y))
+end
+
+local function getDirectionFromPos(fromPos, toPos)
+  if not fromPos or not toPos then return nil end
+  local dx, dy = toPos.x - fromPos.x, toPos.y - fromPos.y
+  if dx == 0 and dy == 0 then return nil end
+  if dx > 0 and dy < 0 then return NorthEast
+  elseif dx > 0 and dy > 0 then return SouthEast
+  elseif dx < 0 and dy > 0 then return SouthWest
+  elseif dx < 0 and dy < 0 then return NorthWest
+  elseif dy < 0 then return North
+  elseif dx > 0 then return East
+  elseif dy > 0 then return South
+  else return West end
+end
+
+local function resolveFloorChangeStandPos(oldPos, newPos)
+  if not oldPos or not newPos then return oldPos end
+  if oldPos.x == newPos.x and oldPos.y == newPos.y then
+    return oldPos
+  end
+  local tOld = g_map.getTile(oldPos)
+  if tOld and tOld.hasFloorChange and tOld:hasFloorChange() then
+    return oldPos
+  end
+  local sameXY = { x = newPos.x, y = newPos.y, z = oldPos.z }
+  local tSame = g_map.getTile(sameXY)
+  if tSame and tSame.hasFloorChange and tSame:hasFloorChange() then
+    return sameXY
+  end
+  local bestPos, bestDist = nil, 999
+  for dx = -1, 1 do
+    for dy = -1, 1 do
+      if dx ~= 0 or dy ~= 0 then
+        local cand = { x = oldPos.x + dx, y = oldPos.y + dy, z = oldPos.z }
+        local t = g_map.getTile(cand)
+        if t and t.hasFloorChange and t:hasFloorChange() then
+          local d = math.abs(cand.x - newPos.x) + math.abs(cand.y - newPos.y)
+          if d < bestDist then
+            bestDist, bestPos = d, cand
+          end
+        end
+      end
+    end
+  end
+  return bestPos or oldPos
 end
 
 local function parseCommaSet(str)
@@ -5874,8 +6119,9 @@ function onHelperTick()
     local wps = charConfig.cavebot.waypoints
     local lastWpPos = (#wps > 0) and getWaypointPos(wps[#wps]) or nil
     if lastAutoRecPos and (lastAutoRecPos.z ~= pPos.z or getDistanceBetween(lastAutoRecPos, pPos) >= 8) then
-      if not lastWpPos or lastWpPos.x ~= lastAutoRecPos.x or lastWpPos.y ~= lastAutoRecPos.y or lastWpPos.z ~= lastAutoRecPos.z then
-        table.insert(wps, string.format('Stand: %d, %d, %d', lastAutoRecPos.x, lastAutoRecPos.y, lastAutoRecPos.z))
+      local standPos = (lastAutoRecPos.z ~= pPos.z) and resolveFloorChangeStandPos(lastAutoRecPos, pPos) or lastAutoRecPos
+      if not lastWpPos or lastWpPos.x ~= standPos.x or lastWpPos.y ~= standPos.y or lastWpPos.z ~= standPos.z then
+        table.insert(wps, string.format('Stand: %d, %d, %d', standPos.x, standPos.y, standPos.z))
       end
       table.insert(wps, string.format('Node: %d, %d, %d', pPos.x, pPos.y, pPos.z))
       lastAutoRecPos = { x = pPos.x, y = pPos.y, z = pPos.z }
@@ -5892,6 +6138,8 @@ function onHelperTick()
       lastAutoRecPos = { x = pPos.x, y = pPos.y, z = pPos.z }
     end
   end
+
+  tickFloorMarkers(now)
 
   if helperSavePending and (now - (helperLastSaveAt or 0)) >= 5000 then
     helperSavePending = false
@@ -5976,24 +6224,6 @@ function onHelperTick()
       end
 
       if currentVocName == 'Druid' or currentVocName == 'Monk' then
-        local mr = vp.healing.masRes
-        if mr and mr.enabled and mr.words ~= '' and (now - lastCastTime) >= 1000 then
-          if mpPct >= (mr.selfMp or 20) then
-            local lowFriends = 0
-            local mrThresh = mr.hp or 85
-            if mr.includeSelf ~= false and hpPct <= mrThresh then lowFriends = lowFriends + 1 end
-            for _, p in ipairs(nearbyPlayers) do
-              if getDistanceBetween(pPos, p:getPosition()) <= 3 and isFriendAllowed(p, { party = mr.checkParty, guild = mr.checkGuild }) then
-                if p:getHealthPercent() <= mrThresh then lowFriends = lowFriends + 1 end
-              end
-            end
-            if lowFriends >= (mr.minPlayers or 2) then
-              g_game.talk(mr.words)
-              lastCastTime = now
-            end
-          end
-        end
-
         local function resolveFriendVocRule(cfg, p)
           if not cfg or not cfg.vocs then return nil end
           local vocName = getCreatureVocName(p)
@@ -6017,14 +6247,17 @@ function onHelperTick()
         local function tryFriendHealConfig(cfg)
           if not cfg or not cfg.enabled or not cfg.words or cfg.words == '' then return false end
           if hpPct < (cfg.selfHp or 60) or mpPct < (cfg.selfMp or 15) then return false end
+          if isSpellOnClientCooldown(cfg.words, now) then return false end
           local bestCandidate, bestEff = nil, 999
           for _, p in ipairs(nearbyPlayers) do
-            if isFriendAllowed(p, vp.healing.sioFilters) then
+            local fp = p:getPosition()
+            if fp and fp.z == pPos.z and math.abs(pPos.x - fp.x) <= 7 and math.abs(pPos.y - fp.y) <= 5
+               and isFriendAllowed(p, vp.healing.sioFilters) then
               local vRule = resolveFriendVocRule(cfg, p)
               if vRule and vRule.enabled then
                 local fHp = p:getHealthPercent()
                 if fHp <= (vRule.hp or 80) then
-                  local eff = fHp - (((tonumber(vRule.prio) or 3) - 1) * 5)
+                  local eff = fHp - ((5 - (tonumber(vRule.prio) or 3)) * 8)
                   if eff < bestEff then
                     bestEff, bestCandidate = eff, p
                   end
@@ -6042,13 +6275,36 @@ function onHelperTick()
 
         if (now - lastCastTime) >= 1000 then
           local granHandled = (currentVocName == 'Druid') and tryFriendHealConfig(vp.healing.granSio) or false
+          local mrHandled = false
           if not granHandled then
-            if not tryFriendHealConfig(vp.healing.sio) and vp.healing.partyHeal.enabled and vp.healing.partyHeal.words ~= '' then
+            local mr = vp.healing.masRes
+            if mr and mr.enabled and mr.words ~= '' and mpPct >= (mr.selfMp or 20)
+               and not isSpellOnClientCooldown(mr.words, now) then
+              local lowFriends = 0
+              local mrThresh = mr.hp or 85
+              if mr.includeSelf ~= false and hpPct <= mrThresh then lowFriends = lowFriends + 1 end
+              for _, p in ipairs(nearbyPlayers) do
+                if getDistanceBetween(pPos, p:getPosition()) <= 3 and isFriendAllowed(p, { party = mr.checkParty, guild = mr.checkGuild }) then
+                  if p:getHealthPercent() <= mrThresh then lowFriends = lowFriends + 1 end
+                end
+              end
+              if lowFriends >= (mr.minPlayers or 2) then
+                g_game.talk(mr.words)
+                lastCastTime = now
+                mrHandled = true
+              end
+            end
+          end
+          if not granHandled and not mrHandled then
+            if not tryFriendHealConfig(vp.healing.sio) and vp.healing.partyHeal.enabled and vp.healing.partyHeal.words ~= ''
+               and not isSpellOnClientCooldown(vp.healing.partyHeal.words, now) then
               local minHp = vp.healing.sio and vp.healing.sio.selfHp or 60
               local minMp = vp.healing.sio and vp.healing.sio.selfMp or 15
               if hpPct >= minHp and mpPct >= minMp then
                 for _, p in ipairs(nearbyPlayers) do
-                  if isFriendAllowed(p, vp.healing.sioFilters) and p:getHealthPercent() <= (vp.healing.partyHeal.pct or 75) then
+                  local fp = p:getPosition()
+                  if fp and fp.z == pPos.z and math.abs(pPos.x - fp.x) <= 7 and math.abs(pPos.y - fp.y) <= 5
+                     and isFriendAllowed(p, vp.healing.sioFilters) and p:getHealthPercent() <= (vp.healing.partyHeal.pct or 75) then
                     g_game.talk(vp.healing.partyHeal.words .. ' "' .. p:getName())
                     lastCastTime = now
                     break
@@ -6219,10 +6475,14 @@ function onHelperTick()
         local isSupportSpell = (spData and type(spData.group) == 'table' and spData.group[3] ~= nil and spData.group[1] == nil) and true or false
         local groupCadenceOk = isSupportSpell and (not supportCastThisTick) or (not isSupportSpell and not attackCastThisTick)
         if groupCadenceOk then
+          local wLower = trimmedWords:lower()
           local needTgt = (rule.requiresTarget ~= false)
+          if COMBAT_SUPPORT_WORDS[wLower] or wLower == 'exori mas'
+             or (spData and spData.needTarget == false) or (rule.priority == 'Target Name') then
+            needTgt = false
+          end
           local tgt = isValidMonsterCreature(currentTarget) and currentTarget or nil
           if (not needTgt) or tgt then
-            local tgtHp = tgt and tgt:getHealthPercent() or 100
             local cntRange = getRuleCountRange(rule, trimmedWords)
             local matchingCount = 0
             for _, m in ipairs(nearbyMonsters) do
@@ -6248,13 +6508,17 @@ function onHelperTick()
             end
 
             local countOk = checkCountCondition(matchingCount, rule.countOp or '>=', rule.countVal or 1)
-            local hpMinOk = (not tgt) or (tgtHp >= (tonumber(rule.hpMin) or 0))
+            local hpRef = (rule.priority == 'Target Name') and (firstMatchedCreature or tgt) or tgt
+            local hpRefVal = hpRef and hpRef:getHealthPercent() or 100
+            local hpMinOk = (not hpRef) or (hpRefVal >= (tonumber(rule.hpMin) or 0))
             local maxVal = tonumber(rule.hpMax) or 100
-            local hpMaxOk = (not tgt) or (maxVal <= 0) or (tgtHp <= maxVal)
+            local hpMaxOk = (not hpRef) or (maxVal <= 0) or (hpRefVal <= maxVal)
             local mpOk = mpPct >= (tonumber(rule.mpPct) or 0)
             local delayMs = tonumber(rule.delay) or 0
-            local lastRuleCast = ruleCooldowns[rule] or 0
+            local hasServerId = (rule.type ~= 'R' and spData and spData.id) and true or false
+            local lastRuleCast = hasServerId and math.max(confirmedSpellCastAt[spData.id] or 0, ruleCooldowns[rule] or 0) or (ruleCooldowns[rule] or 0)
             local cdOk = ((delayMs <= 0) or ((now - lastRuleCast) >= delayMs))
+              and (not hasServerId or not rule._tryAt or ((now - rule._tryAt) >= 350))
               and (rule.type == 'R' or not isSpellOnClientCooldown(trimmedWords, now))
             local trapMin = math.max(1, math.min(8, tonumber(c.trappedCount) or 8))
             local trapOk = (not c.trapped) or (adjacentMonsters >= trapMin)
@@ -6304,7 +6568,17 @@ function onHelperTick()
               else
                 if trimmedWords ~= '' then
                   g_game.talk(trimmedWords)
-                  ruleCooldowns[rule] = now
+                  if hasServerId then
+                    rule._tryAt = now
+                    if type(spData.group) == 'table' then
+                      for gid, _ in pairs(spData.group) do
+                        local gNum = tonumber(gid) or gid
+                        groupCooldownUntil[gNum] = math.max(groupCooldownUntil[gNum] or 0, now + math.max(castGap, 300))
+                      end
+                    end
+                  else
+                    ruleCooldowns[rule] = now
+                  end
                   if isSupportSpell then
                     lastSupportShooterCastTime = now
                     supportCastThisTick = true
@@ -6328,6 +6602,13 @@ function onHelperTick()
      and (now - lastHasteTime) >= 2000 and not isSpellOnClientCooldown(tl.haste.words, now) then
     g_game.talk(tl.haste.words)
     lastHasteTime = now
+    local hSp = findSpellByWords(tl.haste.words)
+    if hSp and type(hSp.group) == 'table' then
+      for gid, _ in pairs(hSp.group) do
+        local gNum = tonumber(gid) or gid
+        groupCooldownUntil[gNum] = math.max(groupCooldownUntil[gNum] or 0, now + 300)
+      end
+    end
   end
 
   if tl.manaTrain.enabled and tl.manaTrain.words ~= '' and (tl.manaTrain.pzCast or not inPz)
@@ -6460,14 +6741,14 @@ function onHelperTick()
         helperSpeedUiLock = false
       end
     end
-    local cadenceMs = (activeSpeed >= 100) and 150 or math.max(180, math.floor(180 + (100 - activeSpeed) * 12))
+    local stepDelayMs = (activeSpeed >= 100) and 0 or math.max(120, math.floor(100 + (100 - activeSpeed) * 4.5))
 
     if activeSpeed <= 0 then
       if player:isAutoWalking() then
         player:stopAutoWalk()
       end
-      lastCavebotTime = now
-    elseif (now - lastCavebotTime) >= cadenceMs then
+      lastCavebotStepTime = now
+    else
       local stopCount = tonumber(cbS.stopMonsters) or 3
       local resumeCount = tonumber(cbS.walkMonsters) or 1
       local isGlobalLure = (cbS.lureMode == 'global')
@@ -6477,6 +6758,7 @@ function onHelperTick()
       if idx > #wps or idx < 1 then idx = 1 end
       local wpStr = wps[idx] or ''
       local wpLower = wpStr:lower()
+      local wasPaused = cbPauseState
 
       if isGlobalLure then
         if #wps > 0 and (wpLower:find('^start lure') or wpLower:find('^end lure')) then
@@ -6492,85 +6774,117 @@ function onHelperTick()
           cbPauseState = false
         end
       else
-        -- BOX LURE: só segura em waypoint que não é Node; solta quando limpar
+        -- BOX LURE: só segura em waypoint de lure/stand (não-Node); solta e avança na hora quando limpar
         if cbPauseState and #nearbyMonsters <= resumeCount then
           cbPauseState = false
+          if #wps > 0 then
+            cb.currentWpIndex = (idx % #wps) + 1
+          end
           cavebotAdvanceUI()
         end
         if wpLower:find('^node') then cbPauseState = false end
       end
 
-      if not cbPauseState then
-        if #wps > 0 then
-          idx = cb.currentWpIndex or 1
-          if idx > #wps or idx < 1 then idx = 1 end
-          wpStr = wps[idx] or ''
-          wpLower = wpStr:lower()
+      if cbPauseState and not wasPaused then
+        if player:isAutoWalking() then player:stopAutoWalk() end
+        cavebotAdvanceUI()
+      end
 
-          local x, y, z = wpStr:match('(%d+),%s*(%d+),%s*(%d+)')
-          if x and y and z then
-            local dest = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
-            if dest.z ~= pPos.z then
-              ruleCooldowns.zWait = ruleCooldowns.zWait or now
-              if (now - ruleCooldowns.zWait) >= 2500 then
-                ruleCooldowns.zWait = nil
-                cb.currentWpIndex = (idx % #wps) + 1
-                cavebotAdvanceUI()
-              end
-            else
-              ruleCooldowns.zWait = nil
-              local isNode = wpLower:find('^node') ~= nil
-              local acceptDist = isNode and 1 or 0
-              if getDistanceBetween(pPos, dest) <= acceptDist and (not isGlobalLure) and (not isNode)
-                 and not cbPauseState and #nearbyMonsters >= stopCount then
-                cbPauseState = true  -- box lure: segura aqui até limpar
-                cavebotAdvanceUI()
-              elseif getDistanceBetween(pPos, dest) <= acceptDist then
-                if wpLower:find('^rope') then
-                  local tile = g_map.getTile(dest)
-                  if tile and tile:getTopUseThing() then
-                    g_game.useInventoryItemWith(cb.ropeId or 3003, tile:getTopUseThing())
-                  end
-                elseif wpLower:find('^hole') or wpLower:find('^shovel') then
-                  local tile = g_map.getTile(dest)
-                  if tile and tile:getTopUseThing() then
-                    g_game.useInventoryItemWith(cb.shovelId or 5710, tile:getTopUseThing())
-                  end
-                elseif wpLower:find('^ladder') or wpLower:find('^use') then
-                  local tile = g_map.getTile(dest)
-                  if tile and tile:getTopUseThing() then
-                    g_game.use(tile:getTopUseThing())
-                  end
-                end
-                cb.currentWpIndex = (idx % #wps) + 1
-                cavebotAdvanceUI()
-                if isNode and activeSpeed >= 100 then
-                  local nx, ny, nz = (wps[cb.currentWpIndex] or ''):match('(%d+),%s*(%d+),%s*(%d+)')
-                  if nx and tonumber(nz) == pPos.z then
-                    player:autoWalk({ x = tonumber(nx), y = tonumber(ny), z = tonumber(nz) })
-                  end
-                end
-              elseif activeSpeed < 100 then
-                if player:isAutoWalking() then
-                  player:stopAutoWalk()
-                end
-                local path = g_map.findPath(pPos, dest, 5000, 0)
+      if not cbPauseState and #wps > 0 then
+        local function walkToCoord(destPos, forceFallbackDir)
+          if activeSpeed < 100 then
+            if player:isAutoWalking() then
+              player:stopAutoWalk()
+            end
+            if (now - lastCavebotStepTime) >= stepDelayMs then
+              if getDistanceBetween(pPos, destPos) == 1 then
+                local dir = getDirectionFromPos(pPos, destPos)
+                if dir then g_game.walk(dir) end
+              else
+                local path = g_map.findPath(pPos, destPos, 5000, 0)
                 if path and #path > 0 then
                   g_game.walk(path[1])
                 end
-              elseif not player:isAutoWalking() then
-                local ok = player:autoWalk(dest)
-                if not ok then
-                  local path = g_map.findPath(pPos, dest, 5000, 0)
-                  if path and #path > 0 then
-                    g_game.walk(path[1])
-                  end
+              end
+              lastCavebotStepTime = now
+            end
+          elseif not player:isAutoWalking() then
+            local ok = player:autoWalk(destPos)
+            if not ok then
+              if forceFallbackDir and getDistanceBetween(pPos, destPos) == 1 then
+                local dir = getDirectionFromPos(pPos, destPos)
+                if dir then g_game.walk(dir) end
+              else
+                local path = g_map.findPath(pPos, destPos, 5000, 0)
+                if path and #path > 0 then
+                  g_game.walk(path[1])
                 end
               end
             end
-          else
-            cb.currentWpIndex = (idx % #wps) + 1
           end
+        end
+
+        idx = cb.currentWpIndex or 1
+        if idx > #wps or idx < 1 then idx = 1 end
+        wpStr = wps[idx] or ''
+        wpLower = wpStr:lower()
+
+        local x, y, z = wpStr:match('(%d+),%s*(%d+),%s*(%d+)')
+        if x and y and z then
+          local dest = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+          if dest.z ~= pPos.z then
+            ruleCooldowns.zWait = ruleCooldowns.zWait or now
+            if (now - ruleCooldowns.zWait) >= 250 then
+              ruleCooldowns.zWait = nil
+              cb.currentWpIndex = (idx % #wps) + 1
+              cavebotAdvanceUI()
+            end
+          else
+            ruleCooldowns.zWait = nil
+            local isNode = wpLower:find('^node') ~= nil
+            local isAction = (wpLower:find('^rope') or wpLower:find('^hole') or wpLower:find('^shovel')
+              or wpLower:find('^ladder') or wpLower:find('^use')) ~= nil
+            local acceptDist = (isNode or isAction) and 1 or 0
+            local dist = getDistanceBetween(pPos, dest)
+            if dist <= acceptDist and (not isGlobalLure) and (not isNode) and (not isAction)
+               and not cbPauseState and #nearbyMonsters >= stopCount then
+              cbPauseState = true  -- box lure: segura aqui até limpar
+              if player:isAutoWalking() then player:stopAutoWalk() end
+              cavebotAdvanceUI()
+            elseif dist <= acceptDist then
+              if wpLower:find('^rope') then
+                local tile = g_map.getTile(dest)
+                if tile and tile:getTopUseThing() then
+                  g_game.useInventoryItemWith(cb.ropeId or 3003, tile:getTopUseThing())
+                end
+              elseif wpLower:find('^hole') or wpLower:find('^shovel') then
+                local tile = g_map.getTile(dest)
+                if tile and tile:getTopUseThing() then
+                  g_game.useInventoryItemWith(cb.shovelId or 5710, tile:getTopUseThing())
+                end
+              elseif wpLower:find('^ladder') or wpLower:find('^use') then
+                local tile = g_map.getTile(dest)
+                if tile and tile:getTopUseThing() then
+                  g_game.use(tile:getTopUseThing())
+                end
+              end
+              cb.currentWpIndex = (idx % #wps) + 1
+              cavebotAdvanceUI()
+              local nextStr = wps[cb.currentWpIndex] or ''
+              local nx, ny, nz = nextStr:match('(%d+),%s*(%d+),%s*(%d+)')
+              if nx and tonumber(nz) == pPos.z then
+                local nextDest = { x = tonumber(nx), y = tonumber(ny), z = tonumber(nz) }
+                local nextLower = nextStr:lower()
+                local nextForce = (nextLower:find('^stand') or nextLower:find('^hole')) ~= nil
+                walkToCoord(nextDest, nextForce)
+              end
+            else
+              local forceDir = (wpLower:find('^stand') or wpLower:find('^hole')) ~= nil
+              walkToCoord(dest, forceDir)
+            end
+          end
+        else
+          cb.currentWpIndex = (idx % #wps) + 1
         end
       end
       lastCavebotTime = now
@@ -6600,15 +6914,52 @@ function onHelperTextMessage(mode, text)
 end
 
 function onHelperPlayerPosChange(player, newPos, oldPos)
-  if not cavebotAutoRec or not newPos or not oldPos then return end
+  if not newPos or not oldPos then return end
+
+  if newPos.z ~= oldPos.z then
+    -- mudou de andar: tudo imediato (waypoints no mapa/chao, indice e proximo passo sem esperar 2.5s)
+    ruleCooldowns.zWait = nil
+    helperLastRenderZ = newPos.z
+    local cb = charConfig and charConfig.cavebot
+    if cb and cb.enabled and not cavebotAutoRec then
+      local wps = cb.waypoints or {}
+      local n = #wps
+      local idx = cb.currentWpIndex or 1
+      local guard = 0
+      while n > 0 and guard < n do
+        local z = (wps[idx] or ''):match('%d+,%s*%d+,%s*(%d+)')
+        if z and tonumber(z) == oldPos.z then
+          idx = (idx % n) + 1
+          guard = guard + 1
+        else
+          break
+        end
+      end
+      if idx ~= (cb.currentWpIndex or 1) then
+        cb.currentWpIndex = idx
+        cavebotAdvanceUI()
+      end
+    end
+    if cb then
+      renderCavebotWaypointsOnMaps()
+    end
+    if cb and cb.enabled and not cavebotAutoRec then
+      addEvent(onHelperTick)
+    end
+  end
+
+  if not cavebotAutoRec then return end
   if newPos.z == oldPos.z then return end
-  local offs = {
-    [North] = { 0, -1 }, [East] = { 1, 0 }, [South] = { 0, 1 }, [West] = { -1, 0 },
-    [NorthEast] = { 1, -1 }, [SouthEast] = { 1, 1 }, [SouthWest] = { -1, 1 }, [NorthWest] = { -1, -1 }
-  }
-  local o = offs[player:getDirection()] or { 0, 0 }
   local wps = charConfig.cavebot.waypoints
-  table.insert(wps, string.format('Stand: %d, %d, %d', oldPos.x + o[1], oldPos.y + o[2], oldPos.z))
+  -- Stand = tile exato da escada/buraco/rope no andar antigo, nunca 1 SQM depois
+  local standPos = resolveFloorChangeStandPos(oldPos, newPos)
+  local standStr = string.format('Stand: %d, %d, %d', standPos.x, standPos.y, standPos.z)
+  local lx, ly, lz = (wps[#wps] or ''):match('^Node:%s*(%d+),%s*(%d+),%s*(%d+)')
+  if lx and tonumber(lx) == standPos.x and tonumber(ly) == standPos.y and tonumber(lz) == standPos.z then
+    wps[#wps] = standStr   -- o ultimo Node ja estava nesse tile: vira Stand (sem duplicar)
+  else
+    table.insert(wps, standStr)
+  end
   table.insert(wps, string.format('Node: %d, %d, %d', newPos.x, newPos.y, newPos.z))
   lastAutoRecPos = { x = newPos.x, y = newPos.y, z = newPos.z }
   selectedCavebotWpIdx = #wps
@@ -6813,7 +7164,7 @@ function onGameStart()
   if tickEvent then
     removeEvent(tickEvent)
   end
-  tickEvent = cycleEvent(onHelperTick, 200)
+  tickEvent = cycleEvent(onHelperTick, 100)
 end
 
 function onGameEnd()

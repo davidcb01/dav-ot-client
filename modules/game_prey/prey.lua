@@ -622,7 +622,7 @@ function onPreyInactive(slot, timeUntilFreeReroll, wildcards)
 
     setPickSpecificPreyBonus(slot)
     updatePickSpecificPreyButton(slot, wildcards)
-    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    local tbPrey = g_game.isOnline() and g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
     if tbPrey and tbPrey.updateWidget then
         tbPrey.updateWidget(slot, 1, nil, prey, show)
     end
@@ -1986,10 +1986,11 @@ function onPreyListSelection(slot, races, nextFreeReroll, wildcards, option)
 
     updateChoosePreyButtonState(slot)
     updatePickSpecificPreyButton(slot, wildcards)
-    if g_game.getFeature(GameTaskboard) and Tracker and Tracker.Prey and Tracker.Prey.updateWidget then
+    local tbPrey = g_game.getFeature(GameTaskboard) and getTaskboardPreyTracker()
+    if tbPrey and tbPrey.updateWidget then
         prey.bonusType = PREY_BONUS_NONE
         prey.lockType = option or 0
-        Tracker.Prey.updateWidget(slot, 1, nil, prey, show)
+        tbPrey.updateWidget(slot, 1, nil, prey, show)
     end
 end
 

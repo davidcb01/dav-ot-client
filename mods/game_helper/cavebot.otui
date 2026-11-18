@@ -121,6 +121,17 @@ Panel
         !text: tr('Start Nearest')
         checked: true
 
+      CheckBox
+        id: showFloorWpCheck
+        anchors.top: enableCavebotCheck.bottom
+        anchors.left: parent.left
+        margin-top: 5
+        width: 230
+        !text: tr('Enable Waypoints on Floor')
+        tooltip: Draws a translucent black square with the waypoint number and type on the floor tile (also while recording).
+        checked: true
+        @onCheckChange: modules.game_helper.onToggleShowWaypointsFloor(self:isChecked())
+
       HelperSmallButton
         id: showCbHudBtn
         text: Show CB Mini-HUD
@@ -367,18 +378,59 @@ Panel
           margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('End Lure')
 
-        HorizontalSeparator
-          id: toolsSlotSep
+        Label
+          id: wpModeLbl
+          text: Waypoint Mode:
           anchors.top: dirGridPanel.bottom
           anchors.left: parent.left
+          margin-top: 8
+          color: #f0d080
+          text-auto-resize: true
+
+        CheckBox
+          id: wpModeAdd
+          anchors.top: wpModeLbl.top
+          anchors.left: wpModeLbl.right
+          margin-left: 10
+          margin-top: -3
+          width: 52
+          !text: tr('Add')
+          tooltip: Add: new waypoint goes to the end of the list.
+          checked: true
+          @onCheckChange: modules.game_helper.setCavebotWpMode('Add', self:isChecked())
+
+        CheckBox
+          id: wpModeInsert
+          anchors.top: wpModeAdd.top
+          anchors.left: wpModeAdd.right
+          margin-left: 6
+          width: 62
+          !text: tr('Insert')
+          tooltip: Insert: new waypoint goes right BEFORE the selected waypoint.
+          @onCheckChange: modules.game_helper.setCavebotWpMode('Insert', self:isChecked())
+
+        CheckBox
+          id: wpModeReplace
+          anchors.top: wpModeAdd.top
+          anchors.left: wpModeInsert.right
+          margin-left: 6
+          width: 72
+          !text: tr('Replace')
+          tooltip: Replace: new waypoint replaces the selected waypoint.
+          @onCheckChange: modules.game_helper.setCavebotWpMode('Replace', self:isChecked())
+
+        HorizontalSeparator
+          id: toolsSlotSep
+          anchors.top: wpModeLbl.bottom
+          anchors.left: parent.left
           anchors.right: parent.right
-          margin-top: 10
+          margin-top: 16
 
         Label
           text: Rope Item:
           anchors.top: toolsSlotSep.bottom
           anchors.left: parent.left
-          margin-top: 14
+          margin-top: 24
           color: #cccccc
           text-auto-resize: true
 
@@ -386,14 +438,14 @@ Panel
           id: ropeSlot
           anchors.top: toolsSlotSep.bottom
           anchors.left: prev.right
-          margin-top: 8
+          margin-top: 18
           margin-left: 6
 
         Label
           text: Shovel Item:
           anchors.top: toolsSlotSep.bottom
           anchors.left: ropeSlot.right
-          margin-top: 14
+          margin-top: 24
           margin-left: 18
           color: #cccccc
           text-auto-resize: true
@@ -402,7 +454,7 @@ Panel
           id: shovelSlot
           anchors.top: toolsSlotSep.bottom
           anchors.left: prev.right
-          margin-top: 8
+          margin-top: 18
           margin-left: 6
 
         Label

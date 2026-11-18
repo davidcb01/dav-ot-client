@@ -220,7 +220,7 @@ TaskBoardKillTracker < MiniWindow
   MiniWindowContents
     id: contentsPanel
     anchors.fill: parent
-    margin: 16 22 15 6
+    margin: 16 16 4 6
     layout: verticalBox
 
     Label
@@ -328,7 +328,7 @@ TaskBoardKillTracker < MiniWindow
       id: wslot9
       margin-top: 5
       margin-left: 3
-      margin-bottom: 5
+      margin-bottom: 2
       visible: false
 
   UIWidget

@@ -27,8 +27,9 @@ function TaskBoardController:initTracker()
         local hasTaskBoardSlots = preyTracker:recursiveGetChildById('bslot1') and
                                       preyTracker:recursiveGetChildById('weeklyTasksLabel')
         if hasTaskBoardSlots then
-            -- tracker ja existe (relogin): reaplica o cache na hora, sem piscar "Inactive"
+            -- tracker ja existe (init -> onGameStart ou relogin): reaplica cache e garante checkTracker()
             Tracker.restoreAll()
+            self:checkTracker()
             return
         end
 
@@ -232,10 +233,7 @@ local function updatePreyWidgetImpl(slot, state, currentHolderOutfit, preySlot, 
         return
     end
 
-    if slot == 2 then
-        trackerSlot:setVisible(true)
-        preyTracker:setContentMaximumHeight(195)
-    end
+    trackerSlot:setVisible(true)
 
     if state == SLOT_STATE_ACTIVE then
         local creatureAndBonus = preySlot.active.creatureAndBonus
@@ -275,6 +273,7 @@ Tracker.Prey.last = Tracker.Prey.last or {}
 -- existir (logo apos o login), o estado e reaplicado em Tracker.restoreAll().
 function Tracker.Prey.updateWidget(slot, state, currentHolderOutfit, preySlot, showCallback)
     Tracker.Prey.last[slot] = {
+        char = g_game.getCharacterName() or '',
         slot = slot,
         state = state,
         outfit = currentHolderOutfit,
@@ -548,7 +547,9 @@ function Tracker.restoreAll()
     end
 
     for _, a in pairs(Tracker.Prey.last) do
-        updatePreyWidgetImpl(a.slot, a.state, a.outfit, a.preySlot, a.show)
+        if not a.char or a.char == '' or a.char == char then
+            updatePreyWidgetImpl(a.slot, a.state, a.outfit, a.preySlot, a.show)
+        end
     end
     Tracker.fitHeight()
 end
@@ -579,19 +580,22 @@ function Tracker.fitHeight()
                 total = total + c:getHeight() + c:getMarginTop() + c:getMarginBottom()
             end
         end
-        -- margens do contentsPanel: top 16 + bottom 15
-        local h = total + 16 + 15
+        -- margens do contentsPanel: top 16 + bottom 4 + folga de borda 4
+        local h = total + 16 + 4 + 4
         local rb = preyTracker:getChildById('bottomResizeBorder')
         if rb then
-            rb:setMinimum(h)
-            rb:setMaximum(h)
+            rb:setMinimum(47)
+            rb:setMaximum(math.max(47, h))
         end
-        if preyTracker:getHeight() ~= h then
+        if not preyTracker:isOn() and preyTracker:getHeight() ~= h then
             preyTracker:setHeight(h)
             local parent = preyTracker:getParent()
             if parent and modules.game_interface and modules.game_interface.syncHorizontalPanels then
                 modules.game_interface.syncHorizontalPanels()
             end
+        end
+        if cp.updateScrollBars then
+            cp:updateScrollBars()
         end
     end)
 end
