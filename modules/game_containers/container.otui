@@ -56,6 +56,7 @@ ContainerWindow < MiniWindow
     anchors.left: parent.left
     anchors.right: miniwindowScrollBar.left
     anchors.bottom: separator.top
+    clip: false
     margin-left: 3
     margin-bottom: 1
     margin-top: -2
@@ -84,8 +85,8 @@ ContainerWindow < MiniWindow
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.bottom: parent.bottom
-    height: 20
-    margin: 2 2 4 3
+    height: 0
+    margin: 0
     visible: false
 
     Label

@@ -139,20 +139,7 @@ local function computeHorizontalPanelHeight(panel)
     if not panel or not panel:isOn() then
         return 0
     end
-    local sum = 0
-    local hasChild = false
-    for _, child in ipairs(panel:getChildren()) do
-        if child:isExplicitlyVisible() then
-            sum = sum + child:getHeight()
-            hasChild = true
-        end
-    end
-    if not hasChild then
-        return 138
-    end
-    local parent = panel:getParent()
-    local maxH = (parent and parent:getHeight() > 160) and (parent:getHeight() - 80) or 600
-    return math.max(138, sum + 4)
+    return 215
 end
 
 local syncingHorizontalPanels = false
@@ -171,13 +158,40 @@ function syncHorizontalPanels()
                 ((gameRightExtraPanel3 and gameRightExtraPanel3:isOn()) and 1 or 0)
             local w = cols * SIDE_PANEL_WIDTH + (cols - 1) * 1
             gameHorizontalRightPanel:setWidth(w)
+            
+            local visibleChildren = {}
             for _, child in ipairs(gameHorizontalRightPanel:getChildren()) do
-                child:setWidth(math.max(172, w - 4))
+                if child:isExplicitlyVisible() then
+                    table.insert(visibleChildren, child)
+                end
+            end
+            
+            local childCount = #visibleChildren
+            local individualWidth = childCount > 0 and math.floor((w - (childCount - 1) * 2) / childCount) or w
+            
+            for _, child in ipairs(visibleChildren) do
+                child:setWidth(math.max(172, individualWidth - 4))
                 local cp = child:getChildById('contentsPanel')
                 if cp and cp:getLayout() then
                     cp:getLayout():update()
+                    local layout = cp:getLayout()
+                    local cellSize = layout:getCellSize() or {width=34, height=34}
+                    local cellSpacing = layout:getCellSpacing() or 3
+                    local panelW = cp:getWidth() - 12
+                    local colsGrid = math.max(1, math.floor((panelW + cellSpacing) / (cellSize.width + cellSpacing)))
+                    local cap = 32
+                    local containerId = child:getId():gsub("container", "")
+                    local container = g_game.getContainer(tonumber(containerId) or 0)
+                    if container and container.getCapacity then
+                        cap = container:getCapacity()
+                    end
+                    local rows = math.ceil(cap / colsGrid)
+                    local gridH = rows * (cellSize.height + cellSpacing) - cellSpacing
+                    local totalH = gridH + 15 + 3 + 25
+                    child:setHeight(math.min(211, child:getHeight()))
                 end
             end
+            
             local h = computeHorizontalPanelHeight(gameHorizontalRightPanel)
             gameHorizontalRightPanel:setHeight(h)
             local layout = gameHorizontalRightPanel:getLayout()
@@ -213,13 +227,40 @@ function syncHorizontalPanels()
             else
                 local w = cols * SIDE_PANEL_WIDTH + (cols - 1) * 1
                 gameHorizontalLeftPanel:setWidth(w)
+                
+                local visibleChildrenLeft = {}
                 for _, child in ipairs(gameHorizontalLeftPanel:getChildren()) do
-                    child:setWidth(math.max(172, w - 4))
+                    if child:isExplicitlyVisible() then
+                        table.insert(visibleChildrenLeft, child)
+                    end
+                end
+                
+                local childCountLeft = #visibleChildrenLeft
+                local individualWidthLeft = childCountLeft > 0 and math.floor((w - (childCountLeft - 1) * 2) / childCountLeft) or w
+                
+                for _, child in ipairs(visibleChildrenLeft) do
+                    child:setWidth(math.max(172, individualWidthLeft - 4))
                     local cp = child:getChildById('contentsPanel')
                     if cp and cp:getLayout() then
                         cp:getLayout():update()
+                        local layout = cp:getLayout()
+                        local cellSize = layout:getCellSize() or {width=34, height=34}
+                        local cellSpacing = layout:getCellSpacing() or 3
+                        local panelW = cp:getWidth() - 12
+                        local colsGrid = math.max(1, math.floor((panelW + cellSpacing) / (cellSize.width + cellSpacing)))
+                        local cap = 32
+                        local containerId = child:getId():gsub("container", "")
+                        local container = g_game.getContainer(tonumber(containerId) or 0)
+                        if container and container.getCapacity then
+                            cap = container:getCapacity()
+                        end
+                        local rows = math.ceil(cap / colsGrid)
+                        local gridH = rows * (cellSize.height + cellSpacing) - cellSpacing
+                        local totalH = gridH + 15 + 3 + 25
+                        child:setHeight(math.min(211, child:getHeight()))
                     end
                 end
+
                 local h = computeHorizontalPanelHeight(gameHorizontalLeftPanel)
                 gameHorizontalLeftPanel:setHeight(h)
                 local layout = gameHorizontalLeftPanel:getLayout()

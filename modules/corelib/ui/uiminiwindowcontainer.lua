@@ -193,10 +193,14 @@ function UIMiniWindowContainer:onDrop(widget, mousePos)
         end
 
         if isHorizontal then
+            local targetW = math.max(172, self:getWidth() - 4)
+            widget:setWidth(targetW)
             local curH = widget:getHeight()
             if not widget:isOn() then
                 local isContainer = widget:getId():find('^container') ~= nil
                 if isContainer then
+                    local cp = widget:getChildById('contentsPanel')
+                    if cp and cp:getLayout() then cp:getLayout():update() end
                     local rb = widget:getChildById('bottomResizeBorder')
                     local rbMax = rb and rb.getMaximum and rb:getMaximum() or 0
                     if rbMax > 0 then

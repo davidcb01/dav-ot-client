@@ -402,6 +402,20 @@ function findSpellByWords(words)
   return nil
 end
 
+do
+  local rawFind = findSpellByWords
+  local cache = {}
+  function findSpellByWords(words)
+    if not words or words == '' then return nil end
+    local hit = cache[words]
+    if hit == nil then
+      hit = rawFind(words) or false
+      cache[words] = hit
+    end
+    return hit or nil
+  end
+end
+
 function findItemInCatalog(itemId)
   local id = tonumber(itemId) or 0
   if id <= 0 then return nil end
@@ -648,6 +662,7 @@ local function normalizeShooterRule(r)
     r = {}
   end
   r.type = r.type or 'S'
+  r._lastCastAt = nil
   r.words = r.words or ''
   r.name = r.name or r.words
   r.clientId = tonumber(r.clientId) or 1
@@ -5008,7 +5023,7 @@ function setupWidgetsAndCallbacks()
   local function initLangCombo(cb)
     if not cb then return end
     cb:addOption('English', 'en')
-    cb:addOption('Português', 'pt')
+    cb:addOption('Portuguï¿½s', 'pt')
     cb:setCurrentOptionByData(getHelperLanguage(), true)
     cb.onOptionChange = function(w, text, data)
       if refreshingLanguageCombos then return end
@@ -5036,12 +5051,16 @@ local function getDistanceBetween(p1, p2)
 end
 
 local function parseCommaSet(str)
+  if not str or str == '' then return {} end
+  helperCommaSetCache = helperCommaSetCache or {}
+  local cached = helperCommaSetCache[str]
+  if cached then return cached end
   local set = {}
-  if not str or str == '' then return set end
   for token in str:gmatch('[^,]+') do
     local clean = token:lower():gsub('^%s+', ''):gsub('%s+$', '')
     if clean ~= '' then set[clean] = true end
   end
+  helperCommaSetCache[str] = set
   return set
 end
 
@@ -5743,6 +5762,45 @@ function updateItemTimerCountdownUI(now)
   end
 end
 
+function getSortedHealSpells(list)
+  local arr = {}
+  for i, sp in ipairs(list or {}) do
+    local isMp = (sp.mode == 'mp_low' or sp.mode == 'mp_high')
+    arr[#arr + 1] = { sp = sp, i = i, g = isMp and 2 or 1 }
+  end
+  table.sort(arr, function(a, b)
+    if a.g ~= b.g then return a.g < b.g end
+    if a.g == 1 then
+      local pa, pb = tonumber(a.sp.pct) or 80, tonumber(b.sp.pct) or 80
+      if pa ~= pb then return pa < pb end
+    end
+    return a.i < b.i
+  end)
+  local out = {}
+  for k, e in ipairs(arr) do out[k] = e.sp end
+  return out
+end
+
+function helperTickError(section, err)
+  helperTickErrAt = helperTickErrAt or {}
+  local t = g_clock.millis()
+  if t - (helperTickErrAt[section] or -10000) > 5000 then
+    helperTickErrAt[section] = t
+    perror('[Helper] erro em ' .. section .. ': ' .. tostring(err))
+  end
+end
+
+function saveCurrentProfileThrottled()
+  local t = g_clock.millis()
+  if t - (helperLastSaveAt or -10000) >= 5000 then
+    helperLastSaveAt = t
+    helperSavePending = false
+    saveCurrentProfile()
+  else
+    helperSavePending = true
+  end
+end
+
 function onHelperTick()
   if not g_game.isOnline() then return end
   local player = g_game.getLocalPlayer()
@@ -5773,16 +5831,22 @@ function onHelperTick()
       lastAutoRecPos = { x = pPos.x, y = pPos.y, z = pPos.z }
       selectedCavebotWpIdx = #wps
       refreshCavebotUI(true)
-      saveCurrentProfile()
+      saveCurrentProfileThrottled()
     elseif not lastAutoRecPos or getDistanceBetween(lastAutoRecPos, pPos) >= recDist then
       if not lastWpPos or lastWpPos.x ~= pPos.x or lastWpPos.y ~= pPos.y or lastWpPos.z ~= pPos.z then
         table.insert(wps, string.format('Node: %d, %d, %d', pPos.x, pPos.y, pPos.z))
         selectedCavebotWpIdx = #wps
         refreshCavebotUI(true)
-        saveCurrentProfile()
+        saveCurrentProfileThrottled()
       end
       lastAutoRecPos = { x = pPos.x, y = pPos.y, z = pPos.z }
     end
+  end
+
+  if helperSavePending and (now - (helperLastSaveAt or 0)) >= 5000 then
+    helperSavePending = false
+    helperLastSaveAt = now
+    saveCurrentProfile()
   end
 
   updateItemTimerCountdownUI(now)
@@ -5807,149 +5871,155 @@ function onHelperTick()
   end
 
   -- 1. AUTO HEALING (Unlimited Spells & Potions + Strict Module Gate)
-  if vp.healing.enabled then
-    if vp.healing.manaShield.enabled and (currentVocName == 'Sorcerer' or currentVocName == 'Druid' or currentVocName == 'Monk')
-       and vp.healing.manaShield.words ~= '' and not hasUtamo and not inPz and (now - lastCastTime) >= 1000 then
-      g_game.talk(vp.healing.manaShield.words)
-      lastCastTime = now
-    end
+  local okHeal, errHeal = pcall(function()
+    if vp.healing.enabled then
+      if vp.healing.manaShield.enabled and (currentVocName == 'Sorcerer' or currentVocName == 'Druid' or currentVocName == 'Monk')
+        and vp.healing.manaShield.words ~= '' and not hasUtamo and not inPz and (now - lastCastTime) >= 1000 then
+        g_game.talk(vp.healing.manaShield.words)
+        lastCastTime = now
+      end
 
-    if vp.healing.curePara.enabled and vp.healing.curePara.words ~= '' and isParalyzed and (now - lastCastTime) >= 900 then
-      g_game.talk(vp.healing.curePara.words)
-      lastCastTime = now
-    end
+      if vp.healing.curePara.enabled and vp.healing.curePara.words ~= '' and isParalyzed and (now - lastCastTime) >= 900 then
+        g_game.talk(vp.healing.curePara.words)
+        lastCastTime = now
+      end
 
-    if (now - lastCastTime) >= 950 then
-      for _, sp in ipairs(vp.healing.spells) do
-        if sp and sp.enabled ~= false and sp.words and sp.words ~= '' and mpPct >= (tonumber(sp.minMp) or 0)
-           and not isSpellOnClientCooldown(sp.words, now) then
-          local thresh = tonumber(sp.pct) or 80
-          local triggered = false
-          if sp.mode == 'mp_low' then
-            triggered = (mpPct <= thresh)
-          elseif sp.mode == 'mp_high' then
-            triggered = (mpPct >= thresh)
-          else
-            triggered = (hpPct <= thresh)
-          end
-          if triggered then
-            g_game.talk(sp.words)
-            lastCastTime = now
-            break
+      if (now - lastCastTime) >= 950 then
+        for _, sp in ipairs(getSortedHealSpells(vp.healing.spells)) do
+          if sp and sp.enabled ~= false and sp.words and sp.words ~= '' and mpPct >= (tonumber(sp.minMp) or 0)
+            and not isSpellOnClientCooldown(sp.words, now) then
+            local thresh = tonumber(sp.pct) or 80
+            local triggered = false
+            if sp.mode == 'mp_low' then
+              triggered = (mpPct <= thresh)
+            elseif sp.mode == 'mp_high' then
+              triggered = (mpPct >= thresh)
+            else
+              triggered = (hpPct <= thresh)
+            end
+            if triggered then
+              g_game.talk(sp.words)
+              lastCastTime = now
+              break
+            end
           end
         end
       end
-    end
 
-    if (now - lastPotionTime) >= 950 then
-      for _, pt in ipairs(vp.healing.potions) do
-        if pt and pt.enabled ~= false and pt.id and pt.id > 0 then
-          local thresh = tonumber(pt.pct) or 50
-          local shouldUse = false
-          if pt.ptype == 'mp' and mpPct <= thresh then
-            shouldUse = true
-          elseif pt.ptype ~= 'mp' and hpPct <= thresh then
-            shouldUse = true
-          end
-          if shouldUse then
-            g_game.useInventoryItemWith(pt.id, player)
-            lastPotionTime = now
-            break
+      if (now - lastPotionTime) >= 950 then
+        for _, pt in ipairs(vp.healing.potions) do
+          if pt and pt.enabled ~= false and pt.id and pt.id > 0 then
+            local thresh = tonumber(pt.pct) or 50
+            local shouldUse = false
+            if pt.ptype == 'mp' and mpPct <= thresh then
+              shouldUse = true
+            elseif pt.ptype ~= 'mp' and hpPct <= thresh then
+              shouldUse = true
+            end
+            if shouldUse then
+              g_game.useInventoryItemWith(pt.id, player)
+              lastPotionTime = now
+              break
+            end
           end
         end
       end
-    end
 
-    if currentVocName == 'Druid' or currentVocName == 'Monk' then
-      local mr = vp.healing.masRes
-      if mr and mr.enabled and mr.words ~= '' and (now - lastCastTime) >= 1000 then
-        if mpPct >= (mr.selfMp or 20) then
-          local lowFriends = 0
-          local mrThresh = mr.hp or 85
-          if mr.includeSelf ~= false and hpPct <= mrThresh then lowFriends = lowFriends + 1 end
+      if currentVocName == 'Druid' or currentVocName == 'Monk' then
+        local mr = vp.healing.masRes
+        if mr and mr.enabled and mr.words ~= '' and (now - lastCastTime) >= 1000 then
+          if mpPct >= (mr.selfMp or 20) then
+            local lowFriends = 0
+            local mrThresh = mr.hp or 85
+            if mr.includeSelf ~= false and hpPct <= mrThresh then lowFriends = lowFriends + 1 end
+            for _, p in ipairs(nearbyPlayers) do
+              if getDistanceBetween(pPos, p:getPosition()) <= 3 and isFriendAllowed(p, { party = mr.checkParty, guild = mr.checkGuild }) then
+                if p:getHealthPercent() <= mrThresh then lowFriends = lowFriends + 1 end
+              end
+            end
+            if lowFriends >= (mr.minPlayers or 2) then
+              g_game.talk(mr.words)
+              lastCastTime = now
+            end
+          end
+        end
+
+        local function resolveFriendVocRule(cfg, p)
+          if not cfg or not cfg.vocs then return nil end
+          local vocName = getCreatureVocName(p)
+          if vocName then
+            return cfg.vocs[vocName]
+          end
+          if cfg.vocs.Knight and cfg.vocs.Knight.enabled then
+            return cfg.vocs.Knight
+          end
+          local bestRule = nil
+          for _, r in pairs(cfg.vocs) do
+            if type(r) == 'table' and r.enabled then
+              if not bestRule or (tonumber(r.hp) or 0) > (tonumber(bestRule.hp) or 0) then
+                bestRule = r
+              end
+            end
+          end
+          return bestRule
+        end
+
+        local function tryFriendHealConfig(cfg)
+          if not cfg or not cfg.enabled or not cfg.words or cfg.words == '' then return false end
+          if hpPct < (cfg.selfHp or 60) or mpPct < (cfg.selfMp or 15) then return false end
+          local bestCandidate, bestEff = nil, 999
           for _, p in ipairs(nearbyPlayers) do
-            if getDistanceBetween(pPos, p:getPosition()) <= 3 and isFriendAllowed(p, { party = mr.checkParty, guild = mr.checkGuild }) then
-              if p:getHealthPercent() <= mrThresh then lowFriends = lowFriends + 1 end
+            if isFriendAllowed(p, vp.healing.sioFilters) then
+              local vRule = resolveFriendVocRule(cfg, p)
+              if vRule and vRule.enabled then
+                local fHp = p:getHealthPercent()
+                if fHp <= (vRule.hp or 80) then
+                  local eff = fHp - (((tonumber(vRule.prio) or 3) - 1) * 5)
+                  if eff < bestEff then
+                    bestEff, bestCandidate = eff, p
+                  end
+                end
+              end
             end
           end
-          if lowFriends >= (mr.minPlayers or 2) then
-            g_game.talk(mr.words)
+          if bestCandidate then
+            g_game.talk(cfg.words .. ' "' .. bestCandidate:getName())
             lastCastTime = now
+            return true
           end
+          return false
         end
-      end
 
-      local function resolveFriendVocRule(cfg, p)
-        if not cfg or not cfg.vocs then return nil end
-        local vocName = getCreatureVocName(p)
-        if vocName then
-          return cfg.vocs[vocName]
-        end
-        if cfg.vocs.Knight and cfg.vocs.Knight.enabled then
-          return cfg.vocs.Knight
-        end
-        local bestRule = nil
-        for _, r in pairs(cfg.vocs) do
-          if type(r) == 'table' and r.enabled then
-            if not bestRule or (tonumber(r.hp) or 0) > (tonumber(bestRule.hp) or 0) then
-              bestRule = r
-            end
-          end
-        end
-        return bestRule
-      end
-
-      local function tryFriendHealConfig(cfg)
-        if not cfg or not cfg.enabled or not cfg.words or cfg.words == '' then return false end
-        if hpPct < (cfg.selfHp or 60) or mpPct < (cfg.selfMp or 15) then return false end
-        local bestCandidate, bestEff = nil, 999
-        for _, p in ipairs(nearbyPlayers) do
-          if isFriendAllowed(p, vp.healing.sioFilters) then
-            local vRule = resolveFriendVocRule(cfg, p)
-            if vRule and vRule.enabled then
-              local fHp = p:getHealthPercent()
-              if fHp <= (vRule.hp or 80) then
-                local eff = fHp - (((tonumber(vRule.prio) or 3) - 1) * 5)
-                if eff < bestEff then
-                  bestEff, bestCandidate = eff, p
-                end
-              end
-            end
-          end
-        end
-        if bestCandidate then
-          g_game.talk(cfg.words .. ' "' .. bestCandidate:getName())
-          lastCastTime = now
-          return true
-        end
-        return false
-      end
-
-      if (now - lastCastTime) >= 1000 then
-        local granHandled = (currentVocName == 'Druid') and tryFriendHealConfig(vp.healing.granSio) or false
-        if not granHandled then
-          if not tryFriendHealConfig(vp.healing.sio) and vp.healing.partyHeal.enabled and vp.healing.partyHeal.words ~= '' then
-            local minHp = vp.healing.sio and vp.healing.sio.selfHp or 60
-            local minMp = vp.healing.sio and vp.healing.sio.selfMp or 15
-            if hpPct >= minHp and mpPct >= minMp then
-              for _, p in ipairs(nearbyPlayers) do
-                if isFriendAllowed(p, vp.healing.sioFilters) and p:getHealthPercent() <= (vp.healing.partyHeal.pct or 75) then
-                  g_game.talk(vp.healing.partyHeal.words .. ' "' .. p:getName())
-                  lastCastTime = now
-                  break
+        if (now - lastCastTime) >= 1000 then
+          local granHandled = (currentVocName == 'Druid') and tryFriendHealConfig(vp.healing.granSio) or false
+          if not granHandled then
+            if not tryFriendHealConfig(vp.healing.sio) and vp.healing.partyHeal.enabled and vp.healing.partyHeal.words ~= '' then
+              local minHp = vp.healing.sio and vp.healing.sio.selfHp or 60
+              local minMp = vp.healing.sio and vp.healing.sio.selfMp or 15
+              if hpPct >= minHp and mpPct >= minMp then
+                for _, p in ipairs(nearbyPlayers) do
+                  if isFriendAllowed(p, vp.healing.sioFilters) and p:getHealthPercent() <= (vp.healing.partyHeal.pct or 75) then
+                    g_game.talk(vp.healing.partyHeal.words .. ' "' .. p:getName())
+                    lastCastTime = now
+                    break
+                  end
                 end
               end
             end
           end
         end
       end
-    end
 
-    if vp.healing.recovery.enabled and vp.healing.recovery.words ~= '' and not inPz and hpPct <= (vp.healing.recovery.pct or 95) and (now - lastCastTime) >= 60000 then
-      g_game.talk(vp.healing.recovery.words)
-      lastCastTime = now
+      if vp.healing.recovery.enabled and vp.healing.recovery.words ~= '' and not inPz
+        and hpPct <= (vp.healing.recovery.pct or 95)
+        and (now - (ruleCooldowns.recovery or -60000)) >= 60000 and (now - lastCastTime) >= 950 then
+        g_game.talk(vp.healing.recovery.words)
+        ruleCooldowns.recovery = now
+        lastCastTime = now
+      end
     end
-  end
+  end)
+  if not okHeal then helperTickError('healing', errHeal) end
 
   -- 2. AUTO TARGETING (Modes A-I) & DAVCASTER SHOOTER
   local tgtCfg = vp.target or {}
@@ -5960,7 +6030,15 @@ function onHelperTick()
       g_game.setChaseMode(desiredChase)
     end
     local maxRange = math.max(1, math.min(10, tonumber(tgtCfg.maxRange) or 7))
-    local tgtMonsters = getNearbyMonsters(pPos, maxRange, tgtCfg.ignoreList)
+        local tgtMonsters
+    if maxRange <= 7 and (tgtCfg.ignoreList or '') == (vp.shooter.ignoreList or '') then
+      tgtMonsters = {}
+      for _, m in ipairs(nearbyMonsters) do
+        if m.dist <= maxRange then tgtMonsters[#tgtMonsters + 1] = m end
+      end
+    else
+      tgtMonsters = getNearbyMonsters(pPos, maxRange, tgtCfg.ignoreList)
+    end
     local ignoreSet = parseCommaSet(tgtCfg.ignoreList)
 
     local keepValid = false
@@ -6087,8 +6165,10 @@ function onHelperTick()
         end
       end
 
-      if chosen and isValidMonsterCreature(chosen) and chosen ~= currentTarget then
+      if chosen and isValidMonsterCreature(chosen) and chosen ~= currentTarget
+         and (now - (ruleCooldowns.attackSent or 0)) >= 400 then
         currentTarget = chosen
+        ruleCooldowns.attackSent = now
         g_game.attack(currentTarget)
       end
     end
@@ -6138,7 +6218,7 @@ function onHelperTick()
             local hpMaxOk = (not tgt) or (maxVal <= 0) or (tgtHp <= maxVal)
             local mpOk = mpPct >= (tonumber(rule.mpPct) or 0)
             local delayMs = tonumber(rule.delay) or 0
-            local lastRuleCast = rule._lastCastAt or 0
+            local lastRuleCast = ruleCooldowns[rule] or 0
             local cdOk = ((delayMs <= 0) or ((now - lastRuleCast) >= delayMs))
               and (rule.type == 'R' or not isSpellOnClientCooldown(trimmedWords, now))
             local trapMin = math.max(1, math.min(8, tonumber(c.trappedCount) or 8))
@@ -6181,7 +6261,7 @@ function onHelperTick()
               if rule.type == 'R' then
                 if rule.itemId and rule.itemId > 0 and isValidMonsterCreature(runeTarget) then
                   g_game.useInventoryItemWith(rule.itemId, runeTarget)
-                  rule._lastCastAt = now
+                  ruleCooldowns[rule] = now
                   lastShooterCastTime = now
                   attackCastThisTick = true
                   break
@@ -6189,7 +6269,7 @@ function onHelperTick()
               else
                 if trimmedWords ~= '' then
                   g_game.talk(trimmedWords)
-                  rule._lastCastAt = now
+                  ruleCooldowns[rule] = now
                   if isSupportSpell then
                     lastSupportShooterCastTime = now
                     supportCastThisTick = true
@@ -6219,7 +6299,6 @@ function onHelperTick()
      and mpPct >= (tonumber(tl.manaTrain.pct) or 85) and (now - lastManaTrainTime) >= 2200
      and (now - lastCastTime) >= 1000 and not isSpellOnClientCooldown(tl.manaTrain.words, now) then
     g_game.talk(tl.manaTrain.words)
-    lastCastTime = now
     lastManaTrainTime = now
   end
 
@@ -6242,7 +6321,9 @@ function onHelperTick()
     lastExerciseTime = now
   end
 
-  if tl.autoEat and (now - lastEatTime) >= 15000 then
+    local hungryOk = true
+    if PlayerStates.Hungry ~= nil then hungryOk = player:hasState(PlayerStates.Hungry) end
+    if tl.autoEat and hungryOk and now >= (ruleCooldowns.eatFullUntil or 0) and (now - lastEatTime) >= 15000 then
     for _, cont in pairs(g_game.getContainers()) do
       local ate = false
       for _, item in ipairs(cont:getItems()) do
@@ -6257,7 +6338,8 @@ function onHelperTick()
     lastEatTime = now
   end
 
-  if tl.changeGold and (now - lastGoldTime) >= 150 then
+    if tl.changeGold and (now - lastGoldTime) >= 150 then
+    local anyUsed = false
     for _, cid in ipairs({ 3031, 3035 }) do
       local used = false
       for _, cont in pairs(g_game.getContainers()) do
@@ -6275,9 +6357,13 @@ function onHelperTick()
         if used then break end
       end
       if used then
+        anyUsed = true
         lastGoldTime = now
         break
       end
+    end
+    if not anyUsed then
+      lastGoldTime = now + 650
     end
   end
 
@@ -6306,6 +6392,7 @@ function onHelperTick()
   runFollowEngine(player, pPos, now)
 
   -- 4. CAVEBOT ENGINE (OTClient-native Percentage Speed + Dynamic Lure + Stand vs Node)
+  local okCb, errCb = pcall(function()
   if charConfig.cavebot.enabled then
     local cb = charConfig.cavebot
     local cbS = cb.settings or {}
@@ -6385,9 +6472,14 @@ function onHelperTick()
           if x and y and z then
             local dest = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
             if dest.z ~= pPos.z then
-              cb.currentWpIndex = (idx % #wps) + 1
-              refreshCavebotUI()
+              ruleCooldowns.zWait = ruleCooldowns.zWait or now
+              if (now - ruleCooldowns.zWait) >= 2500 then
+                ruleCooldowns.zWait = nil
+                cb.currentWpIndex = (idx % #wps) + 1
+                refreshCavebotUI()
+              end
             else
+              ruleCooldowns.zWait = nil
               local isNode = wpLower:find('^node') ~= nil
               local acceptDist = isNode and 1 or 0
               if getDistanceBetween(pPos, dest) <= acceptDist then
@@ -6435,11 +6527,19 @@ function onHelperTick()
       lastCavebotTime = now
     end
   end
+  end)
+  if not okCb then helperTickError('cavebot', errCb) end
 end
 
 -- ============================================================================
 -- MODULE LIFECYCLE
 -- ============================================================================
+
+function onHelperTextMessage(mode, text)
+  if text and text:lower():find('you are full', 1, true) then
+    ruleCooldowns.eatFullUntil = g_clock.millis() + 600000
+  end
+end
 
 function init()
   g_ui.importStyle('modals')
@@ -6522,6 +6622,7 @@ function init()
   connect(g_game, {
     onGameStart = onGameStart,
     onGameEnd = onGameEnd,
+    onTextMessage = onHelperTextMessage,
     onFollowingCreatureChange = onHelperFollowCreatureChange,
     onSpellCooldown = onHelperSpellCooldown,
     onSpellGroupCooldown = onHelperSpellGroupCooldown,
@@ -6562,6 +6663,7 @@ function terminate()
   disconnect(g_game, {
     onGameStart = onGameStart,
     onGameEnd = onGameEnd,
+    onTextMessage = onHelperTextMessage,
     onFollowingCreatureChange = onHelperFollowCreatureChange,
     onSpellCooldown = onHelperSpellCooldown,
     onSpellGroupCooldown = onHelperSpellGroupCooldown,
@@ -6606,6 +6708,14 @@ function onGameStart()
   spellCooldownUntil = {}
   groupCooldownUntil = {}
   ruleCooldowns = {}
+  lastCastTime = 0
+  lastShooterCastTime = 0
+  lastSupportShooterCastTime = 0
+  lastPotionTime = 0
+  lastCavebotTime = 0
+  cbPauseState = false
+  cavebotLureActive = false
+  playerStopTracker = { pos = nil, since = 0 }
   loadCharacterProfile(currentCharName)
 
   if statsWindow then
@@ -6637,6 +6747,14 @@ function onGameEnd()
   spellCooldownUntil = {}
   groupCooldownUntil = {}
   ruleCooldowns = {}
+  lastCastTime = 0
+  lastShooterCastTime = 0
+  lastSupportShooterCastTime = 0
+  lastPotionTime = 0
+  lastCavebotTime = 0
+  cbPauseState = false
+  cavebotLureActive = false
+  playerStopTracker = { pos = nil, since = 0 }
   cavebotAutoRec = false
   lastBlessVisualState = nil
   lastBlessDialogCoreOk = nil

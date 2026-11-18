@@ -339,7 +339,7 @@ UIWidget
     anchors.left: parent.left
     anchors.top: parent.top
     width: 176
-    height: 138
+    height: 215
     padding: 2
     &ignoreFillAll: true
     focusable: false
@@ -356,7 +356,7 @@ UIWidget
     anchors.right: parent.right
     anchors.top: parent.top
     width: 176
-    height: 138
+    height: 215
     padding: 2
     &ignoreFillAll: true
     focusable: false

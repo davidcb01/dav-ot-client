@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261117.1527",
-  "updated_at": "2026-11-17T15:27:05",
-  "changelog": "tentativa de corrigir painel horizontal n 9999999",
+  "version": "15.25.261117.2202",
+  "updated_at": "2026-11-17T22:02:18",
+  "changelog": "ajustes gerais no client e helper",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -20,6 +20,10 @@
     "otclient.exe": {
       "sha256": "a8c97a92d476ed7440fbe59977fd49e12bbd2dc3a48af8f9b9a8ddfbe6fa407b",
       "size": 43272704
+    },
+    "\u00ef\u00bb\u00bf": {
+      "sha256": "163c0b317e20059f7a4b81128e435daa1ab808ebd09a84aae47720ff700cbcd9",
+      "size": 105960
     },
     "data/setup.otml": {
       "sha256": "48439da2b9b0fbc2af6ea38ca357721e770c2670cb26abdd13ee663324f91d3f",
@@ -34222,8 +34226,8 @@
       "size": 20142
     },
     "mods/game_helper/helper.lua": {
-      "sha256": "0c3940a57dd64f657d1f7cf5bd3f56fb76092d02438111625ea01804b5a5290a",
-      "size": 265526
+      "sha256": "53d591739997fd5da9b04a4cc7db5836dd587deaeab93635595b746bc33e777a",
+      "size": 269442
     },
     "mods/game_helper/helper.otmod": {
       "sha256": "1a024ad736fc2b2acaa7436e957c4b2c6c4ba3c84a68829e44fa24b829d00194",
@@ -34978,8 +34982,8 @@
       "size": 26960
     },
     "modules/corelib/ui/uiminiwindowcontainer.lua": {
-      "sha256": "c2958ab81a5218ecda66d2115628e3554abdf9ab7331c6ca4b9b22ca3fba5ab0",
-      "size": 10299
+      "sha256": "6c83622ee1cea652253d9e2302606c736ec7ab848b40cc929d86b128f6371cc8",
+      "size": 10545
     },
     "modules/corelib/ui/uimovabletabbar.lua": {
       "sha256": "db5cc349be51a4a8ffd7a8c5678742fe006ec9b29c7361fee69e3dd1cb1c4530",
@@ -35514,12 +35518,12 @@
       "size": 1179
     },
     "modules/game_containers/container.otui": {
-      "sha256": "df9fb01f825399a00b61412bcf7f17f14c9b249bd0b137391050f517752c8695",
-      "size": 4809
+      "sha256": "497e5b03d24902d1970f4c46e74523648da3c02db8fd41672345c5d14dc24e32",
+      "size": 4818
     },
     "modules/game_containers/containers.lua": {
-      "sha256": "b2a33bbe5bb6c9a47c09c7cea0df421528fe70f9b224b8c61f3dbcf20623684f",
-      "size": 62121
+      "sha256": "7c7944a7dcf7d4bc97bbb71b22443812641c63bdc0e073fca4c9722f82c33b66",
+      "size": 62655
     },
     "modules/game_containers/containers.otmod": {
       "sha256": "2e1dd70248167aa76411e091d30d984a8b9e7a2fdca4d73c2d2f14f2e9bfb0e0",
@@ -36946,11 +36950,11 @@
       "size": 10415
     },
     "modules/game_interface/gameinterface.lua": {
-      "sha256": "7c95ee12c0c8e0d1bf34ba8068774aea2baa443b083ba9655babc3a190c6c069",
-      "size": 89130
+      "sha256": "e722c71a52ca8d085527c70bea48e05d98afbb5438f2a8806856d82a581c1638",
+      "size": 91730
     },
     "modules/game_interface/gameinterface.otui": {
-      "sha256": "86236736ffd17c728e0b80a04f23f090a6a55adb742578fdf60e38c897f3e14a",
+      "sha256": "99777d5f9d051d813cf3e4e8596a516785830662e57286ab2e08c50ed608495c",
       "size": 12317
     },
     "modules/game_interface/interface.otmod": {

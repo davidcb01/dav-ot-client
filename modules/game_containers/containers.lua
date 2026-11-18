@@ -1253,7 +1253,13 @@ function onContainerOpen(container, previousContainer)
     container.window = containerWindow
     container.itemsPanel = containerPanel
 
-    toggleContainerPages(containerWindow, container:hasPages())
+    local function shouldShowPages()
+        if not container:hasPages() then return false end
+        local totalPages = 1 + math.floor(math.max(0, (container:getSize() - 1)) / container:getCapacity())
+        return totalPages > 1
+    end
+
+    toggleContainerPages(containerWindow, shouldShowPages())
     refreshContainerPages(container)
 
     local layout = containerPanel:getLayout()
@@ -1262,14 +1268,20 @@ function onContainerOpen(container, previousContainer)
     local step = cellSize.height + cellSpacing
     local contentsPadV = (containerPanel:getPaddingTop() or 6) + (containerPanel:getPaddingBottom() or 6)
     local function computeExactMaxHeight(nl)
-        local hasPages = container:hasPages()
+        local hasPages = shouldShowPages()
         local gridH = math.max(nl, 1) * step - cellSpacing
-        -- 15px header->contents top + 32px footer (separator + pagePanel) or 3px bottom margin + 4px safe slack
         local frameH = 15 + (hasPages and 32 or 3) + 4
-        return gridH + contentsPadV + frameH
+        local totalH = gridH + contentsPadV + frameH
+        
+        local parent = containerWindow:getParent()
+        local inHoriz = parent and (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel')
+        if inHoriz then
+            totalH = math.min(totalH, 211)
+        end
+        return totalH
     end
     local function computeMinHeight()
-        local hasPages = container:hasPages()
+        local hasPages = shouldShowPages()
         return cellSize.height + contentsPadV + 15 + (hasPages and 32 or 3) + 4
     end
 
@@ -1289,15 +1301,26 @@ function onContainerOpen(container, previousContainer)
         if not containerWindow or containerWindow:isDestroyed() or not containerPanel or containerPanel:isDestroyed() then
             return
         end
-        local hasPages = container:hasPages()
+        local hasPages = shouldShowPages()
         if not containerWindow:isOn() then
             toggleContainerPages(containerWindow, hasPages)
             local mb = containerWindow:getChildById('miniborder')
             if mb then mb:raise() end
         end
         if layout then
+            local parent = containerWindow:getParent()
+            local inHoriz = parent and (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel')
+            if inHoriz and parent:getWidth() > 176 then
+                local targetW = math.max(172, parent:getWidth() - 4)
+                if containerWindow:getWidth() ~= targetW then
+                    containerWindow:setWidth(targetW)
+                end
+            end
+            containerPanel:setImageClip({ x = 0, y = 0, width = 0, height = 0 })
             layout:update()
-            local nl = math.max(layout:getNumLines(), 1)
+            local panelW = containerPanel:getWidth() - contentsPadV
+            local cols = math.max(1, layout:getNumColumns() or math.floor((panelW + cellSpacing) / (cellSize.width + cellSpacing)))
+            local nl = math.max(1, math.ceil(container:getCapacity() / cols))
             local minH = computeMinHeight()
             local maxH = math.max(minH, computeExactMaxHeight(nl))
             if resizeBorder then
@@ -1306,20 +1329,9 @@ function onContainerOpen(container, previousContainer)
             end
             if not containerWindow:isOn() then
                 local curH = containerWindow:getHeight()
-                local parent = containerWindow:getParent()
-                local inHoriz = parent and (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel')
                 local clampedH = math.max(minH, math.min(curH, maxH))
-                -- In horizontal panels always match exact maxH to display all rows without cutoff
-                if inHoriz then
-                    clampedH = maxH
-                end
                 if curH ~= clampedH then
                     containerWindow:setHeight(clampedH)
-                    if inHoriz then
-                        if modules.game_interface and modules.game_interface.syncHorizontalPanels then
-                            modules.game_interface.syncHorizontalPanels()
-                        end
-                    end
                 end
             end
         end
