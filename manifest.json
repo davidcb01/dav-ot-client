@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261119.1432",
-  "updated_at": "2026-11-19T14:32:43",
-  "changelog": "mais \u0001corre\u00e7\u00f5es da separa\u00e7\u00e3o dos m\u00f3dulos",
+  "version": "15.25.261119.1510",
+  "updated_at": "2026-11-19T15:10:06",
+  "changelog": "erro de hotkeys do helper",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -34242,8 +34242,8 @@
       "size": 23252
     },
     "mods/game_helper/helper.lua": {
-      "sha256": "3f49ee05e6bcccfdb232ea346236338c37699b6f5f36c006aec0a2d705716da0",
-      "size": 17523
+      "sha256": "913105492d960df9826a56052c4c07b2530522b9cbeb7de7fc5e5cc88fad5258",
+      "size": 17494
     },
     "mods/game_helper/helper.otmod": {
       "sha256": "4ab16d933f0344e3f4c4ae9dad2eba88e1a8fb8c40e74355df3c17662b6dbc46",
@@ -34258,8 +34258,8 @@
       "size": 17697
     },
     "mods/game_helper/modals.otui": {
-      "sha256": "10e3a53f598cd4ff198ab58cd52112216950156644ee044a992fae13e4d8784e",
-      "size": 36936
+      "sha256": "5a4b0b34ecc4d1e612338c980b824e78117f3d00b821d9ea299dc8dbd98864f9",
+      "size": 37237
     },
     "mods/game_helper/settings.otui": {
       "sha256": "6cfef7917ecc4eb4207aafc349730f201070bd44990a2efbbaed1ac03542ae48",
@@ -34274,12 +34274,12 @@
       "size": 1234
     },
     "mods/game_helper/target.otui": {
-      "sha256": "bc8037e7d18c3eea463bf595358ef266f075e679ae859b8ac31986ca76163df5",
-      "size": 9280
+      "sha256": "1400603ade2845b55b0453a0e5b48615e9aa36f522379cb6e66285b83d4e5c6d",
+      "size": 9284
     },
     "mods/game_helper/tools.otui": {
-      "sha256": "9d00418eb32982fa4f9b970c88d7e64a0c1f27163db3593d9b5c9ce30c3364a4",
-      "size": 13028
+      "sha256": "dd6b08502b14090caa49180dfc262ae8f52db67b043e5d585aab30b00d062d09",
+      "size": 13415
     },
     "mods/game_helper/cavebots/cobra.txt": {
       "sha256": "2450502f0aed78bc85c05e4139c0709fd5b8408ec0b68b30c930758329ff7797",
@@ -34482,40 +34482,40 @@
       "size": 209
     },
     "mods/game_helper/modules/cavebot.lua": {
-      "sha256": "2412767c4280ac8ff445471de0602b79175bc6d5dbe25c0c7731e1e1892401cd",
-      "size": 44886
+      "sha256": "276b4f4c445f0a362729b9f01d14caf296742905fa728c3b31f7b4e83a5a7509",
+      "size": 46285
     },
     "mods/game_helper/modules/config.lua": {
-      "sha256": "858811dac448dc2adb38a94dbf5d90fa2290e15e5e34d41973845c85e3d8234a",
-      "size": 35243
+      "sha256": "dae1090ec1478cf502aecda62e671731121cb329823b46884345a488a387bb8b",
+      "size": 35344
     },
     "mods/game_helper/modules/follow.lua": {
       "sha256": "90ed4311f58283544f0dbf51849d8391823050f82e3e6b116d365bc93c611747",
       "size": 26552
     },
     "mods/game_helper/modules/healing.lua": {
-      "sha256": "9aeaa309c3487ae3b39252f0b9bb658a235e3333d4dc0f6860265c49011db291",
-      "size": 36418
+      "sha256": "ac686009a1a93ee8fb4c3bc80db274f370f9e51ef39c2942c6bdee172e0ea4c8",
+      "size": 36447
     },
     "mods/game_helper/modules/settings.lua": {
       "sha256": "aaa2609ef2b8f96a4c902746094658a48e92813a821595099aba7f1cb8366e94",
       "size": 7652
     },
     "mods/game_helper/modules/shooter.lua": {
-      "sha256": "9763f4c3aee74f7256c3bc350b31657a05eb73f9afad73bfae55a9ed6c9c5e45",
-      "size": 33692
+      "sha256": "861b327a2be3dcd77f147743552cb790d2ec2942ca75dd2bc8b41968c6a803e2",
+      "size": 34780
     },
     "mods/game_helper/modules/state.lua": {
-      "sha256": "cd09b8e36d146781cafd1f03f36eaf54348c1bffcaeb8179d24665c740fe2918",
-      "size": 34546
+      "sha256": "48ed183dd52f8dab764d43e65969afc33bcb2ec9a09a286b97414582fb35b0f5",
+      "size": 36097
     },
     "mods/game_helper/modules/target.lua": {
-      "sha256": "73bb05005fd950a7d290a52dcceec1c384086ce80c9a04834aa1676a20751215",
-      "size": 24008
+      "sha256": "0d0ac78e91d2a5b41b894b250bcdae53789a2fe90d8ea4a98eb0e56ae4d7e3f1",
+      "size": 24038
     },
     "mods/game_helper/modules/tools.lua": {
-      "sha256": "2ef6bb9008593f3b7aef2188ba942eb3eb6d9a505cf8c569eef2156dcc6807e7",
-      "size": 26487
+      "sha256": "8b30138f764cfa0590a847fe02529c592b983aaae8d1620c10809a828b3b3028",
+      "size": 26495
     },
     "mods/game_helper/modules/ui_common.lua": {
       "sha256": "02937e9ba29439aac600efdf9f22d19a533e79635d4315cb5c583f5279feac4e",
@@ -34982,8 +34982,8 @@
       "size": 7413
     },
     "modules/corelib/ui/uiminiwindow.lua": {
-      "sha256": "15e362755f893cb58270ae37b1d90a8eeb5d60fea31b94a9f89566736007b4e5",
-      "size": 27786
+      "sha256": "5515975e4a7d5f435223e9734f1c3df64c0eb4cd50eda2117f6b0a17b93eb6f0",
+      "size": 27797
     },
     "modules/corelib/ui/uiminiwindowcontainer.lua": {
       "sha256": "6c83622ee1cea652253d9e2302606c736ec7ab848b40cc929d86b128f6371cc8",

@@ -218,6 +218,7 @@ end
 
 function loadTargetUI()
   -- 4. Target UI
+  local vp = getVocProfile()
   if panels.target then
     local tgTop = panels.target:getChildById('targetTopBox')
     tgTop:getChildById('targetEnableCheck'):setChecked(vp.target.enabled == true, true)

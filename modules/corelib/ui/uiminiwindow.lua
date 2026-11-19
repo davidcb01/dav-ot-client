@@ -595,7 +595,7 @@ function UIMiniWindow:onHeightChange(height)
         return
     end
     self._inHeightChange = true
-    if self:getId() == 'mainmappanel' and height > 0 then
+    if self:getId() == 'mainmappanel' and height and height > 0 then
         self.panelHeight = height
     end
     if self.miniLoaded and not self._suppressGeometrySave and not self._draggingMiniWindow and not self:isOn() and height and height > 0 then

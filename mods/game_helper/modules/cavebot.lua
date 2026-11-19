@@ -778,10 +778,28 @@ end
 
 function loadCavebotUI()
   local cBody = panels.cavebot and panels.cavebot:getChildById('bodyPanel')
-  local cbTop = cBody and cBody:getChildById('cbTopControlsBox')
-  if cbTop and cbTop:getChildById('antiTrapCheck') then
+  if not cBody then return end
+  local cbTop = cBody:getChildById('cbTopControlsBox')
+  cbTop:getChildById('enableCavebotCheck'):setChecked(charConfig.cavebot.enabled == true)
+  cbTop:getChildById('autoRecDistEdit'):setText(tostring(charConfig.cavebot.autoRecDist or 3))
+  cbTop:getChildById('cbWalkSpeedEdit'):setText(tostring((charConfig.cavebot.settings and charConfig.cavebot.settings.walkSpeedPct) ~= nil and charConfig.cavebot.settings.walkSpeedPct or 100))
+  cbTop:getChildById('startNearestCheck'):setChecked(charConfig.cavebot.startNearest ~= false)
+  cbTop:getChildById('showWaypointsCheck'):setChecked(charConfig.cavebot.showWaypoints ~= false)
+  local floorChk = cbTop:getChildById('showFloorWpCheck')
+  if floorChk then floorChk:setChecked(charConfig.cavebot.showWaypointsFloor ~= false) end
+  local ignUnreachChk = cbTop:getChildById('ignoreUnreachableCheck')
+  if ignUnreachChk then ignUnreachChk:setChecked(charConfig.cavebot.ignoreUnreachable ~= false) end
+  if cbTop:getChildById('antiTrapCheck') then
     cbTop:getChildById('antiTrapCheck'):setChecked(charConfig.cavebot.antiTrap == true)
   end
+  syncCavebotSpeedEditState()
+  local huntEdit = cBody:getChildById('cbListRow'):getChildById('wpManageRow'):getChildById('huntNameEdit')
+  if huntEdit then huntEdit:setText(charConfig.cavebot.huntName or '') end
+  local cbAct = cBody:getChildById('cbMiddleRow'):getChildById('cbActionToolsBox')
+  renderItemSlot(cbAct:getChildById('ropeSlot'), charConfig.cavebot.ropeId)
+  renderItemSlot(cbAct:getChildById('shovelSlot'), charConfig.cavebot.shovelId)
+  setCavebotDirOffset('C')
+  refreshCavebotUI()
 end
 
 function setupCavebotCallbacks()

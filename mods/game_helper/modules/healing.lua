@@ -334,6 +334,7 @@ end
 
 function loadHealingUI()
   -- 1. Healing UI
+  local vp = getVocProfile()
   refreshHealingSpellsListUI()
   refreshHealingPotionsListUI()
   local exBox = panels.healing:getChildById('selfHealingContainer'):getChildById('extraHealingBox')

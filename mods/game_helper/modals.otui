@@ -898,7 +898,7 @@ CavebotSettingsModal < MainWindow
     @onClick: modules.game_helper.saveCavebotSettingsModal()
 CbControlMiniHud < UIWindow
   id: cbControlMiniHud
-  size: 162 192
+  size: 162 212
   background-color: #16161cE8
   border-width: 1
   border-color: #3c3c48
@@ -1122,8 +1122,9 @@ CbControlMiniHud < UIWindow
 
     HelperSmallButton
       id: hUse
-      anchors.bottom: parent.bottom
+      anchors.top: hRope.bottom
       anchors.left: parent.left
+      margin-top: 2
       width: 74
       height: 18
       text: Use Tile
@@ -1132,13 +1133,24 @@ CbControlMiniHud < UIWindow
 
     HelperSmallButton
       id: hShovel
-      anchors.bottom: parent.bottom
+      anchors.top: hRope.bottom
       anchors.right: parent.right
+      margin-top: 2
       width: 74
       height: 18
       text: Shovel
       color: #cccccc
       @onClick: modules.game_helper.addCavebotWaypoint('Shovel')
+
+    HelperSmallButton
+      id: hBox
+      anchors.bottom: parent.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 18
+      text: Box (Lure+Stand)
+      color: #ffcc33
+      @onClick: modules.game_helper.addCavebotWaypoint('Box')
 
 IdsMenuRow < UIWidget
   height: 28

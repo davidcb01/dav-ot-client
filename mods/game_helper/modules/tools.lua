@@ -206,12 +206,12 @@ function loadToolsUI()
   uBox:getChildById('autoEatCheck'):setChecked(tl.autoEat == true)
   uBox:getChildById('autoBlessCheck'):setChecked(tl.autoBless == true)
   uBox:getChildById('antiAfkCheck'):setChecked(tl.antiAfk == true)
-  if uBox:getChildById('autoAolCheck') then uBox:getChildById('autoAolCheck'):setChecked(tl.autoAol == true) end
-  if uBox:getChildById('autoQuiverCheck') then uBox:getChildById('autoQuiverCheck'):setChecked(tl.autoQuiver == true) end
-  if uBox:getChildById('keepBpCheck') then uBox:getChildById('keepBpCheck'):setChecked(tl.keepBpOpen == true) end
-  if uBox:getChildById('nextBpCheck') then uBox:getChildById('nextBpCheck'):setChecked(tl.nextBpFull == true) end
-  if uBox:getChildById('autoPartyCheck') then uBox:getChildById('autoPartyCheck'):setChecked(tl.autoParty == true) end
   if uBox:getChildById('autoOberonCheck') then uBox:getChildById('autoOberonCheck'):setChecked(tl.autoOberon == true) end
+  local qCfg = tl.quiver or {}
+  if uBox:getChildById('autoQuiverCheck') then uBox:getChildById('autoQuiverCheck'):setChecked(qCfg.enabled == true) end
+  if uBox:getChildById('quiverAmmoSlot') then renderItemSlot(uBox:getChildById('quiverAmmoSlot'), qCfg.itemId or 35901) end
+  if uBox:getChildById('quiverMinEdit') then uBox:getChildById('quiverMinEdit'):setText(tostring(qCfg.minQty or 100)) end
+  if uBox:getChildById('quiverMaxEdit') then uBox:getChildById('quiverMaxEdit'):setText(tostring(qCfg.maxQty or 500)) end
 
   -- 3. Shooter UI
 end
@@ -342,13 +342,54 @@ function setupToolsCallbacks()
     lastAfkTime = g_clock.millis()
     saveCurrentProfile()
   end
-  if uBox:getChildById('autoAolCheck') then
-    uBox:getChildById('autoAolCheck').onCheckChange = function(w, ch) charConfig.tools.autoAol = (ch == true) saveCurrentProfile() end
-    uBox:getChildById('autoQuiverCheck').onCheckChange = function(w, ch) charConfig.tools.autoQuiver = (ch == true) saveCurrentProfile() end
-    uBox:getChildById('keepBpCheck').onCheckChange = function(w, ch) charConfig.tools.keepBpOpen = (ch == true) saveCurrentProfile() end
-    uBox:getChildById('nextBpCheck').onCheckChange = function(w, ch) charConfig.tools.nextBpFull = (ch == true) saveCurrentProfile() end
-    uBox:getChildById('autoPartyCheck').onCheckChange = function(w, ch) charConfig.tools.autoParty = (ch == true) saveCurrentProfile() end
+  if uBox:getChildById('autoOberonCheck') then
     uBox:getChildById('autoOberonCheck').onCheckChange = function(w, ch) charConfig.tools.autoOberon = (ch == true) saveCurrentProfile() end
+  end
+  if uBox:getChildById('autoQuiverCheck') then
+    uBox:getChildById('autoQuiverCheck').onCheckChange = function(w, ch)
+      charConfig.tools.quiver = charConfig.tools.quiver or {}
+      charConfig.tools.quiver.enabled = (ch == true)
+      quiverRefillingActive = false
+      saveCurrentProfile()
+    end
+  end
+  local qSlot = uBox:getChildById('quiverAmmoSlot')
+  if qSlot then
+    bindSlotClicks(qSlot, function()
+      local qCfg = charConfig.tools.quiver or {}
+      openItemSelector('Select Ammo / Arrow / Bolt', 'ammo', qCfg.itemId, function(it)
+        charConfig.tools.quiver.itemId = it.id
+        renderItemSlot(qSlot, it.id)
+        saveCurrentProfile()
+      end)
+    end, function()
+      charConfig.tools.quiver.itemId = 0
+      renderItemSlot(qSlot, 0)
+      saveCurrentProfile()
+    end)
+    attachItemDropHandler(qSlot, function(droppedId)
+      charConfig.tools.quiver.itemId = droppedId
+      renderItemSlot(qSlot, droppedId)
+      saveCurrentProfile()
+    end)
+  end
+  if uBox:getChildById('quiverMinEdit') then
+    uBox:getChildById('quiverMinEdit').onTextChange = function(w, txt)
+      local n = tonumber(txt)
+      if n then
+        charConfig.tools.quiver.minQty = math.max(1, math.min(5000, math.floor(n)))
+        saveCurrentProfile()
+      end
+    end
+  end
+  if uBox:getChildById('quiverMaxEdit') then
+    uBox:getChildById('quiverMaxEdit').onTextChange = function(w, txt)
+      local n = tonumber(txt)
+      if n then
+        charConfig.tools.quiver.maxQty = math.max(1, math.min(5000, math.floor(n)))
+        saveCurrentProfile()
+      end
+    end
   end
 
   -- Shooter Tab Wiring (edicao em tempo real, sem botao Update)
@@ -479,123 +520,108 @@ function runToolsTick(player, pPos, now, mpPct, inPz, hasHaste)
     lastItemTimerTime = now
   end
 
-  if tl.autoAol and (now - lastAutoAolTime) >= 1200 then
-    local neck = player:getInventoryItem(InventorySlotNeck)
-    if not neck or neck:getId() ~= 3057 then
-      local foundAol = nil
-      for _, container in pairs(g_game.getContainers() or {}) do
-        for _, item in ipairs(container:getItems() or {}) do
-          if item and item:getId() == 3057 then
-            foundAol = item
-            break
-          end
-        end
-        if foundAol then break end
-      end
-      if foundAol then
-        g_game.move(foundAol, { x = 65535, y = InventorySlotNeck, z = 0 }, 1)
-      else
-        g_game.talk('!aol')
+  local qCfg = tl.quiver
+  if qCfg and qCfg.enabled and (now - lastQuiverTime) >= 250 then
+    local targetAmmoId = tonumber(qCfg.itemId) or 0
+    local minQty = math.max(1, tonumber(qCfg.minQty) or 100)
+    local maxQty = math.max(minQty, tonumber(qCfg.maxQty) or 500)
+
+    local equippedQuiverIds = {}
+    local closedQuiverItem = nil
+    for _, slot in ipairs({ InventorySlotRight, InventorySlotLeft, InventorySlotAmmo }) do
+      local eq = player:getInventoryItem(slot)
+      if eq and eq.isContainer and eq:isContainer() then
+        equippedQuiverIds[eq:getId()] = eq
       end
     end
-    lastAutoAolTime = now
-  end
 
-  if tl.autoQuiver and (now - lastQuiverTime) >= 200 then
-    local rightItem = player:getInventoryItem(InventorySlotRight)
-    if rightItem then
-      local qId = rightItem:getId()
-      local quiverContainer = nil
-      for _, container in pairs(g_game.getContainers() or {}) do
-        local rootItem = container:getContainerItem()
-        if rootItem and rootItem:getId() == qId then
-          quiverContainer = container
-          break
-        end
-      end
-      if not quiverContainer then
-        g_game.open(rightItem)
-      else
-        local freeSlot = nil
-        for s = 0, quiverContainer:getCapacity() - 1 do
-          if not quiverContainer:getItem(s) then
-            freeSlot = s
-            break
-          end
-        end
-        if freeSlot then
-          for _, container in pairs(g_game.getContainers() or {}) do
-            if container ~= quiverContainer then
-              for _, item in ipairs(container:getItems() or {}) do
-                if item and DEFAULT_QUIVER_AMMO_SET and DEFAULT_QUIVER_AMMO_SET[item:getId()] then
-                  g_game.move(item, quiverContainer:getSlotPosition(freeSlot), item:getCount())
-                  lastQuiverTime = now
-                  freeSlot = nil
-                  break
-                end
-              end
-            end
-            if not freeSlot then break end
-          end
-        end
-      end
-    end
-    lastQuiverTime = now
-  end
-
-  if tl.keepBpOpen and (now - lastKeepBpTime) >= 1500 then
-    local backItem = player:getInventoryItem(InventorySlotBack)
-    if backItem then
-      local bId = backItem:getId()
-      local isOpen = false
-      for _, container in pairs(g_game.getContainers() or {}) do
-        local rootItem = container:getContainerItem()
-        if rootItem and rootItem:getId() == bId then
-          isOpen = true
-          break
-        end
-      end
-      if not isOpen then
-        g_game.open(backItem)
-      end
-    end
-    lastKeepBpTime = now
-  end
-
-  if tl.nextBpFull and (now - lastNextBpTime) >= 1000 then
+    local openQuivers = {}
+    local nonQuiverContainers = {}
     for _, container in pairs(g_game.getContainers() or {}) do
       local rootItem = container:getContainerItem()
-      if rootItem and DEFAULT_BP_CONTAINER_SET and DEFAULT_BP_CONTAINER_SET[rootItem:getId()]
-         and container:getCapacity() == #(container:getItems() or {}) then
-        local opened = false
-        for _, item in ipairs(container:getItems() or {}) do
-          if item and DEFAULT_BP_CONTAINER_SET[item:getId()] then
-            g_game.open(item, container)
-            opened = true
-            break
+      local rId = rootItem and rootItem:getId() or 0
+      if rId > 0 and equippedQuiverIds[rId] then
+        table.insert(openQuivers, container)
+      else
+        table.insert(nonQuiverContainers, container)
+      end
+    end
+
+    for qId, eqItem in pairs(equippedQuiverIds) do
+      local foundOpen = false
+      for _, qc in ipairs(openQuivers) do
+        local r = qc:getContainerItem()
+        if r and r:getId() == qId then foundOpen = true break end
+      end
+      if not foundOpen then
+        closedQuiverItem = eqItem
+        break
+      end
+    end
+
+    if closedQuiverItem then
+      g_game.open(closedQuiverItem)
+      lastQuiverTime = now
+    else
+      local totalAmmoInQuiver = 0
+      local detectedAmmoId = targetAmmoId
+      for _, qc in ipairs(openQuivers) do
+        for _, item in ipairs(qc:getItems() or {}) do
+          if item then
+            local iid = item:getId()
+            if (targetAmmoId > 0 and iid == targetAmmoId) or (targetAmmoId == 0 and DEFAULT_QUIVER_AMMO_SET and DEFAULT_QUIVER_AMMO_SET[iid]) then
+              totalAmmoInQuiver = totalAmmoInQuiver + (item:getCount() or 1)
+              if detectedAmmoId == 0 then detectedAmmoId = iid end
+            end
           end
         end
-        if opened then break end
       end
-    end
-    lastNextBpTime = now
-  end
 
-  if tl.autoParty and (now - lastAutoPartyTime) >= 1200 then
-    if player:isPartyLeader() then
-      local sh = player:getShield()
-      if sh ~= 10 and sh ~= 7 and g_game.partyShareExperience then
-        g_game.partyShareExperience(true)
+      if totalAmmoInQuiver < minQty then
+        quiverRefillingActive = true
+      elseif totalAmmoInQuiver >= maxQty then
+        quiverRefillingActive = false
       end
-    else
-      for _, spec in ipairs(g_map.getSpectators(pPos, false) or {}) do
-        if spec:isPlayer() and spec ~= player and spec:getShield() == 1 and g_game.partyJoin then
-          g_game.partyJoin(spec:getId())
-          break
+
+      if quiverRefillingActive and totalAmmoInQuiver < maxQty and #openQuivers > 0 then
+        local needed = maxQty - totalAmmoInQuiver
+        local moveId = (targetAmmoId > 0) and targetAmmoId or (detectedAmmoId > 0 and detectedAmmoId or 35901)
+
+        -- Destino em qualquer quiver com espaco (stack incompleto do mesmo item ou slot livre)
+        local destPos = nil
+        for _, qc in ipairs(openQuivers) do
+          for s = 0, qc:getCapacity() - 1 do
+            local existing = qc:getItem(s)
+            if existing and existing:getId() == moveId and existing:getCount() < 100 then
+              destPos = qc:getSlotPosition(s)
+              break
+            elseif not existing then
+              destPos = qc:getSlotPosition(s)
+              break
+            end
+          end
+          if destPos then break end
+        end
+
+        if destPos then
+          local movedFromOpen = false
+          for _, bc in ipairs(nonQuiverContainers) do
+            for _, item in ipairs(bc:getItems() or {}) do
+              if item and item:getId() == moveId then
+                g_game.move(item, destPos, math.min(needed, item:getCount() or 1))
+                movedFromOpen = true
+                break
+              end
+            end
+            if movedFromOpen then break end
+          end
+          if not movedFromOpen and g_game.equipItemId then
+            g_game.equipItemId(moveId)
+          end
         end
       end
+      lastQuiverTime = now
     end
-    lastAutoPartyTime = now
   end
 
   runFollowEngine(player, pPos, now)
@@ -628,21 +654,6 @@ function onHelperTalk(name, level, mode, text)
             g_game.talk(resp)
           end
         end, math.max(50, delayMs))
-      end
-    end
-  end
-
-  if tl.autoParty and player:isPartyLeader() and name and name ~= player:getName() then
-    local lowTxt = tostring(text or ''):lower()
-    if (lowTxt == 'pt' or lowTxt == 'party' or lowTxt:find('%f[%a]pt%f[%A]') ~= nil) and not lowTxt:find('!party', 1, true) then
-      local pPos = player:getPosition()
-      if pPos then
-        for _, spec in ipairs(g_map.getSpectators(pPos, true) or {}) do
-          if spec:isPlayer() and spec:getName() == name and spec:getShield() == 0 and g_game.partyInvite then
-            g_game.partyInvite(spec:getId())
-            break
-          end
-        end
       end
     end
   end

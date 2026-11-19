@@ -135,44 +135,44 @@ Panel
       id: targetRangeEdit
       anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
       anchors.left: targetMaxRangeLbl.right
-      margin-left: 6
-      width: 34
+      margin-left: 4
+      width: 30
       text: 7
 
     ComboBox
       id: targetChaseCombo
-      width: 86
+      width: 78
       height: 19
       anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
       anchors.left: targetRangeEdit.right
-      margin-left: 14
+      margin-left: 8
       !tooltip: tr('Stand = do not chase the target. Chase = walk after the target.')
 
     CheckBox
       id: targetKeepCheck
       anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
       anchors.left: targetChaseCombo.right
-      margin-left: 14
-      width: 148
+      margin-left: 10
+      width: 144
       !text: tr('Keep target until dead')
       checked: true
-
-    CheckBox
-      id: targetFinisherCheck
-      anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
-      anchors.left: targetKeepCheck.right
-      margin-left: 8
-      width: 68
-      !text: tr('Finisher')
 
     HelperBlueButton
       id: finisherSettingsBtn
       text: Finisher Settings
-      width: 106
+      width: 108
       height: 19
       anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
       anchors.right: parent.right
       @onClick: modules.game_helper.openFinisherSettingsModal()
+
+    CheckBox
+      id: targetFinisherCheck
+      anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
+      anchors.right: finisherSettingsBtn.left
+      margin-right: 4
+      width: 68
+      !text: tr('Finisher')
 
   TextList
     id: targetRulesList

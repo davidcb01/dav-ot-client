@@ -321,6 +321,26 @@ ITEM_CATALOG = {
   { id = 3098,  name = 'Ring of Healing', desc = 'HP & Mana regen ring', cat = 'timer' },
   { id = 6529,  name = 'Pair of Soft Boots', desc = 'High HP/MP regen boots', cat = 'timer' },
 
+  -- Ammunition (Paladin Quiver Refill)
+  { id = 35901, name = 'Diamond Arrow', desc = 'AoE Paladin Arrow (Lvl 150+)', cat = 'ammo' },
+  { id = 15793, name = 'Crystalline Arrow', desc = 'Single-target Earth Arrow (Lvl 90+)', cat = 'ammo' },
+  { id = 35902, name = 'Spectral Bolt', desc = 'High damage Bolt (Lvl 150+)', cat = 'ammo' },
+  { id = 16141, name = 'Prismatic Bolt', desc = 'High damage Bolt (Lvl 90+)', cat = 'ammo' },
+  { id = 16142, name = 'Drill Bolt', desc = 'Physical Bolt (Lvl 70+)', cat = 'ammo' },
+  { id = 16143, name = 'Envenomed Arrow', desc = 'Earth Arrow (Lvl 70+)', cat = 'ammo' },
+  { id = 14251, name = 'Tarsal Arrow', desc = 'Earth Arrow (Lvl 30+)', cat = 'ammo' },
+  { id = 14252, name = 'Vortex Bolt', desc = 'Energy Bolt (Lvl 40+)', cat = 'ammo' },
+  { id = 7365,  name = 'Onyx Arrow', desc = 'Physical Arrow (Lvl 40+)', cat = 'ammo' },
+  { id = 7364,  name = 'Sniper Arrow', desc = 'Physical Arrow (Lvl 20+)', cat = 'ammo' },
+  { id = 7363,  name = 'Piercing Bolt', desc = 'Physical Bolt (Lvl 30+)', cat = 'ammo' },
+  { id = 3450,  name = 'Power Bolt', desc = 'Physical Bolt (Lvl 55+)', cat = 'ammo' },
+  { id = 6528,  name = 'Infernal Bolt', desc = 'High damage Bolt (Lvl 110+)', cat = 'ammo' },
+  { id = 3449,  name = 'Burst Arrow', desc = 'AoE Fire Arrow', cat = 'ammo' },
+  { id = 3447,  name = 'Arrow', desc = 'Basic Arrow', cat = 'ammo' },
+  { id = 3446,  name = 'Bolt', desc = 'Basic Bolt', cat = 'ammo' },
+  { id = 25759, name = 'Royal Star', desc = 'Throwing Star (Lvl 120+)', cat = 'ammo' },
+  { id = 7368,  name = 'Assassin Star', desc = 'Throwing Star (Lvl 80+)', cat = 'ammo' },
+
   -- Cavebot Tools
   { id = 3003,  name = 'Rope', desc = 'Standard rope for rope spots', cat = 'tool' },
   { id = 646,   name = 'Elvenhair Rope', desc = 'Lightweight rope', cat = 'tool' },
@@ -782,14 +802,10 @@ OBERON_EXACT_RESPONSES = {
   ["ultah salid'ar, esdo lo!"] = "SEHWO ASIMO, TOLIDO ESD!"
 }
 
-lastAutoAolTime = 0
+quiverRefillingActive = false
 lastQuiverTime = 0
-lastKeepBpTime = 0
-lastNextBpTime = 0
-lastAutoPartyTime = 0
 lastOberonTime = 0
 lastAntiTrapTime = 0
 lastAutoUtamoTime = 0
 lastEquipDefenseTime = 0
-lastHeldTargetId = nil
 antiLagShieldActive = false

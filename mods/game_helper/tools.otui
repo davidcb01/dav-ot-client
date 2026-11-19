@@ -431,83 +431,95 @@ Panel
         id: changeGoldCheck
         anchors.top: utilsTitleLbl.bottom
         anchors.left: parent.left
-        margin-top: 10
-        width: 150
+        margin-top: 8
+        width: 148
         !text: tr('Change Gold')
 
       CheckBox
         id: autoEatCheck
         anchors.top: prev.bottom
         anchors.left: parent.left
-        margin-top: 10
-        width: 150
+        margin-top: 6
+        width: 148
         !text: tr('Auto Eat Food')
 
       CheckBox
         id: autoBlessCheck
         anchors.top: prev.bottom
         anchors.left: parent.left
-        margin-top: 10
-        width: 150
+        margin-top: 6
+        width: 148
         !text: tr('Auto Bless (!bless)')
 
       CheckBox
         id: antiAfkCheck
-        anchors.top: prev.bottom
-        anchors.left: parent.left
-        margin-top: 10
-        width: 150
-        !text: tr('Anti-AFK (10 min)')
-
-      CheckBox
-        id: autoAolCheck
-        anchors.top: prev.bottom
-        anchors.left: parent.left
-        margin-top: 10
-        width: 150
-        !text: tr('Auto AOL (!aol)')
-
-      CheckBox
-        id: autoQuiverCheck
         anchors.top: utilsTitleLbl.bottom
         anchors.left: parent.horizontalCenter
-        margin-top: 10
+        margin-top: 8
         margin-left: 4
-        width: 155
-        !text: tr('Auto Refill Quiver')
-
-      CheckBox
-        id: keepBpCheck
-        anchors.top: prev.bottom
-        anchors.left: parent.horizontalCenter
-        margin-top: 10
-        margin-left: 4
-        width: 155
-        !text: tr('Keep BPs Open')
-
-      CheckBox
-        id: nextBpCheck
-        anchors.top: prev.bottom
-        anchors.left: parent.horizontalCenter
-        margin-top: 10
-        margin-left: 4
-        width: 155
-        !text: tr('Next BP Full')
-
-      CheckBox
-        id: autoPartyCheck
-        anchors.top: prev.bottom
-        anchors.left: parent.horizontalCenter
-        margin-top: 10
-        margin-left: 4
-        width: 155
-        !text: tr('Auto Party (Share)')
+        width: 150
+        !text: tr('Anti-AFK (10 min)')
 
       CheckBox
         id: autoOberonCheck
         anchors.top: prev.bottom
         anchors.left: parent.horizontalCenter
-        margin-top: 10
+        margin-top: 6
         margin-left: 4
-        width: 155
+        width: 150
         !text: tr('Auto Oberon')
+
+      HorizontalSeparator
+        id: quiverSep
+        anchors.top: autoBlessCheck.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 10
+
+      CheckBox
+        id: autoQuiverCheck
+        anchors.top: quiverSep.bottom
+        anchors.left: parent.left
+        margin-top: 8
+        width: 200
+        !text: tr('Auto Refill Quiver')
+
+      HelperItemSlot
+        id: quiverAmmoSlot
+        anchors.top: autoQuiverCheck.bottom
+        anchors.left: parent.left
+        margin-top: 6
+
+      Label
+        id: quiverMinLbl
+        text: Min:
+        anchors.verticalCenter: quiverAmmoSlot.verticalCenter
+        anchors.left: quiverAmmoSlot.right
+        margin-left: 10
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: quiverMinEdit
+        anchors.verticalCenter: quiverAmmoSlot.verticalCenter
+        anchors.left: quiverMinLbl.right
+        margin-left: 4
+        width: 46
+        text: 100
+
+      Label
+        id: quiverMaxLbl
+        text: Max:
+        anchors.verticalCenter: quiverAmmoSlot.verticalCenter
+        anchors.left: quiverMinEdit.right
+        margin-left: 10
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: quiverMaxEdit
+        anchors.verticalCenter: quiverAmmoSlot.verticalCenter
+        anchors.left: quiverMaxLbl.right
+        margin-left: 4
+        width: 46
+        text: 500

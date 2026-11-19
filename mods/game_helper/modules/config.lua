@@ -460,12 +460,8 @@ function createDefaultCharConfig()
       autoEat = false,
       autoBless = false,
       antiAfk = false,
-      autoAol = false,
-      autoQuiver = false,
-      keepBpOpen = false,
-      nextBpFull = false,
-      autoParty = false,
       autoOberon = false,
+      quiver = { enabled = false, itemId = 35901, minQty = 100, maxQty = 500 },
       follow = { enabled = false, name = '', mode = 'Default', dist = 1, turn = false, openDoors = true },
       itemTimer = { enabled = false, itemId = 3725, sec = 610 }
     },
@@ -561,12 +557,12 @@ function normalizeCharConfig(cfg)
   t.autoEat = (t.autoEat == true)
   t.autoBless = (t.autoBless == true)
   t.antiAfk = (t.antiAfk == true)
-  t.autoAol = (t.autoAol == true)
-  t.autoQuiver = (t.autoQuiver == true)
-  t.keepBpOpen = (t.keepBpOpen == true)
-  t.nextBpFull = (t.nextBpFull == true)
-  t.autoParty = (t.autoParty == true)
   t.autoOberon = (t.autoOberon == true)
+  t.quiver = type(t.quiver) == 'table' and t.quiver or {}
+  t.quiver.enabled = (t.quiver.enabled == true)
+  t.quiver.itemId = tonumber(t.quiver.itemId) or 35901
+  t.quiver.minQty = math.max(1, math.min(5000, tonumber(t.quiver.minQty) or 100))
+  t.quiver.maxQty = math.max(t.quiver.minQty, math.min(5000, tonumber(t.quiver.maxQty) or 500))
 
   -- Cavebot normalization
   cfg.cavebot = type(cfg.cavebot) == 'table' and cfg.cavebot or deepCopy(def.cavebot)

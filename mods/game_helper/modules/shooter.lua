@@ -370,6 +370,7 @@ end
 
 function loadShooterUI()
   -- 3. Shooter UI
+  local vp = getVocProfile()
   local sGlob = panels.shooter:getChildById('bodyPanel'):getChildById('shooterGlobalBox')
   sGlob:getChildById('enableShooterCheck'):setChecked(vp.shooter.enabled == true, true)
   sGlob:getChildById('disablePzCheck'):setChecked(vp.shooter.disablePz ~= false)
@@ -433,6 +434,33 @@ function setupShooterCallbacks()
   end
 
   -- Key Capture Modal
+  if keyCaptureModal then
+    keyCaptureModal:getChildById('clearKeyBtn').onClick = function()
+      if activeKeyCaptureSlot then
+        charConfig.keys[activeKeyCaptureSlot] = ''
+        updateKeyButtonsUI()
+        saveCurrentProfile()
+        rebuildShortcutBindings()
+      end
+      closeKeyCapture()
+    end
+    keyCaptureModal:getChildById('cancelKeyBtn').onClick = function() closeKeyCapture() end
+    keyCaptureModal.onEscape = function() closeKeyCapture() return true end
+    keyCaptureModal.onKeyDown = function(widget, keyCode, keyboardModifiers)
+      if keyCode == KeyEscape then closeKeyCapture() return true end
+      if not activeKeyCaptureSlot then return false end
+      local keyStr = resolvePressedKeyString(keyCode, keyboardModifiers)
+      if keyStr and keyStr ~= '' then
+        charConfig.keys[activeKeyCaptureSlot] = keyStr
+        closeKeyCapture()
+        updateKeyButtonsUI()
+        saveCurrentProfile()
+        rebuildShortcutBindings()
+        return true
+      end
+      return true
+    end
+  end
 
   -- Shooter Tab Wiring (edicao em tempo real, sem botao Update)
   local sBody = panels.shooter:getChildById('bodyPanel')

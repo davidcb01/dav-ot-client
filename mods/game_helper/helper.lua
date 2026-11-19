@@ -6,7 +6,6 @@ function loadProfileIntoUI()
   refreshingTargetUI = true
   setHelperLanguageState((charConfig and charConfig.language) or 'en')
   applyHelperLanguage(true)
-  local vp = getVocProfile()
   updateMasterBarUI()
   updateStatsUI()
   updateKeyButtonsUI()
