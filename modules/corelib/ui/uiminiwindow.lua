@@ -140,11 +140,10 @@ function UIMiniWindow:maximize(dontSave)
         self:setSettings({
             minimized = false
         })
-    end
-
-    local parent = self:getParent()
-    if parent and parent:getClassName() == 'UIMiniWindowContainer' then
-        parent:fitAll(self)
+        local parent = self:getParent()
+        if parent and parent:getClassName() == 'UIMiniWindowContainer' then
+            parent:fitAll(self)
+        end
     end
 
     signalcall(self.onMaximize, self)
@@ -255,18 +254,35 @@ function UIMiniWindow:setupOnStart(opts)
             end
 
             if parent and parent:getClassName() == 'UIMiniWindowContainer' then
-                local isHorizontal = (parent:getId() == 'gameHorizontalRightPanel' or parent:getId() == 'gameHorizontalLeftPanel')
-                local willBeOpen = (not selfSettings.closed) or (opts and opts.ignoreClosed)
+                local pid = parent:getId()
+                local isHorizontal = (pid == 'gameHorizontalRightPanel' or pid == 'gameHorizontalLeftPanel')
+                local willBeOpen = (self:getId() == 'mainmappanel') or (not selfSettings.closed) or (opts and opts.ignoreClosed)
                 if isHorizontal and willBeOpen and not parent:isOn() then
                     parent:setOn(true)
                     parent:setVisible(true)
+                elseif not isHorizontal and not parent:isOn() and modules.client_options and modules.client_options.getOption then
+                    local optMap = {
+                        gameLeftPanel = 'showLeftPanel',
+                        gameLeftExtraPanel = 'showLeftExtraPanel',
+                        gameLeftExtraPanel2 = 'showLeftExtraPanel2',
+                        gameLeftExtraPanel3 = 'showLeftExtraPanel3',
+                        gameRightExtraPanel = 'showRightExtraPanel',
+                        gameRightExtraPanel2 = 'showRightExtraPanel2',
+                        gameRightExtraPanel3 = 'showRightExtraPanel3'
+                    }
+                    local optKey = optMap[pid]
+                    if optKey and modules.client_options.getOption(optKey) then
+                        parent:setOn(true)
+                        parent:setVisible(true)
+                    end
                 end
-                if parent:isVisible() and selfSettings.index and parent:isOn() then
-                    self.miniIndex = selfSettings.index
-                    parent:scheduleInsert(self, selfSettings.index)
-                    newParentSet = true
-                elseif isHorizontal and willBeOpen then
-                    parent:addChild(self)
+                if parent:isOn() and (not isHorizontal or willBeOpen or selfSettings.index) then
+                    if selfSettings.index then
+                        self.miniIndex = selfSettings.index
+                        parent:scheduleInsert(self, selfSettings.index)
+                    else
+                        parent:addChild(self)
+                    end
                     newParentSet = true
                 end
             elseif parent and not self.moveOnlyToMain then
@@ -305,16 +321,23 @@ function UIMiniWindow:setupOnStart(opts)
             end
         end
 
-        if selfSettings.minimized then
-            self:minimize(true)
-        elseif self:isOn() then
-            self:maximize(true)
-        end
-
-        if selfSettings.closed and not (opts and opts.ignoreClosed) then
-            self:close(true)
-        else
+        if self:getId() == 'mainmappanel' then
+            if self:isOn() then
+                self:maximize(true)
+            end
             self:open(true)
+        else
+            if selfSettings.minimized then
+                self:minimize(true)
+            elseif self:isOn() then
+                self:maximize(true)
+            end
+
+            if selfSettings.closed and not (opts and opts.ignoreClosed) then
+                self:close(true)
+            else
+                self:open(true)
+            end
         end
 
         if selfSettings.locked then

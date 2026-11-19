@@ -159,6 +159,26 @@ function mapController:onGameStart()
         end
     end
     self.ui:setupOnStart()
+    if self.ui:getSettings('closed') or self.ui:getSettings('minimized') then
+        self.ui:eraseSettings({
+            closed = true,
+            minimized = true
+        })
+    end
+    if self.ui:isOn() then
+        self.ui:maximize(true)
+    end
+    if not self.ui:isVisible() then
+        self.ui:open(true)
+    end
+    local parent = self.ui:getParent()
+    if not parent or (parent:getClassName() == 'UIMiniWindowContainer' and not parent:isOn()) then
+        local fallback = modules.game_interface and modules.game_interface.getRightPanel and modules.game_interface.getRightPanel()
+        if fallback and fallback ~= parent then
+            self.ui:setParent(fallback, true)
+            self.ui:open(true)
+        end
+    end
     if not self.ui:isOn() and (self.ui:getHeight() < 118 or self.ui:getHeight() > 260) then
         self.ui:setHeight(134)
     end

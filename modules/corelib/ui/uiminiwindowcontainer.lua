@@ -12,8 +12,23 @@ end
 -- TODO: connect to window onResize event
 -- TODO: try to resize another widget?
 -- TODO: try to find another panel?
+if g_game and connect then
+    connect(g_game, {
+        onGameStart = function()
+            UIMiniWindowContainer._bootSuppressUntil = (g_clock and g_clock.millis() or 0) + 1200
+        end,
+        onGameEnd = function()
+            UIMiniWindowContainer._bootSuppressUntil = nil
+        end
+    })
+end
+
 function UIMiniWindowContainer:fitAll(noRemoveChild)
     if not self:isVisible() then
+        return
+    end
+
+    if UIMiniWindowContainer._bootSuppressUntil and g_clock and g_clock.millis() < UIMiniWindowContainer._bootSuppressUntil then
         return
     end
 
@@ -46,7 +61,7 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
     local removeChildren = {}
     local function isProtectedContainer(child)
         local cid = child and child:getId() or ''
-        return cid:find('^container%d+') ~= nil
+        return cid == 'mainmappanel' or cid:find('^container%d+') ~= nil
     end
 
     -- try to resize noRemoveChild
@@ -60,14 +75,14 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
         end)
     end
 
-    -- try to minimize excess non-minimized widgets first (avoids closing backpacks on server)
+    -- try to minimize excess non-minimized widgets first (never minimize minimap)
     for i = #children, 1, -1 do
         if sumHeight <= selfHeight then
             break
         end
 
         local child = children[i]
-        if child ~= noRemoveChild and child:isVisible() and not child:isOn() then
+        if child ~= noRemoveChild and child:getId() ~= 'mainmappanel' and child:isVisible() and not child:isOn() then
             local prevH = child:getHeight()
             child:minimize(true)
             local newH = child:getHeight()
@@ -91,7 +106,7 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
         end
     end
 
-    -- try to remove save non-container widget (never auto-close backpacks on relog/resize)
+    -- try to remove save non-container widget (never auto-close backpacks/minimap on relog/resize)
     for i = #children, 1, -1 do
         if sumHeight <= selfHeight then
             break
@@ -105,9 +120,9 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
         end
     end
 
-    -- close widgets
+    -- close widgets without overwriting saved user preferences
     for i = 1, #removeChildren do
-        removeChildren[i]:close()
+        removeChildren[i]:close(true)
     end
 end
 
@@ -247,10 +262,12 @@ end
 
 function UIMiniWindowContainer:scheduleInsert(widget, index)
     if index - 1 > self:getChildCount() then
-        if self.scheduledWidgets[index] then
-            pdebug('replacing scheduled widget id ' .. widget:getId())
+        local bucket = self.scheduledWidgets[index]
+        if type(bucket) ~= 'table' then
+            bucket = {}
+            self.scheduledWidgets[index] = bucket
         end
-        self.scheduledWidgets[index] = widget
+        table.insert(bucket, widget)
     else
         local oldParent = widget:getParent()
         if oldParent ~= self then
@@ -262,16 +279,21 @@ function UIMiniWindowContainer:scheduleInsert(widget, index)
 
         while true do
             local placed = false
-            for nIndex, nWidget in pairs(self.scheduledWidgets) do
+            for nIndex, bucket in pairs(self.scheduledWidgets) do
                 if nIndex - 1 <= self:getChildCount() then
-                    local nOldParent = nWidget:getParent()
-                    if nOldParent ~= self then
-                        if nOldParent then
-                            nOldParent:removeChild(nWidget)
-                        end
-                        self:insertChild(nIndex, nWidget)
-                    end
+                    local list = (type(bucket) == 'table') and bucket or { bucket }
                     self.scheduledWidgets[nIndex] = nil
+                    for _, nWidget in ipairs(list) do
+                        if nWidget and (not nWidget.isDestroyed or not nWidget:isDestroyed()) then
+                            local nOldParent = nWidget:getParent()
+                            if nOldParent ~= self then
+                                if nOldParent then
+                                    nOldParent:removeChild(nWidget)
+                                end
+                                self:insertChild(math.min(nIndex, self:getChildCount() + 1), nWidget)
+                            end
+                        end
+                    end
                     placed = true
                     break
                 end

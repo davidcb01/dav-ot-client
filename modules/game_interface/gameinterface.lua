@@ -541,6 +541,9 @@ end
 
 function onGameStart()
     show()
+    if modules.client_options and modules.client_options.syncPanelOptionsOnGameStart then
+        modules.client_options.syncPanelOptionsOnGameStart()
+    end
     updateSidePanelButtons()
     applyMobileMargins()
     

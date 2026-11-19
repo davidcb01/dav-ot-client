@@ -585,6 +585,29 @@ end
 
 local loadingCharOptions = false
 
+function syncPanelOptionsOnGameStart()
+    local charName = g_game.getCharacterName()
+    if not charName or #charName == 0 then
+        return
+    end
+    local savedOpts = CharConfig and CharConfig.load('char_options', charName, 'CharOptions', true) or (g_settings.getNode('CharOptions') or {})[charName]
+    if type(savedOpts) ~= 'table' then
+        return
+    end
+    loadingCharOptions = true
+    local panelKeys = {
+        'showLeftPanel', 'showLeftExtraPanel', 'showLeftExtraPanel2', 'showLeftExtraPanel3',
+        'showRightExtraPanel', 'showRightExtraPanel2', 'showRightExtraPanel3',
+        'showHorizontalLeftPanel', 'showHorizontalRightPanel'
+    }
+    for _, k in ipairs(panelKeys) do
+        if savedOpts[k] ~= nil and options[k] ~= nil then
+            setOption(k, savedOpts[k], true)
+        end
+    end
+    loadingCharOptions = false
+end
+
 function controller:onGameStart()
     local charName = g_game.getCharacterName()
     if charName and #charName > 0 then

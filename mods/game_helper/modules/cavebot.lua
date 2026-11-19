@@ -4,50 +4,72 @@
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- Marcadores de waypoint NO CHAO (quadrado preto translucido + texto central)
+-- Marcadores de waypoint NO CHAO (quadrado preto translucido + texto abaixo do char)
 -- ---------------------------------------------------------------------------
 FLOOR_WP_EFFECT_ID = 9991
 lastFloorMarkAt = 0
 local floorWpEffectObj = nil
 local floorWpEffectTried = false
+local floorLabelPool = {}
+local activeFloorMarkerGroups = {}
 
 function ensureFloorWpEffect()
   if floorWpEffectObj then return floorWpEffectObj end
   if not g_attachedEffects then return nil end
+
+  -- Use direct image registration (game_attachedeffects is sandboxed; avoid noisy getById errors before register)
+  if g_attachedEffects.registerByImage then
+    local ok, reg = pcall(function()
+      return g_attachedEffects.registerByImage(FLOOR_WP_EFFECT_ID, 'CavebotFloorWpBg', '/mods/game_helper/images/wp_tile_bg')
+    end)
+    if ok and reg then
+      pcall(function()
+        if reg.setSize then reg:setSize({ width = 32, height = 32 }) end
+        if reg.setOpacity then reg:setOpacity(0.75) end
+        if reg.setOnTop then reg:setOnTop(false) end
+        if reg.setDrawOrder then reg:setDrawOrder(1) end
+        if reg.setPermanent then reg:setPermanent(true) end
+        if reg.setCanDrawOnUI then reg:setCanDrawOnUI(false) end
+      end)
+      floorWpEffectObj = reg
+      return floorWpEffectObj
+    end
+  end
+
   if floorWpEffectTried then return nil end
   floorWpEffectTried = true
 
-  local effMgr = AttachedEffectManager
+  local effMgr = AttachedEffectManager or (modules and modules.game_attachedeffects and modules.game_attachedeffects.AttachedEffectManager)
   if type(effMgr) == 'table' and effMgr.register then
     pcall(function()
       effMgr.register(FLOOR_WP_EFFECT_ID, 'CavebotFloorWpBg', '/mods/game_helper/images/wp_tile_bg', ThingExternalTexture, {
         size = { 32, 32 },
-        opacity = 0.65,
-        onTop = true,
+        opacity = 0.75,
+        onTop = false,
+        drawOrder = 1,
         permanent = true,
         drawOnUI = false
       })
     end)
-  elseif g_attachedEffects.registerByImage then
-    pcall(function()
-      local reg = g_attachedEffects.registerByImage(FLOOR_WP_EFFECT_ID, 'CavebotFloorWpBg', '/mods/game_helper/images/wp_tile_bg')
-      if reg then
-        if reg.setSize then reg:setSize({ width = 32, height = 32 }) end
-        if reg.setOpacity then reg:setOpacity(0.65) end
-        if reg.setOnTop then reg:setOnTop(true) end
-        if reg.setPermanent then reg:setPermanent(true) end
-        if reg.setCanDrawOnUI then reg:setCanDrawOnUI(false) end
+    if g_attachedEffects.getById then
+      local ok, eff = pcall(g_attachedEffects.getById, FLOOR_WP_EFFECT_ID)
+      if ok and eff then
+        floorWpEffectObj = eff
       end
-    end)
-  end
-
-  if g_attachedEffects.getById then
-    local ok, eff = pcall(g_attachedEffects.getById, FLOOR_WP_EFFECT_ID)
-    if ok and eff then
-      floorWpEffectObj = eff
     end
   end
   return floorWpEffectObj
+end
+
+local function hideFloorLabels()
+  for i = #floorLabelPool, 1, -1 do
+    local lbl = floorLabelPool[i]
+    if not lbl or (lbl.isDestroyed and lbl:isDestroyed()) then
+      table.remove(floorLabelPool, i)
+    else
+      lbl:hide()
+    end
+  end
 end
 
 function clearFloorMarkers()
@@ -67,6 +89,8 @@ function clearFloorMarkers()
     end)
   end
   markedWorldTiles = {}
+  activeFloorMarkerGroups = {}
+  hideFloorLabels()
 end
 
 function floorMarkerColor(typeLower)
@@ -76,6 +100,70 @@ function floorMarkerColor(typeLower)
   if typeLower:find('^rope') or typeLower:find('^shovel') or typeLower:find('^hole')
      or typeLower:find('^ladder') or typeLower:find('^use') then return '#66ccff' end
   return '#ffffff'
+end
+
+local function getOrCreateFloorLabel(mapPanel, index)
+  local lbl = floorLabelPool[index]
+  if lbl and (lbl.isDestroyed and lbl:isDestroyed()) then
+    lbl = nil
+  end
+  if lbl and lbl.getParent and lbl:getParent() ~= mapPanel then
+    pcall(function() lbl:destroy() end)
+    lbl = nil
+  end
+  if not lbl then
+    lbl = g_ui.createWidget('UILabel', mapPanel)
+    lbl:setId('cbFloorWpLbl_' .. index)
+    lbl:setFont('verdana-11px-rounded')
+    lbl:setTextAutoResize(true)
+    lbl:setPhantom(true)
+    lbl:setFocusable(false)
+    if AlignCenter and lbl.setTextAlign then
+      lbl:setTextAlign(AlignCenter)
+    end
+    floorLabelPool[index] = lbl
+  end
+  return lbl
+end
+
+local function updateFloorMarkerLabels()
+  local cbc = charConfig and charConfig.cavebot
+  if not cbc or cbc.showWaypointsFloor == false or #activeFloorMarkerGroups == 0 then
+    hideFloorLabels()
+    return
+  end
+  local mapPanel = modules and modules.game_interface and modules.game_interface.getMapPanel and modules.game_interface.getMapPanel()
+  if not mapPanel or (mapPanel.isDestroyed and mapPanel:isDestroyed()) or not mapPanel:isVisible() then
+    hideFloorLabels()
+    return
+  end
+
+  local used = 0
+  for _, g in ipairs(activeFloorMarkerGroups) do
+    if mapPanel.isInRange and mapPanel:isInRange(g.pos) and mapPanel.getTileRect then
+      local rect = mapPanel:getTileRect(g.pos)
+      if rect and rect.width and rect.width > 4 and rect.height and rect.height > 4 then
+        used = used + 1
+        local lbl = getOrCreateFloorLabel(mapPanel, used)
+        lbl:setColor(g.color)
+        if lbl:getText() ~= g.text then
+          lbl:setText(g.text)
+        end
+        local w = lbl:getWidth()
+        local x = rect.x + math.floor(rect.width / 2) - math.floor(w / 2)
+        local y = rect.y + rect.height + 1
+        lbl:setPosition({ x = x, y = y })
+        lbl:show()
+      end
+    end
+  end
+
+  for i = used + 1, #floorLabelPool do
+    local lbl = floorLabelPool[i]
+    if lbl and (not lbl.isDestroyed or not lbl:isDestroyed()) then
+      lbl:hide()
+    end
+  end
 end
 
 function refreshFloorMarkers()
@@ -107,31 +195,39 @@ function refreshFloorMarkers()
     local tile = g_map.getTile(g.pos)
     if tile then
       if effTemplate then
-        local ground = tile.getGround and tile:getGround() or nil
-        if ground and ground.attachEffect then
-          pcall(function() ground:attachEffect(effTemplate:clone()) end)
-        elseif tile.attachEffect then
+        if tile.attachEffect then
           pcall(function() tile:attachEffect(effTemplate:clone()) end)
+        else
+          local ground = tile.getGround and tile:getGround() or nil
+          if ground and ground.attachEffect then
+            pcall(function() ground:attachEffect(effTemplate:clone()) end)
+          end
         end
       end
       if tile.setText then
-        local text = table.concat(g.labels, '\n')
-        local okT = pcall(function() tile:setText(text, g.color) end)
-        if not okT then pcall(function() tile:setText(text) end) end
+        pcall(function() tile:setText('') end)
       end
+      g.text = table.concat(g.labels, '\n')
+      activeFloorMarkerGroups[#activeFloorMarkerGroups + 1] = g
       markedWorldTiles[#markedWorldTiles + 1] = g.pos
     end
   end
+  updateFloorMarkerLabels()
 end
 
 function tickFloorMarkers(now)
-  if (now - lastFloorMarkAt) < 600 then return end
-  lastFloorMarkAt = now
   local cbc = charConfig and charConfig.cavebot
-  if cbc and cbc.showWaypointsFloor ~= false and #(cbc.waypoints or {}) > 0 then
+  if not cbc or cbc.showWaypointsFloor == false or #(cbc.waypoints or {}) == 0 then
+    if #markedWorldTiles > 0 or #floorLabelPool > 0 then
+      clearFloorMarkers()
+    end
+    return
+  end
+  if (now - lastFloorMarkAt) >= 600 then
+    lastFloorMarkAt = now
     refreshFloorMarkers()
-  elseif #markedWorldTiles > 0 then
-    clearFloorMarkers()
+  elseif #activeFloorMarkerGroups > 0 then
+    updateFloorMarkerLabels()
   end
 end
 
