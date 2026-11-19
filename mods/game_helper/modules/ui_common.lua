@@ -545,7 +545,7 @@ end
 -- VISUAL SLOT HELPERS (Spells & Items + Drag-and-Drop)
 -- ============================================================================
 
-local function renderSpellSlot(slotWidget, spellEntry)
+function renderSpellSlot(slotWidget, spellEntry)
   if not slotWidget then return end
   local icon = slotWidget:getChildById('icon')
   if not icon then return end
@@ -569,7 +569,7 @@ local function renderSpellSlot(slotWidget, spellEntry)
   end
 end
 
-local function setVirtualUIItem(itemW, itemId)
+function setVirtualUIItem(itemW, itemId)
   if not itemW then return end
   local id = tonumber(itemId) or 0
   if id > 0 then
@@ -587,7 +587,7 @@ local function setVirtualUIItem(itemW, itemId)
   end
 end
 
-local function renderItemSlot(slotWidget, itemId)
+function renderItemSlot(slotWidget, itemId)
   if not slotWidget then return end
   local itemW = slotWidget:getChildById('item')
   if not itemW then return end
@@ -602,7 +602,7 @@ local function renderItemSlot(slotWidget, itemId)
   end
 end
 
-local function renderPotionTypeBar(barWidget, ptype)
+function renderPotionTypeBar(barWidget, ptype)
   if not barWidget then return end
   local c1, c2, c3 = '#444444', '#444444', '#444444'
   if ptype == 'mp' then
@@ -620,7 +620,7 @@ local function renderPotionTypeBar(barWidget, ptype)
   if b3 then b3:setBackgroundColor(c3) end
 end
 
-local function bindSlotClicks(slotWidget, onLeftClick, onRightClear)
+function bindSlotClicks(slotWidget, onLeftClick, onRightClear)
   if not slotWidget then return end
   slotWidget.onMouseRelease = function(widget, mousePos, mouseButton)
     if mouseButton == MouseLeftButton then
@@ -635,7 +635,7 @@ local function bindSlotClicks(slotWidget, onLeftClick, onRightClear)
   end
 end
 
-local function attachItemDropHandler(slotWidget, onItemIdDropped)
+function attachItemDropHandler(slotWidget, onItemIdDropped)
   if not slotWidget then return end
   slotWidget.onDrop = function(widget, droppedWidget, mousePos)
     if droppedWidget and droppedWidget.getItem then
@@ -657,7 +657,7 @@ end
 -- SPELL & ITEM SELECTOR MODALS (Strict Vocation Filter + Reliable OK/Apply)
 -- ============================================================================
 
-local COMBAT_SUPPORT_WORDS = {
+COMBAT_SUPPORT_WORDS = {
   ['utito tempo'] = true, ['utito tempo san'] = true, ['utamo tempo'] = true,
   ['exeta res'] = true, ['exeta amp res'] = true, ['exana amp res'] = true,
   ['uteta res eq'] = true, ['uteta res sac'] = true, ['uteta res ven'] = true,
@@ -918,7 +918,7 @@ end
 
 -- ============================================================================
 
-local function isClickInsideAnyChild(parent, childNames, mousePos)
+function isClickInsideAnyChild(parent, childNames, mousePos)
   if not mousePos then return false end
   for _, cid in ipairs(childNames) do
     local c = parent:getChildById(cid)
@@ -929,7 +929,7 @@ local function isClickInsideAnyChild(parent, childNames, mousePos)
   return false
 end
 
-local function bindDeleteButton(btn, fn)
+function bindDeleteButton(btn, fn)
   if not btn then return end
   if btn.setFocusable then btn:setFocusable(false) end
   if btn.setPhantom then btn:setPhantom(false) end

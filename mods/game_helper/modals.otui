@@ -1569,9 +1569,11 @@ FinisherSettingsModal < MainWindow
 
   VerticalScrollBar
     id: finisherScrollBar
-    anchors.top: finisherList.top
-    anchors.bottom: finisherList.bottom
+    anchors.top: finOrderHint.bottom
+    anchors.bottom: finAddRow.top
     anchors.right: parent.right
+    margin-top: 4
+    margin-bottom: 8
     step: 24
     pixels-scroll: true
 
@@ -1616,7 +1618,7 @@ FinisherSettingsModal < MainWindow
       margin-right: 6
       text: 30
 
-    HelperGreenButton
+    HelperBlueButton
       id: finAddBtn
       text: Add
       width: 56

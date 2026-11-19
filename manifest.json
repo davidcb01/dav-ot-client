@@ -1,8 +1,8 @@
 {
   "server": "Dav OT",
-  "version": "15.25.261119.1348",
-  "updated_at": "2026-11-19T13:48:10",
-  "changelog": "v\u00e1riios ajustes e implementa\u00e7\u00f5es",
+  "version": "15.25.261119.1432",
+  "updated_at": "2026-11-19T14:32:43",
+  "changelog": "mais \u0001corre\u00e7\u00f5es da separa\u00e7\u00e3o dos m\u00f3dulos",
   "base_release_url": "https://github.com/davidcb01/dav-ot-client/releases/download/base-1525/base_pack.zip",
   "files": {
     "cacert.pem": {
@@ -34246,8 +34246,8 @@
       "size": 17523
     },
     "mods/game_helper/helper.otmod": {
-      "sha256": "539c545a0522650b2fe80940dbcc37a515bb9833c18bc84e69c6535850b9449f",
-      "size": 429
+      "sha256": "4ab16d933f0344e3f4c4ae9dad2eba88e1a8fb8c40e74355df3c17662b6dbc46",
+      "size": 366
     },
     "mods/game_helper/helper.otui": {
       "sha256": "12f9f4ae16150794bf65eb49c17737d1c534c636c8c4662ff7b3e20290d53957",
@@ -34258,8 +34258,8 @@
       "size": 17697
     },
     "mods/game_helper/modals.otui": {
-      "sha256": "7a66f541f80186a2ba5d76689be0c772ea3f4c0d5cb39e88c047112d30f1166e",
-      "size": 36901
+      "sha256": "10e3a53f598cd4ff198ab58cd52112216950156644ee044a992fae13e4d8784e",
+      "size": 36936
     },
     "mods/game_helper/settings.otui": {
       "sha256": "6cfef7917ecc4eb4207aafc349730f201070bd44990a2efbbaed1ac03542ae48",
@@ -34518,8 +34518,8 @@
       "size": 26487
     },
     "mods/game_helper/modules/ui_common.lua": {
-      "sha256": "d81ba68aaa45291a9626d749ae96a15fcf8196d91acdb73afbbdf516cd0beaa6",
-      "size": 48189
+      "sha256": "02937e9ba29439aac600efdf9f22d19a533e79635d4315cb5c583f5279feac4e",
+      "size": 48135
     },
     "mods/game_itemselector/itemselector.lua": {
       "sha256": "e2867307002c8f1965069e3ecb9f2edc38e593144769472ccae756c4fe2bc2b7",
