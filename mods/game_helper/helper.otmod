@@ -4,6 +4,19 @@ Module
   author: David
   sandboxed: true
   autoload: true
-  scripts: [ i18n, helper ]
+  scripts: [
+    i18n,
+    modules/state,
+    modules/config,
+    modules/ui_common,
+    modules/healing,
+    modules/tools,
+    modules/follow,
+    modules/shooter,
+    modules/target,
+    modules/cavebot,
+    modules/settings,
+    helper
+  ]
   @onLoad: init()
   @onUnload: terminate()

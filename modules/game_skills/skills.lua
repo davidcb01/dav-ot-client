@@ -104,7 +104,7 @@ function skillController:onInit()
     skillsButton = modules.game_mainpanel.addToggleButton('skillsButton', tr('Skills') .. ' (Alt+S)',
                                                                    '/images/options/button_skills', toggle, false, 1)
     skillsButton:setOn(true)
-    skillsWindow = g_ui.loadUI('skills')
+    skillsWindow = g_ui.loadUI('skills', modules.game_interface.getRightPanel())
     skillsWindow:setContentMinimumHeight(80)
 
     Keybind.new("Windows", "Show/hide skills windows", "Alt+S", "")
@@ -122,6 +122,7 @@ function skillController:onInit()
 
     setupUIButtons()
     skillsWindow:setup()
+    skillsWindow:close(true)
 end
 
 function skillController:onTerminate()
@@ -206,7 +207,7 @@ local function areStatsVisible(groupName)
     
     for _, skillId in pairs(skills) do
         local skill = skillsWindow:recursiveGetChildById(skillId)
-        if skill and skill:isVisible() then
+        if skill and skill:isExplicitlyVisible() then
             return true
         end
     end
@@ -409,14 +410,14 @@ end
 
 function isSkillVisible(skillId)
     local skill = skillsWindow:recursiveGetChildById(skillId)
-    return skill and skill:isVisible()
+    return skill and skill:isExplicitlyVisible()
 end
 
 function isSkillPercentBarVisible(skillId)
     local skill = skillsWindow:recursiveGetChildById(skillId)
     if skill then
         local percentBar = skill:getChildById('percent')
-        return percentBar and percentBar:isVisible()
+        return percentBar and percentBar:isExplicitlyVisible()
     end
     return false
 end
@@ -777,18 +778,21 @@ function update()
 end
 
 function skillController:onGameStart()
-    skillsWindow:setupOnStart()
+    hideOldClientStats()
+    loadSkillsVisibilitySettings()
     refresh()
+    updateHeight()
+    skillsWindow:setupOnStart()
 
     local newWindowButton = skillsWindow:recursiveGetChildById('newWindowButton')
     if g_game.getClientVersion() < 1310 and newWindowButton then
         newWindowButton:setVisible(false)
         local sepForge = skillsWindow:recursiveGetChildById('separadorOnForgeBonusesChange')
-        if sepForge and sepForge:isVisible() then
+        if sepForge and sepForge:isExplicitlyVisible() then
             sepForge:setVisible(false)
         end
         local sepDefense = skillsWindow:recursiveGetChildById('separadorOnDefenseInfoChange')
-        if sepDefense and sepDefense:isVisible() then
+        if sepDefense and sepDefense:isExplicitlyVisible() then
             sepDefense:setVisible(false)
         end
 
@@ -804,11 +808,19 @@ function skillController:onGameStart()
         end
     end
     
-    scheduleEvent(function() 
-        loadSkillsVisibilitySettings() 
+    scheduleEvent(function()
+        if not g_game.isOnline() or not skillsWindow then return end
+        loadSkillsVisibilitySettings()
+        updateHeight()
+        local savedH = tonumber(skillsWindow:getSettings('height'))
+        if savedH and savedH > 0 and not skillsWindow:isOn() and skillsWindow:getHeight() ~= savedH then
+            local prevSuppress = skillsWindow._suppressGeometrySave
+            skillsWindow._suppressGeometrySave = true
+            skillsWindow:setHeight(savedH)
+            skillsWindow.maximizedHeight = savedH
+            skillsWindow._suppressGeometrySave = prevSuppress
+        end
     end, 100)
-    hideOldClientStats()
-    updateHeight()
 end
 
 function refresh()
@@ -916,7 +928,7 @@ function updateHeight()
         for _, skillButton in pairs(skillsButtons) do
             local percentBar = skillButton:getChildById('percent')
 
-            if skillButton:isVisible() then
+            if skillButton:isExplicitlyVisible() then
                 if percentBar then
                     showPercentBar(skillButton, skillSettings[char][skillButton:getId()] ~= 1)
                 end
@@ -943,7 +955,7 @@ local function resetTable(t)
 end
 
 function skillController:onGameEnd()
-    skillsWindow:setParent(nil, true)
+    skillsWindow:close(true)
     if expSpeedEvent then
         expSpeedEvent:cancel()
         expSpeedEvent = nil

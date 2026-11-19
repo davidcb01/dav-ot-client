@@ -126,11 +126,30 @@ Panel
         anchors.top: enableCavebotCheck.bottom
         anchors.left: parent.left
         margin-top: 5
-        width: 230
+        width: 188
         !text: tr('Enable Waypoints on Floor')
         tooltip: Draws a translucent black square with the waypoint number and type on the floor tile (also while recording).
         checked: true
         @onCheckChange: modules.game_helper.onToggleShowWaypointsFloor(self:isChecked())
+
+      CheckBox
+        id: ignoreUnreachableCheck
+        anchors.verticalCenter: showFloorWpCheck.verticalCenter
+        anchors.left: showFloorWpCheck.right
+        margin-left: 8
+        width: 184
+        !text: tr('Ignore Trapped Monsters')
+        tooltip: Ignores monsters trapped behind walls or unreachable tiles in Cavebot.
+        checked: true
+
+      CheckBox
+        id: antiTrapCheck
+        anchors.verticalCenter: showFloorWpCheck.verticalCenter
+        anchors.left: ignoreUnreachableCheck.right
+        margin-left: 8
+        width: 110
+        !text: tr('Anti-Trap')
+        tooltip: Steps to a nearby free tile when boxed in (<= 2 exits) outside PZ.
 
       HelperSmallButton
         id: showCbHudBtn
@@ -378,12 +397,25 @@ Panel
           margin-left: 3
           @onClick: modules.game_helper.addCavebotWaypoint('End Lure')
 
+        HelperSmallButton
+          id: wpBoxBtn
+          text: Box
+          width: 66
+          height: 20
+          color: #ffd866
+          tooltip: Adds End Lure, Stand and Start Lure on the target tile.
+          anchors.top: wpUseBtn.bottom
+          anchors.left: dirGridPanel.right
+          margin-left: 8
+          margin-top: 3
+          @onClick: modules.game_helper.addCavebotWaypoint('Box')
+
         Label
           id: wpModeLbl
           text: Waypoint Mode:
-          anchors.top: dirGridPanel.bottom
+          anchors.top: wpBoxBtn.bottom
           anchors.left: parent.left
-          margin-top: 8
+          margin-top: 6
           color: #f0d080
           text-auto-resize: true
 
@@ -424,28 +456,30 @@ Panel
           anchors.top: wpModeLbl.bottom
           anchors.left: parent.left
           anchors.right: parent.right
-          margin-top: 16
+          margin-top: 8
 
         Label
+          id: ropeItemLbl
           text: Rope Item:
           anchors.top: toolsSlotSep.bottom
           anchors.left: parent.left
-          margin-top: 24
+          margin-top: 18
           color: #cccccc
           text-auto-resize: true
 
         HelperItemSlot
           id: ropeSlot
           anchors.top: toolsSlotSep.bottom
-          anchors.left: prev.right
-          margin-top: 18
+          anchors.left: ropeItemLbl.right
+          margin-top: 8
           margin-left: 6
 
         Label
+          id: shovelItemLbl
           text: Shovel Item:
           anchors.top: toolsSlotSep.bottom
           anchors.left: ropeSlot.right
-          margin-top: 24
+          margin-top: 18
           margin-left: 18
           color: #cccccc
           text-auto-resize: true
@@ -453,8 +487,8 @@ Panel
         HelperItemSlot
           id: shovelSlot
           anchors.top: toolsSlotSep.bottom
-          anchors.left: prev.right
-          margin-top: 18
+          anchors.left: shovelItemLbl.right
+          margin-top: 8
           margin-left: 6
 
         Label

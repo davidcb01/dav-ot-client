@@ -123,44 +123,19 @@ Panel
       checked: true
 
     Label
-      text: Default mode:
+      id: targetMaxRangeLbl
+      text: Max range:
       anchors.bottom: parent.bottom
       anchors.left: parent.left
       margin-bottom: 4
-      color: #f0d080
-      text-auto-resize: true
-
-    ComboBox
-      id: targetModeCombo
-      anchors.verticalCenter: prev.verticalCenter
-      anchors.left: prev.right
-      margin-left: 6
-      width: 58
-
-    Label
-      id: targetModeInfoLabel
-      text: (i)
-      anchors.verticalCenter: prev.verticalCenter
-      anchors.left: prev.right
-      margin-left: 6
-      color: #8ec5ff
-      text-auto-resize: true
-      phantom: false
-      !tooltip: tr('Mode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best target for area runes / diamond arrow (most monsters around it)\nMode F: closest target, prioritizing lowest health\nMode G: closest target with highest health\nMode H: farthest target with lowest health\nMode I: farthest target with highest health')
-
-    Label
-      text: Max range:
-      anchors.verticalCenter: prev.verticalCenter
-      anchors.left: prev.right
-      margin-left: 16
       color: #cccccc
       text-auto-resize: true
 
     HelperNumericEdit
       id: targetRangeEdit
-      anchors.verticalCenter: prev.verticalCenter
-      anchors.left: prev.right
-      margin-left: 4
+      anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
+      anchors.left: targetMaxRangeLbl.right
+      margin-left: 6
       width: 34
       text: 7
 
@@ -168,19 +143,36 @@ Panel
       id: targetChaseCombo
       width: 86
       height: 19
-      anchors.verticalCenter: prev.verticalCenter
-      anchors.left: prev.right
+      anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
+      anchors.left: targetRangeEdit.right
       margin-left: 14
       !tooltip: tr('Stand = do not chase the target. Chase = walk after the target.')
 
     CheckBox
       id: targetKeepCheck
-      anchors.verticalCenter: prev.verticalCenter
-      anchors.left: prev.right
-      margin-left: 12
-      width: 150
+      anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
+      anchors.left: targetChaseCombo.right
+      margin-left: 14
+      width: 148
       !text: tr('Keep target until dead')
       checked: true
+
+    CheckBox
+      id: targetFinisherCheck
+      anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
+      anchors.left: targetKeepCheck.right
+      margin-left: 8
+      width: 68
+      !text: tr('Finisher')
+
+    HelperBlueButton
+      id: finisherSettingsBtn
+      text: Finisher Settings
+      width: 106
+      height: 19
+      anchors.verticalCenter: targetMaxRangeLbl.verticalCenter
+      anchors.right: parent.right
+      @onClick: modules.game_helper.openFinisherSettingsModal()
 
   TextList
     id: targetRulesList
@@ -269,7 +261,7 @@ Panel
       color: #8ec5ff
       text-auto-resize: true
       phantom: false
-      !tooltip: tr('Default: uses top Default Mode\nMode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best area rune / diamond arrow cluster\nMode F: closest + lowest HP\nMode G: closest + highest HP\nMode H: farthest + lowest HP\nMode I: farthest + highest HP')
+      !tooltip: tr('Mode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best area rune / diamond arrow cluster\nMode F: closest + lowest HP\nMode G: closest + highest HP\nMode H: farthest + lowest HP\nMode I: farthest + highest HP')
 
     Label
       text: HP%:

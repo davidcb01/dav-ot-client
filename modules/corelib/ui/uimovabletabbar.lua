@@ -124,6 +124,9 @@ local function updateTabs(tabBar)
 end
 
 local function hideTabs(tabBar, fromBack, toArray, width)
+    if tabBar:getWidth() <= 0 then
+        return
+    end
     while #tabBar.tabs > 0 and getMaxMargin(tabBar) + width > tabBar:getWidth() do
         local index = fromBack and #tabBar.tabs or 1
         local tab = tabBar.tabs[index]

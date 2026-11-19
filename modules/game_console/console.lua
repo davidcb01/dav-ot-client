@@ -210,12 +210,6 @@ function consoleController:onInit()
     defaultTab = addTab(tr('Local Chat'), true)
     serverTab = addTab(tr('Server Log'), false)
 
-    local clientVersion = g_game.getClientVersion()
-    if clientVersion >= 820 then
-        local tab = addTab('NPCs', false)
-        tab.npcChat = true
-    end
-
     readOnlyPanel = consolePanel:getChildById('readOnlyPanel')
     readOnlyPanel:hide()
     consoleContentPanel:removeAnchor(AnchorRight)
@@ -705,7 +699,7 @@ function clear()
 
     local npcTab = consoleTabBar:getTab('NPCs')
     if npcTab then
-        npcTab.tabPanel:getChildById('consoleBuffer'):destroyChildren()
+        consoleTabBar:removeTab(npcTab)
     end
 
     consoleTextEdit:clearText()
@@ -945,11 +939,44 @@ function getCurrentTab()
     return consoleTabBar:getCurrentTab()
 end
 
+local function normalizeChannelName(name)
+    if type(name) == 'string' and name:lower() == 'advertising' then
+        return 'Trade'
+    end
+    return name
+end
+
+local function enforceDefaultConsoleTabOrder()
+    if not consoleTabBar or not consoleTabBar.moveTab or not consoleTabBar.tabs then
+        return
+    end
+    local desired = {}
+    if defaultTab then table.insert(desired, defaultTab) end
+    if serverTab then table.insert(desired, serverTab) end
+    local worldTab = getChannelTab(3) or getTab('World Chat')
+    local tradeTab = getChannelTab(5) or getTab('Trade')
+    if worldTab then table.insert(desired, worldTab) end
+    if tradeTab then table.insert(desired, tradeTab) end
+
+    local targetPos = 1
+    for _, tab in ipairs(desired) do
+        local curIdx = table.find(consoleTabBar.tabs, tab)
+        if curIdx then
+            if curIdx ~= targetPos then
+                consoleTabBar:moveTab(tab, targetPos - curIdx)
+            end
+            targetPos = targetPos + 1
+        end
+    end
+end
+
 function addChannel(name, id)
+    name = normalizeChannelName(name)
     channels[id] = name
     local focus = not table.find(ignoredChannels, id)
     local tab = addTab(name, focus)
     tab.channelId = id
+    enforceDefaultConsoleTabOrder()
     return tab
 end
 
@@ -1962,10 +1989,15 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
 end
 
 function onOpenChannel(channelId, channelName)
+    channelName = normalizeChannelName(channelName)
     local tab = addChannel(channelName, channelId)
     if channelId == OWNER_CHANNEL_ID and tab then
         tab.ownerPrivateChannel = true
         ownPrivateName = channelName
+    end
+    enforceDefaultConsoleTabOrder()
+    if table.find(ignoredChannels, channelId) and defaultTab then
+        consoleTabBar:selectTab(defaultTab)
     end
 end
 
@@ -2132,7 +2164,7 @@ function onChannelList(channelList)
 
     for _, v in ipairs(channelList) do
         local channelId = v[1]
-        local channelName = v[2]
+        local channelName = normalizeChannelName(v[2])
 
         if #channelName > 0 then
             local label = g_ui.createWidget('ChannelListLabel', channelListPanel)
@@ -2429,7 +2461,17 @@ function consoleController:onGameStart()
     -- Update chat mode when game comes online to ensure proper key binding
     updateChatMode()
 
-    -- open last channels
+    -- Default chat channels in order: Local Chat, Server Log, World Chat (3), Trade (5)
+    local joinedIds = {}
+    for _, chId in ipairs({ 3, 5 }) do
+        if not channels[chId] then
+            table.insert(ignoredChannels, chId)
+            g_game.joinChannel(chId)
+        end
+        joinedIds[chId] = true
+    end
+
+    -- open remaining saved channels
     local lastChannelsOpen = g_settings.getNode('lastChannelsOpen')
     if lastChannelsOpen then
         local savedChannels = lastChannelsOpen[g_game.getCharacterName()]
@@ -2440,14 +2482,18 @@ function consoleController:onGameStart()
                     if not getChannelTab(LOOT_CHANNEL_ID) then
                         addChannel(tr('Loot'), LOOT_CHANNEL_ID)
                     end
-                elseif channelId ~= -1 and channelId < 100 then
-                    if not table.find(channels, channelId) then
+                elseif channelId ~= -1 and channelId < 100 and not joinedIds[channelId] then
+                    if not channels[channelId] then
                         g_game.joinChannel(channelId)
                         table.insert(ignoredChannels, channelId)
                     end
                 end
             end
         end
+    end
+    enforceDefaultConsoleTabOrder()
+    if defaultTab then
+        consoleTabBar:selectTab(defaultTab)
     end
     scheduleEvent(function()
         ignoredChannels = {}

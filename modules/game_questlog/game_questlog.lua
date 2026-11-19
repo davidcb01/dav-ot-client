@@ -565,7 +565,7 @@ local function toggle()
 end
 
 local function toggleTracker()
-    if trackerMiniWindow:isOn() then
+    if trackerMiniWindow:isVisible() then
         trackerMiniWindow:close()
     else
         if not trackerMiniWindow:getParent() then
@@ -622,7 +622,7 @@ local function showQuestTracker(skipOpen)
         end
         return
     end
-    trackerMiniWindow = g_ui.createWidget('QuestLogTracker')
+    trackerMiniWindow = g_ui.createWidget('QuestLogTracker', modules.game_interface.getRightPanel())
     
     -- Hide all standard miniwindow buttons that we don't want
     local toggleFilterButton = trackerMiniWindow:recursiveGetChildById('toggleFilterButton')
@@ -806,13 +806,24 @@ local function showQuestTracker(skipOpen)
     
     trackerMiniWindow:setContentMinimumHeight(80)
     trackerMiniWindow:setup()
-    
+    trackerMiniWindow:close(true)
+
     -- Rebuild tracker from saved settings when first created
     if not isReceivingQuestTracker and settings[namePlayer] and #settings[namePlayer] > 0 then
         rebuildTrackerFromSettings()
     end
-    
-    if trackerMiniWindow:getSettings('closed') then
+
+    if skipOpen then
+        if trackerMiniWindow:getSettings('closed') == nil then
+            trackerMiniWindow:setSettings({ closed = true })
+        end
+        trackerMiniWindow:setupOnStart()
+        if trackerMiniWindow:isVisible() then
+            onOpenTracker()
+        else
+            onCloseTracker()
+        end
+    elseif trackerMiniWindow:getSettings('closed') then
         trackerMiniWindow:setupOnStart()
         onCloseTracker()
     else
@@ -1116,12 +1127,19 @@ function questLogController:toggleMiniWindowsTracker()
         if buttonQuestLogTrackerButton then
             buttonQuestLogTrackerButton:setOn(false)
         end
-        return trackerMiniWindow:hide()
+        return trackerMiniWindow:close()
     end
     if buttonQuestLogTrackerButton then
         buttonQuestLogTrackerButton:setOn(true)
     end
-    showQuestTracker()
+    if not trackerMiniWindow:getParent() then
+        local panel = modules.game_interface
+                          .findContentPanelAvailable(trackerMiniWindow, trackerMiniWindow:getMinimumHeight())
+        if panel then
+            panel:addChild(trackerMiniWindow)
+        end
+    end
+    trackerMiniWindow:open()
 end
 
 function questLogController:filterQuestListShowComplete()
@@ -1329,9 +1347,10 @@ function questLogController:onGameStart()
             isReceivingQuestTracker = true
             showQuestTracker(true)
             isReceivingQuestTracker = false
-        end
-
-        if trackerMiniWindow then
+        elseif trackerMiniWindow then
+            if trackerMiniWindow:getSettings('closed') == nil then
+                trackerMiniWindow:setSettings({ closed = true })
+            end
             trackerMiniWindow:setupOnStart()
             if trackerMiniWindow:isVisible() then
                 onOpenTracker()
@@ -1357,7 +1376,7 @@ function questLogController:onGameEnd()
     end
     hide()
     if trackerMiniWindow then
-        trackerMiniWindow:setParent(nil, true)
+        trackerMiniWindow:close(true)
     end
     -- Clear the mission to quest mapping
     missionToQuestMap = {}

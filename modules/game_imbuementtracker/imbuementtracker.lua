@@ -141,7 +141,7 @@ function initialize()
     end
 
     imbuementTracker:setup()
-    imbuementTracker:hide()
+    imbuementTracker:close(true)
 end
 
 function onMiniWindowOpen()
@@ -304,12 +304,17 @@ end
 function onGameStart()
     if g_game.getClientVersion() >= 1100 then
         loadFilters()
-        imbuementTrackerButton = modules.game_mainpanel.addToggleButton('imbuementTrackerButton', tr('Imbuement Tracker'), '/images/options/button_imbuementtracker', toggle)
+        if not imbuementTrackerButton then
+            imbuementTrackerButton = modules.game_mainpanel.addToggleButton('imbuementTrackerButton', tr('Imbuement Tracker'), '/images/options/button_imbuementtracker', toggle)
+        end
+        if imbuementTracker:getSettings('closed') == nil then
+            imbuementTracker:setSettings({ closed = true })
+        end
         imbuementTracker:setupOnStart()
         if imbuementTrackerButton then
             imbuementTrackerButton:setOn(imbuementTracker:isVisible())
         end
-        g_game.imbuementDurations(imbuementTrackerButton:isOn())
+        g_game.imbuementDurations(imbuementTracker:isVisible())
         if imbuementTracker:isVisible() then
             scheduleImbuementTrackerRefresh(400)
         end
@@ -318,6 +323,7 @@ end
 
 function onGameEnd()
     imbuementTracker.contentsPanel:destroyChildren()
+    imbuementTracker:close(true)
     saveFilters()
 end
 

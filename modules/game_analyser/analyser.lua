@@ -133,7 +133,7 @@ function init()
   consumableButton = analyserMiniWindow:recursiveGetChildById("consumableButton")
 
   for id, style in pairs(analyserWindows) do
-    openedWindows[id] = g_ui.loadUI(style)
+    openedWindows[id] = g_ui.loadUI(style, modules.game_interface.getRightPanel())
     if openedWindows[id] then
       openedWindows[id]:setup()
       openedWindows[id].closeButton.onClick = function() toggleAnalysers(id) end
@@ -360,6 +360,14 @@ function onlineAnalyser()
         MiscAnalyser:updateWindow(true)
       elseif id == 'consumableButton' then
         ConsumableAnalyser:updateWindow(true)
+      end
+      local savedH = tonumber(widget:getSettings('height'))
+      if savedH and savedH > 0 and not widget:isOn() and widget:getHeight() ~= savedH then
+        local prevSuppress = widget._suppressGeometrySave
+        widget._suppressGeometrySave = true
+        widget:setHeight(savedH)
+        widget.maximizedHeight = savedH
+        widget._suppressGeometrySave = prevSuppress
       end
     end
   end

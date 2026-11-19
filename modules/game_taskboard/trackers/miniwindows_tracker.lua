@@ -42,7 +42,7 @@ function TaskBoardController:initTracker()
         trackerStyleLoaded = true
     end
 
-    preyTracker = g_ui.createWidget('TaskBoardKillTracker')
+    preyTracker = g_ui.createWidget('TaskBoardKillTracker', modules.game_interface.getRightPanel())
     preyTracker:setup()
 
     -- Hide buttons not needed for this tracker variant
@@ -146,16 +146,9 @@ function TaskBoardController:checkTracker()
     restoreEvent = scheduleEvent(function()
         restoreEvent = nil
         if not preyTracker then return end
-        if preyTracker.restorePosition then
-            preyTracker:restorePosition()
-        end
-        -- reabre se da última vez ele estava aberto
-        if preyTracker:getSettings('closed') == false and not preyTracker:isVisible() then
-            if not preyTracker:getParent() then
-                local panel = modules.game_interface.findContentPanelAvailable(preyTracker, preyTracker:getMinimumHeight())
-                if panel then preyTracker:setParent(panel) end
-            end
-            preyTracker:open()
+        preyTracker:setupOnStart()
+        if taskboardTrackerButton then
+            taskboardTrackerButton:setOn(preyTracker:isVisible())
         end
         Tracker.fitHeight()
     end, 150)
@@ -576,22 +569,30 @@ function Tracker.fitHeight()
         end
         local total = 0
         for _, c in ipairs(cp:getChildren()) do
-            if c:isVisible() then
+            if c:isExplicitlyVisible() then
                 total = total + c:getHeight() + c:getMarginTop() + c:getMarginBottom()
             end
         end
         -- margens do contentsPanel: top 16 + bottom 4 + folga de borda 4
-        local h = total + 16 + 4 + 4
+        local h = math.max(47, total + 16 + 4 + 4)
         local rb = preyTracker:getChildById('bottomResizeBorder')
         if rb then
             rb:setMinimum(47)
-            rb:setMaximum(math.max(47, h))
+            rb:setMaximum(h)
         end
-        if not preyTracker:isOn() and preyTracker:getHeight() ~= h then
-            preyTracker:setHeight(h)
-            local parent = preyTracker:getParent()
-            if parent and modules.game_interface and modules.game_interface.syncHorizontalPanels then
-                modules.game_interface.syncHorizontalPanels()
+        if not preyTracker:isOn() then
+            local savedH = tonumber(preyTracker:getSettings('height'))
+            local targetH = (savedH and savedH >= 47) and math.min(savedH, h) or h
+            if preyTracker:getHeight() ~= targetH then
+                local prevSuppress = preyTracker._suppressGeometrySave
+                preyTracker._suppressGeometrySave = true
+                preyTracker:setHeight(targetH)
+                preyTracker.maximizedHeight = targetH
+                preyTracker._suppressGeometrySave = prevSuppress
+                local parent = preyTracker:getParent()
+                if parent and modules.game_interface and modules.game_interface.syncHorizontalPanels then
+                    modules.game_interface.syncHorizontalPanels()
+                end
             end
         end
         if cp.updateScrollBars then

@@ -183,7 +183,7 @@
                         </div>
                         <div class="weeklyInfo" style="top: -10px;">
                             <label class="weeklyCurrentLabel" *visible="item.showProgress"
-                                *class-weeklyCurrentReady="item.canDeliver">{{item.current}}</label>
+                                *color="item.canDeliver and '#00ff00' or '#ff0000'">{{item.current}}</label>
                             <label class="weeklyOfLabel" *visible="item.showProgress">of</label>
                             <label class="weeklyTotalLabel" *visible="item.showProgress">{{item.total}}</label>
                             <div class="weeklyDoneIcon" *visible="item.delivered"></div>

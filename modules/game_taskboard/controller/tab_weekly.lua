@@ -140,7 +140,7 @@ function TaskBoardController:onWeeklyServerData(header, monsters, items)
         local total = tonumber(it.total) or 0
         local delivered = (tonumber(it.claimed) or 0) == 1
         local finished = (tonumber(it.state) or 0) == 1
-        local canDeliver = finished and not delivered
+        local canDeliver = (not delivered) and (finished or (total > 0 and current >= total))
         table.insert(itemList, {
             itemId = itemId,
             itemName = itemName,

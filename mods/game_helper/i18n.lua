@@ -153,8 +153,8 @@ local EN_TO_PT = {
   ['Ignore creatures (comma separated):'] = 'Ignorar criaturas (separadas por vírgula):',
   ['Mode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best target for area runes / diamond arrow (most monsters around it)\nMode F: closest target, prioritizing lowest health\nMode G: closest target with highest health\nMode H: farthest target with lowest health\nMode I: farthest target with highest health'] =
     'Modo A: alvo mais próximo\nModo B: alvo mais distante\nModo C: menor HP\nModo D: maior HP\nModo E: melhor alvo p/ runa em área / diamond arrow (mais monstros ao redor)\nModo F: mais próximo com menor HP\nModo G: mais próximo com maior HP\nModo H: mais distante com menor HP\nModo I: mais distante com maior HP',
-  ['Default: uses top Default Mode\nMode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best area rune / diamond arrow cluster\nMode F: closest + lowest HP\nMode G: closest + highest HP\nMode H: farthest + lowest HP\nMode I: farthest + highest HP'] =
-    'Padrão: usa o Modo Padrão acima\nModo A: mais próximo\nModo B: mais distante\nModo C: menor HP\nModo D: maior HP\nModo E: melhor grupo p/ área / diamond arrow\nModo F: mais próximo + menor HP\nModo G: mais próximo + maior HP\nModo H: mais distante + menor HP\nModo I: mais distante + maior HP',
+  ['Mode A: closest target\nMode B: farthest target\nMode C: lowest health\nMode D: highest health\nMode E: best area rune / diamond arrow cluster\nMode F: closest + lowest HP\nMode G: closest + highest HP\nMode H: farthest + lowest HP\nMode I: farthest + highest HP'] =
+    'Modo A: mais próximo\nModo B: mais distante\nModo C: menor HP\nModo D: maior HP\nModo E: melhor grupo p/ área / diamond arrow\nModo F: mais próximo + menor HP\nModo G: mais próximo + maior HP\nModo H: mais distante + menor HP\nModo I: mais distante + maior HP',
 
   -- Cavebot Tab & Mini-HUD
   ['Enable Cavebot'] = 'Ativar Cavebot',
@@ -175,6 +175,8 @@ local EN_TO_PT = {
   ['Use Tile'] = 'Usar Tile',
   ['Start Lure'] = 'Iniciar Lure',
   ['End Lure'] = 'Fim Lure',
+  ['Box'] = 'Box',
+  ['Adds End Lure, Stand and Start Lure on the target tile.'] = 'Adiciona End Lure, Stand e Start Lure no tile alvo.',
   ['Rope Item:'] = 'Item Corda:',
   ['Shovel Item:'] = 'Item Pá:',
   ['Center'] = 'Centralizar',
@@ -285,6 +287,10 @@ local EN_TO_PT = {
   ['Deleted profile "%s".'] = 'Perfil "%s" excluído.',
   [' [Current]'] = ' [Atual]',
   ['%d vocs'] = '%d vocações',
+  ['Ignore Trapped Monsters'] = 'Ignorar Monstros Presos',
+  ['Ignores monsters trapped behind walls or unreachable tiles in Cavebot.'] = 'Ignora monstros presos atrás de paredes ou inacessíveis no Cavebot.',
+  ['Sec:'] = 'Seg:',
+  ['Interval in seconds between mana training casts'] = 'Intervalo em segundos entre as magias de mana training',
   ['Offline'] = 'Offline'
 }
 

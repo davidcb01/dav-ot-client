@@ -129,14 +129,18 @@ local function walk(dir)
         g_game.cancelFollow()
     end
 
+    modules.game_interface.lastManualWalk = g_clock.millis()
+
     local isAutoWalking = player:isAutoWalking()
     if isAutoWalking or player:isServerWalking() then
         g_game.stop()
         if isAutoWalking then
             player:stopAutoWalk()
         end
-        player:lockWalk(player:getStepDuration() + 50)
-        return
+        if not player:canWalk() then
+            nextWalkDir = dir
+            return
+        end
     end
 
     if not player:canWalk() then
@@ -200,6 +204,9 @@ end
 local function changeWalkDir(dir, pop)
     if not pop and isTextInputFocused() then
         return
+    end
+    if not pop and modules.game_interface then
+        modules.game_interface.lastManualWalk = g_clock.millis()
     end
     -- Remove all occurrences of the specified direction
     while table.removevalue(smartWalkDirs, dir) do end

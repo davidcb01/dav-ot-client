@@ -435,7 +435,7 @@ Panel
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.bottom: parent.bottom
-      height: 124
+      height: 158
       image-source: /images/ui/2pixel_up_frame_borderimage
       image-border: 4
       padding: 8
@@ -477,9 +477,52 @@ Panel
         id: manaShieldCheck
         anchors.verticalCenter: manaShieldSlot.verticalCenter
         anchors.left: manaShieldSlot.right
-        margin-left: 8
-        width: 130
+        margin-left: 6
+        width: 92
         !text: tr('Auto Utamo')
+
+      Label
+        id: utamoBelowLbl
+        text: <=%
+        anchors.verticalCenter: manaShieldSlot.verticalCenter
+        anchors.left: manaShieldCheck.right
+        margin-left: 2
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: utamoBelowEdit
+        anchors.verticalCenter: manaShieldSlot.verticalCenter
+        anchors.left: utamoBelowLbl.right
+        margin-left: 2
+        width: 30
+        text: 100
+
+      CheckBox
+        id: utamoRecoverCheck
+        anchors.verticalCenter: manaShieldSlot.verticalCenter
+        anchors.left: utamoBelowEdit.right
+        margin-left: 4
+        width: 50
+        !text: tr('Off>=')
+        tooltip: Remove Mana Shield when HP recovers above threshold.
+
+      HelperNumericEdit
+        id: utamoAboveEdit
+        anchors.verticalCenter: manaShieldSlot.verticalCenter
+        anchors.left: utamoRecoverCheck.right
+        margin-left: 2
+        width: 30
+        text: 70
+
+      CheckBox
+        id: antiLagCheck
+        anchors.verticalCenter: manaShieldSlot.verticalCenter
+        anchors.left: utamoAboveEdit.right
+        margin-left: 4
+        width: 68
+        !text: tr('AntiLag')
+        tooltip: Auto-enable Mana Shield when ping >= 200ms.
 
       HelperSpellSlot
         id: recoverySlot
@@ -512,6 +555,78 @@ Panel
         margin-left: 4
         width: 36
         text: 95
+
+      CheckBox
+        id: autoSsaCheck
+        anchors.left: parent.left
+        anchors.bottom: bottomLineSep.top
+        margin-bottom: 6
+        width: 84
+        !text: tr('Auto SSA')
+
+      HelperNumericEdit
+        id: autoSsaHpEdit
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: autoSsaCheck.right
+        margin-left: 2
+        width: 34
+        text: 60
+
+      Label
+        text: %
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: autoSsaHpEdit.right
+        margin-left: 2
+        color: #cccccc
+        text-auto-resize: true
+
+      CheckBox
+        id: autoMightCheck
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: prev.right
+        margin-left: 14
+        width: 96
+        !text: tr('Might Ring')
+
+      HelperNumericEdit
+        id: autoMightHpEdit
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: autoMightCheck.right
+        margin-left: 2
+        width: 34
+        text: 60
+
+      Label
+        text: %
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: autoMightHpEdit.right
+        margin-left: 2
+        color: #cccccc
+        text-auto-resize: true
+
+      CheckBox
+        id: autoEringCheck
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: prev.right
+        margin-left: 14
+        width: 82
+        !text: tr('E-Ring')
+
+      HelperNumericEdit
+        id: autoEringHpEdit
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: autoEringCheck.right
+        margin-left: 2
+        width: 34
+        text: 45
+
+      Label
+        text: %
+        anchors.verticalCenter: autoSsaCheck.verticalCenter
+        anchors.left: autoEringHpEdit.right
+        margin-left: 2
+        color: #cccccc
+        text-auto-resize: true
 
       HorizontalSeparator
         id: bottomLineSep

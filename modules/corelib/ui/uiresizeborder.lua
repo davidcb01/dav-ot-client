@@ -10,7 +10,12 @@ function UIResizeBorder.create()
 end
 
 function UIResizeBorder:onSetup()
-    if self:getWidth() > self:getHeight() then
+    local id = self:getId()
+    if id == 'bottomResizeBorder' or id == 'topResizeBorder' then
+        self.vertical = true
+    elseif id == 'rightResizeBorder' or id == 'leftResizeBorder' then
+        self.vertical = false
+    elseif self:getWidth() > self:getHeight() then
         self.vertical = true
     else
         self.vertical = false
@@ -105,6 +110,9 @@ function UIResizeBorder:onMouseMove(mousePos, mouseMoved)
               newSize = math.min(math.max(parent:getHeight() - delta, self.minimum), maxAllowed)
             end
             parent:setHeight(newSize)
+            if parent.UIMiniWindowContainer and parent.setSettings and parent.miniLoaded and not parent._suppressGeometrySave and not parent:isOn() then
+                parent:setSettings({ height = parent:getHeight() })
+            end
             if container and (container:getId() == 'gameHorizontalRightPanel' or container:getId() == 'gameHorizontalLeftPanel') then
                 if modules.game_interface and modules.game_interface.syncHorizontalPanels then
                     modules.game_interface.syncHorizontalPanels()
@@ -119,6 +127,9 @@ function UIResizeBorder:onMouseMove(mousePos, mouseMoved)
               newSize = math.min(math.max(parent:getWidth() - delta, self.minimum), self.maximum)
             end
             parent:setWidth(newSize)
+            if parent.UIMiniWindowContainer and parent.setSettings and parent.miniLoaded and not parent._suppressGeometrySave and not parent:isOn() then
+                parent:setSettings({ width = parent:getWidth() })
+            end
         end
 
         self:checkBoundary(newSize)
@@ -127,6 +138,14 @@ function UIResizeBorder:onMouseMove(mousePos, mouseMoved)
 end
 
 function UIResizeBorder:onMouseRelease(mousePos, mouseButton)
+    local parent = self:getParent()
+    if parent and parent.UIMiniWindowContainer and parent.setSettings and parent.miniLoaded and not parent._suppressGeometrySave and not parent:isOn() then
+        if self.vertical then
+            parent:setSettings({ height = parent:getHeight() })
+        else
+            parent:setSettings({ width = parent:getWidth() })
+        end
+    end
     if not self:isHovered() then
         -- Restore cursor when mouse is released outside the border
         if modules.client_options and modules.client_options.getOption('nativeCursor') then

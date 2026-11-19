@@ -451,7 +451,8 @@ function onXPExtra(mousePosition)
 end
 
 function XPAnalyser:checkAnchos()
-	if XPAnalyser.window.contentsPanel.rawXpLabel:isVisible() then
+	local showRaw = (XPAnalyser.rawXpVisible == true) or XPAnalyser.window.contentsPanel.rawXpLabel:isExplicitlyVisible()
+	if showRaw then
 		XPAnalyser.window.contentsPanel.xpLabel:setMarginTop(2)
 		XPAnalyser.window.contentsPanel.xpLabel:addAnchor(AnchorTop, 'rawXpLabel', AnchorBottom)
 		XPAnalyser.window.contentsPanel.xpGain:addAnchor(AnchorTop, 'rawXpGain', AnchorBottom)
@@ -461,7 +462,7 @@ function XPAnalyser:checkAnchos()
 		XPAnalyser.window.contentsPanel.xpGain:addAnchor(AnchorTop, 'topParent', AnchorBottom)
 	end
 
-	if XPAnalyser.window.contentsPanel.rawXpHourLabel:isVisible() then
+	if showRaw or XPAnalyser.window.contentsPanel.rawXpHourLabel:isExplicitlyVisible() then
 		XPAnalyser.window.contentsPanel.xpHourLabel:setMarginTop(2)
 		XPAnalyser.window.contentsPanel.xpHour:setMarginTop(2)
 		XPAnalyser.window.contentsPanel.xpHourLabel:addAnchor(AnchorTop, 'rawXpHourLabel', AnchorBottom)
@@ -473,7 +474,8 @@ function XPAnalyser:checkAnchos()
 		XPAnalyser.window.contentsPanel.xpHour:addAnchor(AnchorTop, 'xpHourLabel', AnchorTop)
 	end
 
-	if XPAnalyser.window.contentsPanel.xpBG:isVisible() then
+	local showGauge = (XPAnalyser.gaugeVisible == true) or XPAnalyser.window.contentsPanel.xpBG:isExplicitlyVisible()
+	if showGauge then
 		XPAnalyser.window.contentsPanel.xpGraphBG:addAnchor(AnchorTop, 'separatorGauge', AnchorBottom)
 	else
 		XPAnalyser.window.contentsPanel.xpGraphBG:addAnchor(AnchorTop, 'separatorPercent', AnchorBottom)
@@ -500,8 +502,6 @@ function XPAnalyser:setRawXPVisible(value, preserveHeight)
 			XPAnalyser.window:setHeight(255)
 		end
 		XPAnalyser:saveConfigJson()
-	elseif XPAnalyser.window:getHeight() > maxH then
-		XPAnalyser.window:setHeight(maxH)
 	end
 end
 

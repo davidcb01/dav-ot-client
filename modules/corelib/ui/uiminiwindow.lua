@@ -124,7 +124,10 @@ function UIMiniWindow:maximize(dontSave)
     self:getChildById('miniwindowScrollBar'):show()
     self:getChildById('bottomResizeBorder'):show()
     self:getChildById('minimizeButton'):setOn(false)
-    self:setHeight(self:getSettings('height') or self.maximizedHeight)
+    local targetH = tonumber(self:getSettings('height')) or self.maximizedHeight
+    if targetH and targetH > 0 then
+        self:setHeight(targetH)
+    end
     self:updateResizeBorders()
 
     -- Show miniborder when maximizing
@@ -290,17 +293,11 @@ function UIMiniWindow:setupOnStart(opts)
             end
         end
 
-        if selfSettings.height then
-            local bottomBorder = self:getChildById('bottomResizeBorder')
-            if not self.resizeDisabled and bottomBorder and (bottomBorder:getMinimum() ~= bottomBorder:getMaximum()) then
-                self:setHeight(selfSettings.height)
-                self.maximizedHeight = selfSettings.height
-            elseif self:isOn() and not self.resizeDisabled then
-                self:setHeight(selfSettings.height)
-                self.maximizedHeight = selfSettings.height
-            elseif not self.resizeDisabled then
-                self:setHeight(selfSettings.height)
-                self.maximizedHeight = selfSettings.height
+        local savedH = tonumber(selfSettings.height)
+        if savedH and savedH > 0 then
+            if not self.resizeDisabled then
+                self:setHeight(savedH)
+                self.maximizedHeight = savedH
             else
                 self:eraseSettings({
                     height = true
@@ -372,10 +369,28 @@ function UIMiniWindow:setupOnStart(opts)
             end)
         end
     elseif newParent then
+        local savedW = (not self.resizeDisabled and selfSettings and tonumber(selfSettings.width)) or nil
+        local savedH = (not self.resizeDisabled and not self:isOn() and selfSettings and tonumber(selfSettings.height)) or nil
         addEvent(function()
             if self and not self:isDestroyed() then
-                self:clampFloatingPosition()
-                self:updateResizeBorders()
+                local curParent = self:getParent()
+                if curParent and curParent:getClassName() ~= 'UIMiniWindowContainer' then
+                    local prevSuppress = self._suppressGeometrySave
+                    self._suppressGeometrySave = true
+                    if savedW and savedW >= 130 and self:getWidth() ~= savedW then
+                        self:setWidth(savedW)
+                    end
+                    if savedH and savedH > 0 and not self:isOn() and self:getHeight() ~= savedH then
+                        self:setHeight(savedH)
+                        self.maximizedHeight = savedH
+                    end
+                    self:clampFloatingPosition()
+                    self:updateResizeBorders()
+                    self._suppressGeometrySave = prevSuppress
+                else
+                    self:clampFloatingPosition()
+                    self:updateResizeBorders()
+                end
             end
         end)
     end
@@ -583,7 +598,7 @@ function UIMiniWindow:onHeightChange(height)
     if self:getId() == 'mainmappanel' and height > 0 then
         self.panelHeight = height
     end
-    if not self:isOn() then
+    if self.miniLoaded and not self._suppressGeometrySave and not self._draggingMiniWindow and not self:isOn() and height and height > 0 then
         self:setSettings({
             height = height
         })

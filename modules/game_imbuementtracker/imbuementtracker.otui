@@ -78,6 +78,8 @@ InventoryItem < Panel
 
 ImbuementTracker < MiniWindow
   id: imbuementTracker
+  &save: true
+  &autoOpen: false
   @onOpen: modules.game_imbuementtracker.onMiniWindowOpen()
   @onClose: modules.game_imbuementtracker.onMiniWindowClose()
 

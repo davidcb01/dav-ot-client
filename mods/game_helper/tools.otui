@@ -37,7 +37,7 @@ Panel
         text: MP% >=
         anchors.verticalCenter: manaTrainSlot.verticalCenter
         anchors.left: manaTrainSlot.right
-        margin-left: 10
+        margin-left: 6
         color: #8ec5ff
         text-auto-resize: true
 
@@ -45,25 +45,43 @@ Panel
         id: manaTrainPctEdit
         anchors.verticalCenter: manaTrainSlot.verticalCenter
         anchors.left: prev.right
-        margin-left: 6
-        width: 44
+        margin-left: 4
+        width: 36
         text: 85
+
+      Label
+        id: manaTrainSecLbl
+        text: Sec:
+        anchors.verticalCenter: manaTrainSlot.verticalCenter
+        anchors.left: manaTrainPctEdit.right
+        margin-left: 6
+        color: #cccccc
+        text-auto-resize: true
+
+      HelperNumericEdit
+        id: manaTrainSecEdit
+        anchors.verticalCenter: manaTrainSlot.verticalCenter
+        anchors.left: manaTrainSecLbl.right
+        margin-left: 4
+        width: 34
+        text: 2
+        !tooltip: tr('Interval in seconds between mana training casts')
 
       CheckBox
         id: manaTrainPzCheck
         anchors.top: manaTrainSlot.top
-        anchors.left: manaTrainPctEdit.right
-        margin-left: 14
-        width: 95
+        anchors.left: manaTrainSecEdit.right
+        anchors.right: parent.right
+        margin-left: 8
         !text: tr('Cast in PZ')
         checked: true
 
       CheckBox
         id: manaTrainCheck
         anchors.bottom: manaTrainSlot.bottom
-        anchors.left: manaTrainPctEdit.right
-        margin-left: 14
-        width: 95
+        anchors.left: manaTrainSecEdit.right
+        anchors.right: parent.right
+        margin-left: 8
         !text: tr('Enable')
 
     Panel
@@ -369,13 +387,22 @@ Panel
         id: followEnableCheck
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: 150
+        width: 112
         !text: tr('Enable Follow')
+
+      CheckBox
+        id: followDoorsCheck
+        anchors.verticalCenter: followEnableCheck.verticalCenter
+        anchors.left: followEnableCheck.right
+        margin-left: 6
+        width: 98
+        !text: tr('Open Doors')
+        checked: true
 
       HelperSmallButton
         id: followSetKeyBtn
         text: Set Key
-        width: 145
+        width: 102
         height: 19
         anchors.bottom: parent.bottom
         anchors.right: parent.right
@@ -393,6 +420,7 @@ Panel
       padding: 8
 
       Label
+        id: utilsTitleLbl
         text: Character Utilities
         anchors.top: parent.top
         anchors.left: parent.left
@@ -401,10 +429,10 @@ Panel
 
       CheckBox
         id: changeGoldCheck
-        anchors.top: prev.bottom
+        anchors.top: utilsTitleLbl.bottom
         anchors.left: parent.left
-        margin-top: 12
-        width: 280
+        margin-top: 10
+        width: 150
         !text: tr('Change Gold')
 
       CheckBox
@@ -412,21 +440,74 @@ Panel
         anchors.top: prev.bottom
         anchors.left: parent.left
         margin-top: 10
-        width: 280
-        !text: tr('Auto Eat Food (All Server Food IDs)')
+        width: 150
+        !text: tr('Auto Eat Food')
 
       CheckBox
         id: autoBlessCheck
         anchors.top: prev.bottom
         anchors.left: parent.left
         margin-top: 10
-        width: 280
-        !text: tr('Auto Bless (!bless only if missing blessings)')
+        width: 150
+        !text: tr('Auto Bless (!bless)')
 
       CheckBox
         id: antiAfkCheck
         anchors.top: prev.bottom
         anchors.left: parent.left
         margin-top: 10
-        width: 280
-        !text: tr('Anti-AFK (Rotate Direction Every 10 min)')
+        width: 150
+        !text: tr('Anti-AFK (10 min)')
+
+      CheckBox
+        id: autoAolCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        margin-top: 10
+        width: 150
+        !text: tr('Auto AOL (!aol)')
+
+      CheckBox
+        id: autoQuiverCheck
+        anchors.top: utilsTitleLbl.bottom
+        anchors.left: parent.horizontalCenter
+        margin-top: 10
+        margin-left: 4
+        width: 155
+        !text: tr('Auto Refill Quiver')
+
+      CheckBox
+        id: keepBpCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.horizontalCenter
+        margin-top: 10
+        margin-left: 4
+        width: 155
+        !text: tr('Keep BPs Open')
+
+      CheckBox
+        id: nextBpCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.horizontalCenter
+        margin-top: 10
+        margin-left: 4
+        width: 155
+        !text: tr('Next BP Full')
+
+      CheckBox
+        id: autoPartyCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.horizontalCenter
+        margin-top: 10
+        margin-left: 4
+        width: 155
+        !text: tr('Auto Party (Share)')
+
+      CheckBox
+        id: autoOberonCheck
+        anchors.top: prev.bottom
+        anchors.left: parent.horizontalCenter
+        margin-top: 10
+        margin-left: 4
+        width: 155
+        !text: tr('Auto Oberon')

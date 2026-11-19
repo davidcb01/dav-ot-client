@@ -1422,3 +1422,213 @@ HuntListModal < MainWindow
     anchors.right: parent.right
     anchors.bottom: parent.bottom
     @onClick: self:getParent():hide()
+
+FinisherRow < UIWidget
+  height: 24
+  background-color: #363636
+  border-width-bottom: 1
+  border-color-bottom: #222222
+  focusable: true
+  $focus:
+    background-color: #4f4f4f
+
+  Label
+    id: idxLabel
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    width: 18
+    font: verdana-11px-monochrome
+    color: #aaaaaa
+    text: 1
+    phantom: true
+
+  Label
+    id: nameLabel
+    anchors.left: idxLabel.right
+    anchors.right: hpLabel.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    margin-right: 4
+    font: verdana-11px-rounded
+    color: #efefef
+    text: Dark Torturer
+    phantom: true
+
+  Label
+    id: hpLabel
+    anchors.right: enableCheck.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 8
+    width: 58
+    text-align: right
+    font: verdana-11px-monochrome
+    color: #ffaa44
+    text: HP<=30%
+    phantom: true
+
+  CheckBox
+    id: enableCheck
+    anchors.right: upBtn.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 4
+    width: 16
+    checked: true
+
+  RowActionButton
+    id: upBtn
+    text: ^
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: downBtn.left
+    margin-right: 2
+
+  RowActionButton
+    id: downBtn
+    text: v
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: delBtn.left
+    margin-right: 2
+
+  RowActionButton
+    id: delBtn
+    text: X
+    color: #ff6666
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    margin-right: 2
+
+FinisherSettingsModal < MainWindow
+  id: finisherSettingsModal
+  !text: tr('Finisher Settings')
+  size: 430 375
+  visible: false
+
+  Panel
+    id: finTopRow
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 24
+
+    Label
+      id: finModeLbl
+      text: Target Mode:
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      color: #f0d080
+      text-auto-resize: true
+
+    ComboBox
+      id: finModeCombo
+      width: 56
+      height: 19
+      anchors.left: finModeLbl.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+
+    Label
+      id: finChaseLbl
+      text: Chase Mode:
+      anchors.left: finModeCombo.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 14
+      color: #f0d080
+      text-auto-resize: true
+
+    ComboBox
+      id: finChaseCombo
+      width: 112
+      height: 19
+      anchors.left: finChaseLbl.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+
+  Label
+    id: finOrderHint
+    text: Priority order (top to bottom):
+    anchors.top: finTopRow.bottom
+    anchors.left: parent.left
+    margin-top: 6
+    color: #aaaaaa
+    text-auto-resize: true
+
+  TextList
+    id: finisherList
+    anchors.top: finOrderHint.bottom
+    anchors.left: parent.left
+    anchors.right: finisherScrollBar.left
+    anchors.bottom: finAddRow.top
+    margin-top: 4
+    margin-bottom: 8
+    padding: 3
+    background-color: #2b2b2b
+    border-width: 1
+    border-color: #191919
+    vertical-scrollbar: finisherScrollBar
+    auto-focus: none
+
+  VerticalScrollBar
+    id: finisherScrollBar
+    anchors.top: finisherList.top
+    anchors.bottom: finisherList.bottom
+    anchors.right: parent.right
+    step: 24
+    pixels-scroll: true
+
+  Panel
+    id: finAddRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: finCloseBtn.top
+    margin-bottom: 8
+    height: 22
+
+    Label
+      text: Monster:
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      color: #cccccc
+      text-auto-resize: true
+
+    TextEdit
+      id: finNameEdit
+      anchors.left: prev.right
+      anchors.right: finHpLbl.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      margin-right: 8
+      height: 20
+
+    Label
+      id: finHpLbl
+      text: HP%<=
+      anchors.right: finHpEdit.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      color: #cccccc
+      text-auto-resize: true
+
+    HelperNumericEdit
+      id: finHpEdit
+      width: 38
+      anchors.right: finAddBtn.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 6
+      text: 30
+
+    HelperGreenButton
+      id: finAddBtn
+      text: Add
+      width: 56
+      height: 20
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+
+  Button
+    id: finCloseBtn
+    !text: tr('Close')
+    width: 80
+    height: 22
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: self:getParent():hide()
