@@ -8,40 +8,46 @@
 -- ---------------------------------------------------------------------------
 FLOOR_WP_EFFECT_ID = 9991
 lastFloorMarkAt = 0
+local floorWpEffectObj = nil
+local floorWpEffectTried = false
 
 function ensureFloorWpEffect()
+  if floorWpEffectObj then return floorWpEffectObj end
   if not g_attachedEffects then return nil end
-  local eff = g_attachedEffects.getById and g_attachedEffects.getById(FLOOR_WP_EFFECT_ID) or nil
-  if not eff then
-    local mgr = rawget(_G, 'AttachedEffectManager')
-    if mgr and mgr.register then
-      pcall(function()
-        mgr.register(FLOOR_WP_EFFECT_ID, 'CavebotFloorWpBg', '/mods/game_helper/images/wp_tile_bg', ThingExternalTexture, {
-          size = { 32, 32 },
-          opacity = 0.65,
-          onTop = true,
-          permanent = true,
-          drawOnUI = false
-        })
-      end)
-      eff = g_attachedEffects.getById and g_attachedEffects.getById(FLOOR_WP_EFFECT_ID) or nil
-    end
-    if not eff and g_attachedEffects.registerByImage then
-      pcall(function()
-        eff = g_attachedEffects.registerByImage(FLOOR_WP_EFFECT_ID, 'CavebotFloorWpBg', '/mods/game_helper/images/wp_tile_bg')
-      end)
-      if eff then
-        pcall(function()
-          if eff.setSize then eff:setSize({ width = 32, height = 32 }) end
-          if eff.setOpacity then eff:setOpacity(0.65) end
-          if eff.setOnTop then eff:setOnTop(true) end
-          if eff.setPermanent then eff:setPermanent(true) end
-          if eff.setCanDrawOnUI then eff:setCanDrawOnUI(false) end
-        end)
+  if floorWpEffectTried then return nil end
+  floorWpEffectTried = true
+
+  local effMgr = AttachedEffectManager
+  if type(effMgr) == 'table' and effMgr.register then
+    pcall(function()
+      effMgr.register(FLOOR_WP_EFFECT_ID, 'CavebotFloorWpBg', '/mods/game_helper/images/wp_tile_bg', ThingExternalTexture, {
+        size = { 32, 32 },
+        opacity = 0.65,
+        onTop = true,
+        permanent = true,
+        drawOnUI = false
+      })
+    end)
+  elseif g_attachedEffects.registerByImage then
+    pcall(function()
+      local reg = g_attachedEffects.registerByImage(FLOOR_WP_EFFECT_ID, 'CavebotFloorWpBg', '/mods/game_helper/images/wp_tile_bg')
+      if reg then
+        if reg.setSize then reg:setSize({ width = 32, height = 32 }) end
+        if reg.setOpacity then reg:setOpacity(0.65) end
+        if reg.setOnTop then reg:setOnTop(true) end
+        if reg.setPermanent then reg:setPermanent(true) end
+        if reg.setCanDrawOnUI then reg:setCanDrawOnUI(false) end
       end
+    end)
+  end
+
+  if g_attachedEffects.getById then
+    local ok, eff = pcall(g_attachedEffects.getById, FLOOR_WP_EFFECT_ID)
+    if ok and eff then
+      floorWpEffectObj = eff
     end
   end
-  return eff
+  return floorWpEffectObj
 end
 
 function clearFloorMarkers()

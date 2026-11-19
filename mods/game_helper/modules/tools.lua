@@ -209,7 +209,7 @@ function loadToolsUI()
   if uBox:getChildById('autoOberonCheck') then uBox:getChildById('autoOberonCheck'):setChecked(tl.autoOberon == true) end
   local qCfg = tl.quiver or {}
   if uBox:getChildById('autoQuiverCheck') then uBox:getChildById('autoQuiverCheck'):setChecked(qCfg.enabled == true) end
-  if uBox:getChildById('quiverAmmoSlot') then renderItemSlot(uBox:getChildById('quiverAmmoSlot'), qCfg.itemId or 35901) end
+  if uBox:getChildById('quiverAmmoSlot') then renderItemSlot(uBox:getChildById('quiverAmmoSlot'), qCfg.itemId or 25757) end
   if uBox:getChildById('quiverMinEdit') then uBox:getChildById('quiverMinEdit'):setText(tostring(qCfg.minQty or 100)) end
   if uBox:getChildById('quiverMaxEdit') then uBox:getChildById('quiverMaxEdit'):setText(tostring(qCfg.maxQty or 500)) end
 
@@ -521,7 +521,7 @@ function runToolsTick(player, pPos, now, mpPct, inPz, hasHaste)
   end
 
   local qCfg = tl.quiver
-  if qCfg and qCfg.enabled and (now - lastQuiverTime) >= 250 then
+  if qCfg and qCfg.enabled and currentVocName == 'Paladin' and (now - lastQuiverTime) >= 250 then
     local targetAmmoId = tonumber(qCfg.itemId) or 0
     local minQty = math.max(1, tonumber(qCfg.minQty) or 100)
     local maxQty = math.max(minQty, tonumber(qCfg.maxQty) or 500)
@@ -585,7 +585,7 @@ function runToolsTick(player, pPos, now, mpPct, inPz, hasHaste)
 
       if quiverRefillingActive and totalAmmoInQuiver < maxQty and #openQuivers > 0 then
         local needed = maxQty - totalAmmoInQuiver
-        local moveId = (targetAmmoId > 0) and targetAmmoId or (detectedAmmoId > 0 and detectedAmmoId or 35901)
+        local moveId = (targetAmmoId > 0) and targetAmmoId or (detectedAmmoId > 0 and detectedAmmoId or 25757)
 
         -- Destino em qualquer quiver com espaco (stack incompleto do mesmo item ou slot livre)
         local destPos = nil

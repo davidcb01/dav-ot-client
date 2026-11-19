@@ -477,9 +477,9 @@ Panel
         id: manaShieldCheck
         anchors.verticalCenter: manaShieldSlot.verticalCenter
         anchors.left: manaShieldSlot.right
-        margin-left: 6
-        width: 92
-        !text: tr('Auto Utamo')
+        margin-left: 4
+        width: 58
+        !text: tr('Utamo')
 
       Label
         id: utamoBelowLbl
@@ -495,7 +495,7 @@ Panel
         anchors.verticalCenter: manaShieldSlot.verticalCenter
         anchors.left: utamoBelowLbl.right
         margin-left: 2
-        width: 30
+        width: 28
         text: 100
 
       CheckBox
@@ -512,7 +512,7 @@ Panel
         anchors.verticalCenter: manaShieldSlot.verticalCenter
         anchors.left: utamoRecoverCheck.right
         margin-left: 2
-        width: 30
+        width: 28
         text: 70
 
       CheckBox
@@ -520,8 +520,8 @@ Panel
         anchors.verticalCenter: manaShieldSlot.verticalCenter
         anchors.left: utamoAboveEdit.right
         margin-left: 4
-        width: 68
-        !text: tr('AntiLag')
+        width: 44
+        !text: tr('Lag')
         tooltip: Auto-enable Mana Shield when ping >= 200ms.
 
       HelperSpellSlot

@@ -70,7 +70,7 @@ function setupWidgetsAndCallbacks()
   local function initLangCombo(cb)
     if not cb then return end
     cb:addOption('English', 'en')
-    cb:addOption('Portugu�s', 'pt')
+    cb:addOption('Português', 'pt')
     cb:setCurrentOptionByData(getHelperLanguage(), true)
     cb.onOptionChange = function(w, text, data)
       if refreshingLanguageCombos then return end

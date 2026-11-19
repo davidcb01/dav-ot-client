@@ -56,6 +56,27 @@ function applyVocationVisibility()
   exBox:getChildById('recoverySpellCheck'):setVisible(hasRecovery)
   exBox:getChildById('recoveryHpLbl'):setVisible(hasRecovery)
   exBox:getChildById('recoveryPctEdit'):setVisible(hasRecovery)
+
+  -- Auto Refill Quiver apenas para Royal Paladin (cinza/desabilitado nas outras vocacoes)
+  local isPaladin = (voc == 'Paladin')
+  local uBox = panels.tools and panels.tools:getChildById('rightToolsCol') and panels.tools:getChildById('rightToolsCol'):getChildById('utilsBox')
+  if uBox then
+    local qOp = isPaladin and 1.0 or 0.35
+    for _, cid in ipairs({ 'autoQuiverCheck', 'quiverAmmoSlot', 'quiverMinEdit', 'quiverMaxEdit' }) do
+      local w = uBox:getChildById(cid)
+      if w then
+        if w.setEnabled then w:setEnabled(isPaladin) end
+        if w.setOpacity then w:setOpacity(qOp) end
+      end
+    end
+    for _, cid in ipairs({ 'quiverMinLbl', 'quiverMaxLbl' }) do
+      local w = uBox:getChildById(cid)
+      if w then
+        if w.setOpacity then w:setOpacity(qOp) end
+        if w.setColor then w:setColor(isPaladin and '#cccccc' or '#666666') end
+      end
+    end
+  end
 end
 
 

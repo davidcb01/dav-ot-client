@@ -322,9 +322,9 @@ ITEM_CATALOG = {
   { id = 6529,  name = 'Pair of Soft Boots', desc = 'High HP/MP regen boots', cat = 'timer' },
 
   -- Ammunition (Paladin Quiver Refill)
-  { id = 35901, name = 'Diamond Arrow', desc = 'AoE Paladin Arrow (Lvl 150+)', cat = 'ammo' },
+  { id = 25757, name = 'Diamond Arrow', desc = 'AoE Paladin Arrow (Lvl 150+)', cat = 'ammo' },
   { id = 15793, name = 'Crystalline Arrow', desc = 'Single-target Earth Arrow (Lvl 90+)', cat = 'ammo' },
-  { id = 35902, name = 'Spectral Bolt', desc = 'High damage Bolt (Lvl 150+)', cat = 'ammo' },
+  { id = 25758, name = 'Spectral Bolt', desc = 'High damage Bolt (Lvl 150+)', cat = 'ammo' },
   { id = 16141, name = 'Prismatic Bolt', desc = 'High damage Bolt (Lvl 90+)', cat = 'ammo' },
   { id = 16142, name = 'Drill Bolt', desc = 'Physical Bolt (Lvl 70+)', cat = 'ammo' },
   { id = 16143, name = 'Envenomed Arrow', desc = 'Earth Arrow (Lvl 70+)', cat = 'ammo' },

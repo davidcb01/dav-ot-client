@@ -461,7 +461,7 @@ function createDefaultCharConfig()
       autoBless = false,
       antiAfk = false,
       autoOberon = false,
-      quiver = { enabled = false, itemId = 35901, minQty = 100, maxQty = 500 },
+      quiver = { enabled = false, itemId = 25757, minQty = 100, maxQty = 500 },
       follow = { enabled = false, name = '', mode = 'Default', dist = 1, turn = false, openDoors = true },
       itemTimer = { enabled = false, itemId = 3725, sec = 610 }
     },
@@ -560,7 +560,9 @@ function normalizeCharConfig(cfg)
   t.autoOberon = (t.autoOberon == true)
   t.quiver = type(t.quiver) == 'table' and t.quiver or {}
   t.quiver.enabled = (t.quiver.enabled == true)
-  t.quiver.itemId = tonumber(t.quiver.itemId) or 35901
+  local qItem = tonumber(t.quiver.itemId) or 25757
+  if qItem == 35901 then qItem = 25757 elseif qItem == 35902 then qItem = 25758 end
+  t.quiver.itemId = qItem
   t.quiver.minQty = math.max(1, math.min(5000, tonumber(t.quiver.minQty) or 100))
   t.quiver.maxQty = math.max(t.quiver.minQty, math.min(5000, tonumber(t.quiver.maxQty) or 500))
 
